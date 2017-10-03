@@ -38,6 +38,24 @@ var accessLogStream = fs.createWriteStream ( path.join(__dirname, 'access.log'),
 // setup the logger
 app.use ( morgan ( 'dev', {stream: accessLogStream}) );
 
+
+//
+//
+//
+passport.serializeUser(function(user, done) {
+  done ( null, user.id );
+});
+
+//
+//
+//
+passport.deserializeUser(function(id, done) {
+
+    User.findById ( id, function(err,user) {
+        done ( err, user );
+    });  
+});
+
 //
 //
 //
@@ -66,8 +84,33 @@ app.get ( '/loggedin', function(req, res) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // route to log in
-app.post ( '/login', passport.authenticate('local'), function(req, res) {
-    res.status ( 200 ).json ( 'OK' );
+// app.post ( '/login', function(req,res,next) {
+//     passport.authenticate('local'), function(rerr, user, info) {
+//         res.status ( 200 ).json ( 'OK' );
+//     }
+// });
+
+app.post('/login', function(req, res, next) {
+
+    passport.authenticate('local', function(err, user, info) {
+
+        if ( err ) {
+            return next ( err ); // will generate a 500 error
+        }
+
+        // Generate a JSON response reflecting authentication status
+        if ( ! user ) {
+            return res.send ( 401, { success : false, message : 'authentication failed' } );
+        }
+
+        req.login ( user, function(err) {
+
+            if ( err ) {
+                return next ( err );
+            }
+            return res.send ( { success : true, message : 'authentication succeeded' } );        
+        });
+    })(req, res, next);
 });
 
 ///////////////////////////////////////////////////////////////////////////////
