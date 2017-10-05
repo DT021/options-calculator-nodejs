@@ -14,7 +14,7 @@ var User = require('./User.model');
 
 var app = express();
 
-app.set ( 'view engine', 'jade' );
+app.set ( 'view engine', 'ejs' );
 
 app.use ( passport.initialize() );
 app.use ( passport.session() );
@@ -75,6 +75,33 @@ passport.use ( new LocalStrategy ( function(username, password, done) {
     });
   }
 ));
+
+///////////////////////////////////////////////////////////////////////////////
+// main page when logged out
+app.get ( '/', function(req, res) {
+//    res.render ( 'index', { xox : '<span class="dcdc"><span class="oc-title">options calculator</span> {{ general.version }}</span>' } );
+    res.render ( 'index', { xox : 'from EJS', 
+                            auth : '<button class="btn btn-sm pull-right oc-login" ng-disabled="general.logged||account.password==0||account.username==0" ng-click="doRegister()">sign up</button>' +
+                            '<button class="btn btn-sm pull-right oc-login" ng-disabled="general.logged||account.password==0||account.username==0" ng-click="doLogin()">log in</button>' +
+                            '<input class="oc-login-input pull-right" ng-disabled="general.logged" type="password" placeholder="password" ng-model="account.password"' +
+                                   'ng-focus="account.error.password=0" ng-style="{ border: account.error.password && \'2px solid red\'||\'0 solid\' }"/>' +
+                            '<input class="oc-login-input pull-right" ng-disabled="general.logged" type="text" placeholder="email" ng-model="account.username"' +
+                                   'ng-focus="account.error.username=0" ng-style="{ border: account.error.username && \'2px solid red\'||\'0 solid\' \}">' +
+                            '</input>' +
+                            '</span>' 
+                          } );
+});
+
+///////////////////////////////////////////////////////////////////////////////
+// main page when logged in
+app.get ( '/loggin', function(req, res) {
+    //    res.render ( 'index', { xox : '<span class="dcdc"><span class="oc-title">options calculator</span> {{ general.version }}</span>' } );
+        res.render ( 'index', { xox : 'from EJS', 
+                                auth : '<button class="btn btn-sm pull-right oc-login" ng-click="doLogout()">log out</button>' +
+                                       '<span class="oc-welcome pull-right">welcome, you\'re logged in</span>'
+                              } );
+    });
+    
 
 ///////////////////////////////////////////////////////////////////////////////
 // route to test if the user is logged in or not

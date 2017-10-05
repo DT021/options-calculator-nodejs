@@ -5,9 +5,6 @@ var mongoose = require('mongoose');
 var Strategy = require('./Strategy.model');
 var User = require('./User.model');
 
-// var router = express.Router();
-// var app = express();
-
 app.use ( passport.initialize() );
 app.use ( passport.session() );
 
