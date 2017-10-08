@@ -1,25 +1,52 @@
 
 var express = require('express');
+var session = require('express-session');
 var path = require('path');
 var favicon = require('serve-favicon');
 var morgan = require('morgan');
 var fs = require('fs');
 var bodyParser = require('body-parser');
+var cookieParser = require('cookie-parser');
 var passport = require('passport');
 var LocalStrategy = require('passport-local').Strategy;
 var auth = require('passport-local-authenticate');
 var mongoose = require('mongoose');
+
+// get models
 var Strategy = require('./Strategy.model');
 var User = require('./User.model');
 
+// get access to express
 var app = express();
 
+// set view engine to EJS
 app.set ( 'view engine', 'ejs' );
 
+// set constants used by session
+const cookieSecret = 'asdf33g4w4hghjkuil8saef345';
+const cookieExpirationDate = new Date();
+const cookieExpirationDays = 365;
+cookieExpirationDate.setDate ( cookieExpirationDate.getDate() + cookieExpirationDays );
+
+// set cookie parser middleware
+app.use ( cookieParser(cookieSecret) ); 
+app.use ( session({
+
+	secret: cookieSecret, 
+	resave: true,
+	saveUninitialized: true,
+	cookie: {
+	    httpOnly: true,
+	    expires: cookieExpirationDate // use expires instead of maxAge
+        // store: new MongoStore( { url: config.urlMongo, collection: 'sessions' } )
+	}
+ }));
+
+ // iset nitialized passport
 app.use ( passport.initialize() );
 app.use ( passport.session() );
 
-// connect mongodb
+// connect database
 mongoose.Promise = global.Promise;
 mongoose.connect ( 'mongodb://localhost/oc', {
 
@@ -29,6 +56,7 @@ mongoose.connect ( 'mongodb://localhost/oc', {
 //Bind connection to error event (to get notification of connection errors)
 mongoose.connection.on ( 'error', console.error.bind(console, 'MongoDB connection error:') );
 
+// set body parser
 app.use ( bodyParser.json() );
 app.use ( bodyParser.urlencoded({ extended: true }) );
 
@@ -38,16 +66,11 @@ var accessLogStream = fs.createWriteStream ( path.join(__dirname, 'access.log'),
 // setup the logger
 app.use ( morgan ( 'dev', {stream: accessLogStream}) );
 
-
-//
-//
 //
 passport.serializeUser(function(user, done) {
   done ( null, user.id );
 });
 
-//
-//
 //
 passport.deserializeUser(function(id, done) {
 
@@ -56,8 +79,6 @@ passport.deserializeUser(function(id, done) {
     });  
 });
 
-//
-//
 //
 passport.use ( new LocalStrategy ( function(username, password, done) {
 
@@ -79,45 +100,44 @@ passport.use ( new LocalStrategy ( function(username, password, done) {
 ///////////////////////////////////////////////////////////////////////////////
 // main page when logged out
 app.get ( '/', function(req, res) {
-//    res.render ( 'index', { xox : '<span class="dcdc"><span class="oc-title">options calculator</span> {{ general.version }}</span>' } );
-    res.render ( 'index', { xox : 'from EJS', 
-                            auth : '<button class="btn btn-sm pull-right oc-login" ng-disabled="general.logged||account.password==0||account.username==0" ng-click="doRegister()">sign up</button>' +
-                            '<button class="btn btn-sm pull-right oc-login" ng-disabled="general.logged||account.password==0||account.username==0" ng-click="doLogin()">log in</button>' +
-                            '<input class="oc-login-input pull-right" ng-disabled="general.logged" type="password" placeholder="password" ng-model="account.password"' +
-                                   'ng-focus="account.error.password=0" ng-style="{ border: account.error.password && \'2px solid red\'||\'0 solid\' }"/>' +
-                            '<input class="oc-login-input pull-right" ng-disabled="general.logged" type="text" placeholder="email" ng-model="account.username"' +
-                                   'ng-focus="account.error.username=0" ng-style="{ border: account.error.username && \'2px solid red\'||\'0 solid\' \}">' +
-                            '</input>' +
-                            '</span>' 
-                          } );
+
+    if ( req.isAuthenticated() ) {
+    // if ( loggedIn ) {
+
+        res.render ( 'index', {
+        
+            addnew : '<button class="btn btn-sm" ng-disabled="general.logged || ! (positions.length < 4)" ng-click="doAdd(1,11500,\'call\')">add new</button>',
+            save : '<button class="btn btn-sm" ng-disabled="general.logged || status.saving" ng-click="doSave()">save</button>', 
+            auth : '<button class="btn btn-sm pull-right oc-login" ng-click="doLogout()">log out</button>' +
+                   '<span class="oc-welcome pull-right">welcome, you\'re logged in</span>'
+      } );
+    } else {
+
+        res.render ( 'index', {
+        
+            addnew : '', 
+            save : '', 
+            auth : '<button class="btn btn-sm pull-right oc-login" ng-disabled="general.logged||account.password==0||account.username==0" ng-click="doRegister()">sign up</button>' +
+                    '<button class="btn btn-sm pull-right oc-login" ng-disabled="general.logged||account.password==0||account.username==0" ng-click="doLogin()">log in</button>' +
+                    '</span><input tabindex=2 class="oc-login-input pull-right" ng-enter="doLogin()" ng-disabled="general.logged" type="password" placeholder="password" ng-model="account.password"' +
+                            'ng-focus="account.error.login=0"/>' +
+                    '<input tabindex=1 class="oc-login-input pull-right" ng-disabled="general.logged" type="text" placeholder="email" ng-model="account.username"' +
+                            'ng-focus="account.error.login=0" >' +
+                    '</input><span class="oc-login-error pull-right" ng-show="account.error.login"><i class="oc-login-error-icon fa fa-warning"></i>{{ account.error.login }}</span>' 
+        } );
+    }
 });
-
-///////////////////////////////////////////////////////////////////////////////
-// main page when logged in
-app.get ( '/loggin', function(req, res) {
-    //    res.render ( 'index', { xox : '<span class="dcdc"><span class="oc-title">options calculator</span> {{ general.version }}</span>' } );
-        res.render ( 'index', { xox : 'from EJS', 
-                                auth : '<button class="btn btn-sm pull-right oc-login" ng-click="doLogout()">log out</button>' +
-                                       '<span class="oc-welcome pull-right">welcome, you\'re logged in</span>'
-                              } );
-    });
     
-
 ///////////////////////////////////////////////////////////////////////////////
 // route to test if the user is logged in or not
 app.get ( '/loggedin', function(req, res) {
-    res.json ( req.isAuthenticated() ? req.user : '0' );
+
+    res.json ( req.isAuthenticated() ? req.user : false );
 });
 
 ///////////////////////////////////////////////////////////////////////////////
 // route to log in
-// app.post ( '/login', function(req,res,next) {
-//     passport.authenticate('local'), function(rerr, user, info) {
-//         res.status ( 200 ).json ( 'OK' );
-//     }
-// });
-
-app.post('/login', function(req, res, next) {
+app.post ( '/login', function(req, res, next) {
 
     passport.authenticate('local', function(err, user, info) {
 
@@ -135,9 +155,19 @@ app.post('/login', function(req, res, next) {
             if ( err ) {
                 return next ( err );
             }
-            return res.send ( { success : true, message : 'authentication succeeded' } );        
+            // loggedIn = true;
+            res.redirect ( '/' );
         });
     })(req, res, next);
+});
+
+///////////////////////////////////////////////////////////////////////////////
+// route to log out
+app.post ( '/logout', function(req, res) {
+    
+    req.logOut();
+    // loggedIn = false;
+    res.redirect ( '/' );  
 });
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -145,23 +175,16 @@ app.post('/login', function(req, res, next) {
 app.post ('/register', function(req,res,next) {
 
     var newUser = new User ( req.body );
-    console.log ( 'data posted: ' + newUser );
+console.log ( 'data posted: ' + newUser );
 
     newUser.save(function (err) {
         if ( err ) {
-            console.log ( 'error saving data: ' + err );
+console.log ( 'error saving data: ' + err );
             res.status( 404 ).json ( err );
         } else {
             res.status ( 201 ).json ( newUser );
         }    
     });
-});
-
-///////////////////////////////////////////////////////////////////////////////
-// route to log out
-app.post ( '/logout', function(req, res) {
-    req.logOut();
-    res.status ( 200 ).send ( 'OK' );;
 });
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -174,7 +197,6 @@ app.get ('/users', function(req,res) {
         res.status ( 404 ).json ( err );
     });
 });
-
 
 ///////////////////////////////////////////////////////////////////////////////
 // return all data 
@@ -205,19 +227,18 @@ app.post ('/strategies', function(req,res,next) {
     //console.dir ( req.body[0], {depth:null, colors:true} )
 
     var newStrategy = new Strategy ( req.body[0] );
-    console.log ( 'data posted: ' + newStrategy );
+console.log ( 'data posted: ' + newStrategy );
 
     newStrategy.save(function (err) {
         // err can come from a middleware
         if ( err ) {
-            console.log ( 'error saving data: ' + err );
+console.log ( 'error saving data: ' + err );
             res.status ( 409 ).json ( err );
         } else {
             res.status ( 200 ).json ( newStrategy );
         }    
     });
 });
-
 
 ///////////////////////////////////////////////////////////////////////////////
 // set static page route
