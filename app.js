@@ -102,7 +102,6 @@ passport.use ( new LocalStrategy ( function(username, password, done) {
 app.get ( '/', function(req, res) {
 
     if ( req.isAuthenticated() ) {
-    // if ( loggedIn ) {
 
         res.render ( 'index', {
         
