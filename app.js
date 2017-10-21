@@ -116,11 +116,11 @@ app.get ( '/', function(req, res) {
         
             addnew : '', 
             save : '', 
-            auth : '<button class="btn btn-sm pull-right oc-login" ng-disabled="general.logged||account.password==0||account.username==0" ng-click="doRegister()">sign up</button>' +
+            auth : '<button class="btn btn-sm pull-right oc-login" ng-disabled="general.logged||general.register" ng-click="general.register=true">sign up</button>' +
                     '<button class="btn btn-sm pull-right oc-login" ng-disabled="general.logged||account.password==0||account.username==0" ng-click="doLogin()">log in</button>' +
                     '</span><input tabindex=2 class="oc-login-input pull-right" ng-enter="doLogin()" ng-disabled="general.logged" type="password" placeholder="password" ng-model="account.password"' +
                             'ng-focus="account.error.login=0"/>' +
-                    '<input tabindex=1 class="oc-login-input pull-right" ng-disabled="general.logged" type="text" placeholder="email" ng-model="account.username"' +
+                    '<input tabindex=1 class="oc-login-input pull-right" ng-disabled="general.logged" type="text" placeholder="email/name" ng-model="account.username"' +
                             'ng-focus="account.error.login=0" >' +
                     '</input><span class="oc-login-error pull-right" ng-show="account.error.login"><i class="oc-login-error-icon fa fa-warning"></i>{{ account.error.login }}</span>' 
         } );
@@ -129,7 +129,7 @@ app.get ( '/', function(req, res) {
     
 ///////////////////////////////////////////////////////////////////////////////
 // route to test if the user is logged in or not
-app.get ( '/loggedin', function(req, res) {
+app.get ( '/auth', function(req, res) {
 
     res.json ( req.isAuthenticated() ? req.user : false );
 });
@@ -154,7 +154,6 @@ app.post ( '/login', function(req, res, next) {
             if ( err ) {
                 return next ( err );
             }
-            // loggedIn = true;
             res.redirect ( '/' );
         });
     })(req, res, next);
@@ -165,7 +164,6 @@ app.post ( '/login', function(req, res, next) {
 app.post ( '/logout', function(req, res) {
     
     req.logOut();
-    // loggedIn = false;
     res.redirect ( '/' );  
 });
 
@@ -174,11 +172,8 @@ app.post ( '/logout', function(req, res) {
 app.post ('/register', function(req,res,next) {
 
     var newUser = new User ( req.body );
-console.log ( 'data posted: ' + newUser );
-
     newUser.save(function (err) {
         if ( err ) {
-console.log ( 'error saving data: ' + err );
             res.status( 404 ).json ( err );
         } else {
             res.status ( 201 ).json ( newUser );
@@ -223,15 +218,9 @@ app.get ('/strategies/:name', function(req,res) {
 // save data 
 app.post ('/strategies', function(req,res,next) {
 
-    //console.dir ( req.body[0], {depth:null, colors:true} )
-
     var newStrategy = new Strategy ( req.body[0] );
-console.log ( 'data posted: ' + newStrategy );
-
     newStrategy.save(function (err) {
-        // err can come from a middleware
         if ( err ) {
-console.log ( 'error saving data: ' + err );
             res.status ( 409 ).json ( err );
         } else {
             res.status ( 200 ).json ( newStrategy );
