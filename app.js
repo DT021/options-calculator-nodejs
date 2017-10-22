@@ -108,7 +108,7 @@ app.get ( '/', function(req, res) {
             addnew : '<button class="btn btn-sm" ng-disabled="general.logged || ! (positions.length < 4)" ng-click="doAdd(1,11500,\'call\')">add new</button>',
             save : '<button class="btn btn-sm" ng-disabled="general.logged || status.saving" ng-click="doSave()">save</button>', 
             auth : '<button class="btn btn-sm pull-right oc-login" ng-click="doLogout()">log out</button>' +
-                   '<span class="oc-welcome pull-right">welcome, you\'re logged in</span>'
+                   '<span class="oc-welcome pull-right">welcome ' + req.user.username + ', you\'re logged in</span>'
         });
     } else {
 
@@ -116,7 +116,7 @@ app.get ( '/', function(req, res) {
         
             addnew : '', 
             save : '', 
-            auth : '<button class="btn btn-sm pull-right oc-login" ng-disabled="general.logged||general.register" ng-click="general.register=true">sign up</button>' +
+            auth : '<button class="btn btn-sm pull-right oc-login" ng-disabled="general.logged||general.register" ng-click="account.reg.success=false;general.register=true">sign up</button>' +
                     '<button class="btn btn-sm pull-right oc-login" ng-disabled="general.logged||account.password==0||account.email==0" ng-click="doLogin()">log in</button>' +
                     '</span><input tabindex=2 class="oc-login-input pull-right" ng-enter="doLogin()" ng-disabled="general.logged||general.register" type="password" placeholder="password" ng-model="account.password"' +
                             'ng-focus="account.error.login=0"/>' +
@@ -155,9 +155,12 @@ app.post ( '/login', function(req, res, next) {
             if ( err ) {
                 return next ( err );
             }
-            res.redirect ( '/' );
-        });
-    })(req, res, next);
+            // res.redirect ( '/' );
+		});
+		
+		res.redirect ( '/' );
+		
+	})(req, res, next);
 });
 
 ///////////////////////////////////////////////////////////////////////////////
