@@ -10,18 +10,18 @@ var SALT_WORK_FACTOR = 10;
 //
 var UserSchema = new Schema ({
 
-	username : { type : String,
-			 	 unique : true,
-				 required : true,
-				 validate: {
-	            	validator: function(v) {
-	                	return /^([\w-\.]+@([\w-]+\.)+[\w-]{2,4})?$/.test(v);
-	             	},
-	             	message: 'not a valid email address !'
-	          	 } 
-	          	},						// user name --> email address
+	email : { type : String,			// email address
+			  unique : true,
+			  required : true,
+			  validate: {
+			  validator: function(v) {
+				return /^([\w-\.]+@([\w-]+\.)+[\w-]{2,3})?$/.test(v);
+			  },
+			  message: 'not a valid email address !' } 
+            },	
+	username : String,               	// user name
 	password : { type : String,
-				 required : true }		// user password
+				 required : true }		// password
 });
 
 //

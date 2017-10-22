@@ -80,9 +80,9 @@ passport.deserializeUser(function(id, done) {
 });
 
 //
-passport.use ( new LocalStrategy ( function(username, password, done) {
+passport.use ( new LocalStrategy ( {usernameField: 'email'}, function(email, password, done) {
 
-    User.findOne ( { username: username }, function(err, user) {
+    User.findOne ( { email: email }, function(err, user) {
         if ( err ) { 
             return done(err); 
         }
@@ -109,7 +109,7 @@ app.get ( '/', function(req, res) {
             save : '<button class="btn btn-sm" ng-disabled="general.logged || status.saving" ng-click="doSave()">save</button>', 
             auth : '<button class="btn btn-sm pull-right oc-login" ng-click="doLogout()">log out</button>' +
                    '<span class="oc-welcome pull-right">welcome, you\'re logged in</span>'
-      } );
+        });
     } else {
 
         res.render ( 'index', {
@@ -117,13 +117,13 @@ app.get ( '/', function(req, res) {
             addnew : '', 
             save : '', 
             auth : '<button class="btn btn-sm pull-right oc-login" ng-disabled="general.logged||general.register" ng-click="general.register=true">sign up</button>' +
-                    '<button class="btn btn-sm pull-right oc-login" ng-disabled="general.logged||account.password==0||account.username==0" ng-click="doLogin()">log in</button>' +
-                    '</span><input tabindex=2 class="oc-login-input pull-right" ng-enter="doLogin()" ng-disabled="general.logged" type="password" placeholder="password" ng-model="account.password"' +
+                    '<button class="btn btn-sm pull-right oc-login" ng-disabled="general.logged||account.password==0||account.email==0" ng-click="doLogin()">log in</button>' +
+                    '</span><input tabindex=2 class="oc-login-input pull-right" ng-enter="doLogin()" ng-disabled="general.logged||general.register" type="password" placeholder="password" ng-model="account.password"' +
                             'ng-focus="account.error.login=0"/>' +
-                    '<input tabindex=1 class="oc-login-input pull-right" ng-disabled="general.logged" type="text" placeholder="email/name" ng-model="account.username"' +
+                    '<input tabindex=1 class="oc-login-input pull-right" ng-disabled="general.logged||general.register" type="text" placeholder="email/name" ng-model="account.email"' +
                             'ng-focus="account.error.login=0" >' +
                     '</input><span class="oc-login-error pull-right" ng-show="account.error.login"><i class="oc-login-error-icon fa fa-warning"></i>{{ account.error.login }}</span>' 
-        } );
+        });
     }
 });
     
@@ -138,6 +138,7 @@ app.get ( '/auth', function(req, res) {
 // route to log in
 app.post ( '/login', function(req, res, next) {
 
+    // var user = req.body;
     passport.authenticate('local', function(err, user, info) {
 
         if ( err ) {
@@ -146,7 +147,7 @@ app.post ( '/login', function(req, res, next) {
 
         // Generate a JSON response reflecting authentication status
         if ( ! user ) {
-            return res.send ( 401, { success : false, message : 'authentication failed' } );
+            return res.status(401).send ( { success : false, message : 'authentication failed' } );
         }
 
         req.login ( user, function(err) {
