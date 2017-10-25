@@ -108,7 +108,7 @@ app.get ( '/', function(req, res) {
             addnew : '<button class="btn btn-sm" ng-disabled="general.logged || ! (positions.length < 4)" ng-click="doAdd(1,11500,\'call\')">add new</button>',
             save : '<button class="btn btn-sm" ng-disabled="general.logged || status.saving" ng-click="doSave()">save</button>', 
             auth : '<button class="btn btn-sm pull-right oc-login" ng-click="doLogout()">log out</button>' +
-                   '<span class="oc-welcome pull-right">welcome ' + req.user.username + ', you\'re logged in</span>'
+                   '<span class="oc-welcome pull-right">welcome <b>' + req.user.username + '</b>, you\'re logged in</span>'
         });
     } else {
 
@@ -209,9 +209,9 @@ app.get ('/strategies', function(req,res) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // return single data
-app.get ('/strategies/:name', function(req,res) {
+app.get ('/strategies/:id', function(req,res) {
 
-    Strategy.find ( { name: req.params.name }).then ( function(strategy) {
+    Strategy.find ( { userid: req.params.id }).then ( function(strategy) {
         res.status( 200 ).json ( strategy );
     }).catch ( function(err) {
         res.status ( 404 ).json ( err );
