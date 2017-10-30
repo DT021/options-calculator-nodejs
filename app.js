@@ -126,7 +126,7 @@ app.get ( '/', function(req, res) {
             select : '<span style="margin-left:10px; font-size:130%;vertical-align:middle;">{{ strategy.name }}</span>',
             load   : '<button class="btn btn-sm" ng-disabled="general.logged" ng-click="doRegisterFirst()">load</button>', 
             auth   : '<button class="btn btn-sm pull-right oc-register" ng-disabled="general.logged||general.register" ng-click="doRegisterFirst()">sign up</button>' +
-                     '<button class="btn btn-sm pull-right oc-login" ng-disabled="general.logged||account.password==0||account.email==0" ng-click="doLogin()">log in</button>' +
+                     '<button class="btn btn-sm pull-right oc-login" ng-disabled="general.logged" ng-click="doLogin()">log in</button>' +
                      '</span><input tabindex=2 class="oc-login-input pull-right" ng-enter="doLogin()" ng-disabled="general.logged||general.register" type="password" placeholder="password" ng-model="account.password"' +
                             'ng-focus="account.error.login=0"/>' +
                      '<input tabindex=1 class="oc-login-input pull-right" ng-disabled="general.logged||general.register" type="text" placeholder="email/name" ng-model="account.email"' +
@@ -161,7 +161,8 @@ app.post ( '/login', function(req, res, next) {
 
         // Generate a JSON response reflecting authentication status
         if ( ! user ) {
-            return res.status(401).send ( { success : false, message : 'authentication failed' } );
+            // return res.status(401).send ( { success : false, message : 'authentication failed' } );
+            return res.status(401).send ( { success : false, message : info.message } );
         }
 
         req.login ( user, function(err) {
