@@ -21,7 +21,7 @@ var StrategySchema = new Schema ({
 
 	userid : String,								// the user unique id
 	name : { type : String, 
-			 unique : true },		// strategies name 
+			 unique : true },						// strategies name 
 	symbol : String,								// selected option
 	expiry : Date,									// selected expiration
 

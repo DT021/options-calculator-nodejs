@@ -19,7 +19,8 @@ var UserSchema = new Schema ({
 			  },
 			  message: 'not a valid email address !' } 
             },	
-	username : String,               	// user name
+	username : { type : String,
+                 required : true },     // username
 	password : { type : String,
 				 required : true }		// password
 });
