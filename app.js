@@ -140,8 +140,8 @@ app.get ( '/', function(req, res) {
 // route to test if the user is logged in or not
 app.get ( '/auth', function(req, res) {
 
-    console.log('authenticated:' + (req.isAuthenticated() ? req.user.email : 'false') );
-    res.status(200).json(req.isAuthenticated() ? [{ 'user': req.user }] : [] );
+    // console.log('authenticated:' + (req.isAuthenticated() ? req.user.email : 'false') );
+    res.status ( 200 ).json ( req.isAuthenticated() ? { 'user': req.user } : { 'user': null } );
 });
 
 ///////////////////////////////////////////////////////////////////////////////
