@@ -107,7 +107,7 @@ app.get ( '/', function(req, res) {
 		res.render ( 'index', {
 		
 			addnew : '<button class="btn btn-sm" ng-disabled="general.logged || ! (positions.length < 4)" ng-click="doAdd(1,11500,\'call\')">add new</button>',
-			save   : '<button class="btn btn-sm" ng-disabled="general.logged || ! status.changed" ng-click="doSave()">save</button>', 
+			save   : '<button class="btn btn-sm" ng-disabled="general.logged || ! strategy.changed" ng-click="doSave()">save</button>', 
 			saveas : '<button class="btn btn-sm" ng-disabled="general.logged" ng-click="doOpenDialog()">save as</button>', 
 			remove : '<button class="btn btn-sm" ng-disabled="general.logged" ng-click="doDeleteStrategy()">delete</button>', 
 			select : '<select class="oc-dropdown oc-strat-dropdown" ng-options="strat as strat.name for strat in strategies"' +
@@ -139,6 +139,16 @@ app.get ( '/', function(req, res) {
 	}
 });
 	
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+// add latency for testing purpose
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+app.use ( function (req, res, next) { setTimeout(next,3000) });
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+
 // 
 var sleep = function(what, time) {
 	setTimeout ( function () {
@@ -228,14 +238,14 @@ app.get ('/strategies', function(req,res) {
 });
 
 ///////////////////////////////////////////////////////////////////////////////
-// return single data
+// return all data associated to one user
 app.get ('/strategies/:id', function(req,res) {
 
 	Strategy.find ( { userid: req.params.id }).then ( function(strategy) {
 		// res.status( 200 ).json ( strategy );
-		sleep ( function() {
+		// sleep ( function() {
 			res.status(200).json(strategy);
-		});
+		// });
 	}).catch ( function(err) {
 		res.status ( 500 ).json ( err );
 	});
