@@ -108,13 +108,15 @@ app.get ( '/', function(req, res) {
 		
 			addnew : '<button class="btn btn-sm" ng-disabled="general.logged || ! (positions.length < 4)" ng-click="doAdd(1,11500,\'call\')">add new</button>',
 			save   : '<button class="btn btn-sm" ng-disabled="general.logged || ! status.changed" ng-click="doSave()">save</button>', 
-			saveas: '<button class="btn btn-sm" ng-disabled="general.logged" ng-click="doOpenDialog()">save as</button>', 
+			saveas : '<button class="btn btn-sm" ng-disabled="general.logged" ng-click="doOpenDialog()">save as</button>', 
+			remove : '<button class="btn btn-sm" ng-disabled="general.logged" ng-click="doDeleteStrategy()">delete</button>', 
 			select : '<select class="oc-dropdown oc-strat-dropdown" ng-options="strat as strat.name for strat in strategies"' +
 					 'ng-disabled="general.logged" ng-change="doUpdate()" ng-model="strategy"></select>',
 			load   : '<button class="btn btn-sm" ng-disabled="general.logged" ng-click="doLoad()">load</button>', 
 			auth   : '<button class="btn btn-sm pull-right oc-login" ng-click="doLogout()">log out</button>' +
 					 '<span class="oc-welcome pull-right">welcome <b>' + req.user.username + '</b>, you\'re logged in</span>'
 		});
+
 	} else {
 
 		// this is set when user is not logged in
@@ -123,6 +125,7 @@ app.get ( '/', function(req, res) {
 			addnew : '<button class="btn btn-sm" ng-disabled="general.logged || ! (positions.length < 4)" ng-click="doRegisterFirst()">add new</button>',
 			save   : '<button class="btn btn-sm" ng-disabled="general.logged" ng-click="doRegisterFirst()">save</button>', 
 			saveas : '<button class="btn btn-sm" ng-disabled="general.logged" ng-click="doRegisterFirst()">save as</button>', 
+			remove : '<button class="btn btn-sm" ng-disabled="general.logged" ng-click="doRegisterFirst()">delete</button>', 
 			select : '<span style="margin-left:10px; font-size:130%;vertical-align:middle;">{{ strategy.name }}</span>',
 			load   : '<button class="btn btn-sm" ng-disabled="general.logged" ng-click="doRegisterFirst()">load</button>', 
 			auth   : '<button class="btn btn-sm pull-right oc-register" ng-disabled="general.logged||general.register" ng-click="doRegisterFirst()">sign up</button>' +
@@ -136,6 +139,12 @@ app.get ( '/', function(req, res) {
 	}
 });
 	
+// 
+var sleep = function(what, time) {
+	setTimeout ( function () {
+		what();
+	}, 4000 );
+}
 ///////////////////////////////////////////////////////////////////////////////
 // route to test if the user is logged in or not
 app.get ( '/auth', function(req, res) {
@@ -223,7 +232,10 @@ app.get ('/strategies', function(req,res) {
 app.get ('/strategies/:id', function(req,res) {
 
 	Strategy.find ( { userid: req.params.id }).then ( function(strategy) {
-		res.status( 200 ).json ( strategy );
+		// res.status( 200 ).json ( strategy );
+		sleep ( function() {
+			res.status(200).json(strategy);
+		});
 	}).catch ( function(err) {
 		res.status ( 500 ).json ( err );
 	});
@@ -239,6 +251,27 @@ app.post ('/strategies', function(req,res,next) {
 			res.status ( 500 ).json ( err );
 		} else {
 			res.status ( 200 ).json ( newStrategy );
+		}
+	});
+});
+
+///////////////////////////////////////////////////////////////////////////////
+// save (update)) 
+app.delete ( '/strategies/:name', function (req, res, next) {
+
+	Strategy.findOne ( { name: req.params.name }, (err, strategy) => {
+
+		if (err) {
+			res.status(500).send(err);
+		} else {
+
+			strategy.remove((err, strategy) => {
+				if (err) {
+					res.status(500).send(err);
+				} else {
+					res.status(200).send(strategy);
+				}
+			});
 		}
 	});
 });
@@ -265,7 +298,7 @@ app.post ( '/strategies/:name', function (req,res,next) {
 
 			strategy.save((err,strategy) => {
 				if ( err ) {
-					res.status ( 500 ).send ( err )
+					res.status ( 500 ).send ( err );
 				} else {
 					res.status ( 200 ).send ( strategy );
 				}
