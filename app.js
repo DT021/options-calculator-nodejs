@@ -144,7 +144,7 @@ app.get ( '/', function(req, res) {
 // add latency for testing purpose
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-app.use ( function (req, res, next) { setTimeout(next,3000) });
+app.use ( '/strategies/:id', function (req, res, next) { setTimeout(next,1000) });
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -230,10 +230,12 @@ app.get ('/users', function(req,res) {
 // return all data 
 app.get ('/strategies', function(req,res) {
 
-	Strategy.find().then ( function(strategies) {
-		res.status( 200 ).json ( strategies );
-	}).catch ( function(err) {
-		res.status ( 500 ).json ( err );
+	Strategy.find().sort('name').exec(function (err, strategy) {
+		if (err) {
+			res.status(500).json(err);
+		} else {
+			res.status(200).json(strategy);
+		}
 	});
 });
 
@@ -241,13 +243,12 @@ app.get ('/strategies', function(req,res) {
 // return all data associated to one user
 app.get ('/strategies/:id', function(req,res) {
 
-	Strategy.find ( { userid: req.params.id }).then ( function(strategy) {
-		// res.status( 200 ).json ( strategy );
-		// sleep ( function() {
+	Strategy.find ( { userid: req.params.id }).sort('name').exec( function(err,strategy) {
+		if ( err ) {
+			res.status(500).json(err);
+		} else {
 			res.status(200).json(strategy);
-		// });
-	}).catch ( function(err) {
-		res.status ( 500 ).json ( err );
+		}
 	});
 });
 
