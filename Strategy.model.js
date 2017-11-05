@@ -20,12 +20,13 @@ module.exports = mongoose.model ( 'Position', PositionSchema );
 var StrategySchema = new Schema ({
 
 	userid : String,								// the user unique id
-	name : { type : String, 
-			 unique : true },						// strategies name 
+	name : String,									// strategies name 
 	symbol : String,								// selected option
 	expiry : Date,									// selected expiration
 
 	positions : [PositionSchema]
 });
+
+StrategySchema.index( { userid : 1, name : 1 }, { unique: true } );
 
 module.exports = mongoose.model ( 'Strategy', StrategySchema );

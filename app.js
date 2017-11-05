@@ -109,7 +109,7 @@ app.get ( '/', function(req, res) {
 			addnew : '<button class="btn btn-sm" ng-disabled="general.logged || ! (positions.length < 4)" ng-click="doAdd(1,11500,\'call\')">add new</button>',
 			save   : '<button class="btn btn-sm" ng-disabled="general.logged || ! strategy.changed" ng-click="doSave()">save</button>', 
 			saveas : '<button class="btn btn-sm" ng-disabled="general.logged" ng-click="doOpenDialog()">save as</button>', 
-			remove : '<button class="btn btn-sm" ng-disabled="general.logged" ng-click="doDeleteStrategy()">delete</button>', 
+			remove : '<button class="btn btn-sm" ng-disabled="general.logged || strategies.length<1" ng-click="doDeleteStrategy()">delete</button>', 
 			select : '<select class="oc-dropdown oc-strat-dropdown" ng-options="strat as strat.name for strat in strategies"' +
 					 'ng-disabled="general.logged" ng-change="doUpdate()" ng-model="strategy"></select>',
 			load   : '<button class="btn btn-sm" ng-disabled="general.logged" ng-click="doLoad()">load</button>', 
@@ -144,6 +144,9 @@ app.get ( '/', function(req, res) {
 // add latency for testing purpose
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
+app.use ( '/login', function (req, res, next) { setTimeout(next,1000) });
+app.use ( '/register', function (req, res, next) { setTimeout(next,1000) });
+app.use ( '/strategies', function (req, res, next) { setTimeout(next,1000) });
 app.use ( '/strategies/:id', function (req, res, next) { setTimeout(next,1000) });
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
