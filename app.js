@@ -11,6 +11,7 @@ var passport = require('passport');
 var LocalStrategy = require('passport-local').Strategy;
 var auth = require('passport-local-authenticate');
 var mongoose = require('mongoose');
+var rc = require('./returncodes');
 
 // get models
 var Strategy = require('./Strategy.model');
@@ -23,21 +24,21 @@ var app = express();
 app.set ( 'view engine', 'ejs' );
 
 // set constants used by session
-const cookieSecret = 'asdf33g4w4hghjkuil8saef345';
-const cookieExpirationDate = new Date();
-const cookieExpirationDays = 365;
-cookieExpirationDate.setDate ( cookieExpirationDate.getDate() + cookieExpirationDays );
+const COOKIE_SECRET = 'asdf33g4w4hghjkuil8saef345';
+const COOKIE_EXPIRETION_DATE = new Date();
+const COOKIE_EXPIRETION_DAY = 365;
+COOKIE_EXPIRETION_DATE.setDate ( COOKIE_EXPIRETION_DATE.getDate() + COOKIE_EXPIRETION_DAY );
 
 // set cookie parser middleware
-app.use ( cookieParser(cookieSecret) ); 
+app.use ( cookieParser(COOKIE_SECRET) ); 
 app.use ( session({
 
-	secret: cookieSecret, 
+	secret: COOKIE_SECRET, 
 	resave: true,
 	saveUninitialized: true,
 	cookie: {
 		httpOnly: true,
-		expires: cookieExpirationDate // use expires instead of maxAge
+		expires: COOKIE_EXPIRETION_DATE // use expires instead of maxAge
 		// store: new MongoStore( { url: config.urlMongo, collection: 'sessions' } )
 	}
  }));
@@ -108,8 +109,8 @@ app.get ( '/', function(req, res) {
 		
 			addnew : '<button class="btn btn-sm" ng-disabled="general.logged || ! (positions.length < 4)" ng-click="doAdd(1,11500,\'call\')">add new</button>',
 			save   : '<button class="btn btn-sm" ng-disabled="general.logged || ! strategy.changed" ng-click="doSave()">save</button>', 
-			saveas : '<button class="btn btn-sm" ng-disabled="general.logged" ng-click="doOpenDialog()">save as</button>', 
-			remove : '<button class="btn btn-sm" ng-disabled="general.logged || strategies.length<1" ng-click="doDeleteStrategy()">delete</button>', 
+			saveas : '<button class="btn btn-sm" ng-disabled="general.logged" ng-click="doOpenSaveAsDialog()">save as</button>', 
+			remove:  '<button class="btn btn-sm" ng-disabled="general.logged || strategies.length<1" ng-click="doOpenDeleteDialog()">delete</button>', 
 			select : '<select class="oc-dropdown oc-strat-dropdown" ng-options="strat as strat.name for strat in strategies"' +
 					 'ng-disabled="general.logged" ng-change="doUpdate()" ng-model="strategy"></select>',
 			load   : '<button class="btn btn-sm" ng-disabled="general.logged" ng-click="doLoad()">load</button>', 
@@ -130,9 +131,9 @@ app.get ( '/', function(req, res) {
 			load   : '<button class="btn btn-sm" ng-disabled="general.logged" ng-click="doRegisterFirst()">load</button>', 
 			auth   : '<button class="btn btn-sm pull-right oc-register" ng-disabled="general.logged||general.register" ng-click="doRegisterFirst()">sign up</button>' +
 					 '<button class="btn btn-sm pull-right oc-login" ng-disabled="general.logged" ng-click="doLogin()">log in</button>' +
-					 '</span><input tabindex=2 class="oc-login-input pull-right" ng-enter="doLogin()" ng-disabled="general.logged||general.register" type="password" placeholder="password" ng-model="account.password"' +
+					 '</span><input tabindex=2 class="oc-login-input pull-right" ng-enter="doLogin()" ng-disabled="general.logged||general.register" name="password" type="password" placeholder="password" ng-model="account.password"' +
 							'ng-focus="account.error.login=0"/>' +
-					 '<input tabindex=1 class="oc-login-input pull-right" ng-disabled="general.logged||general.register" type="text" placeholder="email/name" ng-model="account.email"' +
+					 '<input tabindex=1 class="oc-login-input pull-right" ng-disabled="general.logged||general.register" type="text" name="username" placeholder="email/name" ng-model="account.email"' +
 							'ng-focus="account.error.login=0" >' +
 					 '</input><span class="oc-login-error pull-right" ng-show="account.error.login"><i class="oc-login-error-icon fa fa-warning"></i>{{ account.error.login }}</span>' 
 		});
@@ -144,6 +145,7 @@ app.get ( '/', function(req, res) {
 // add latency for testing purpose
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
+// app.use ( '/', function (req, res, next) { setTimeout(next, 1000) });
 app.use ( '/login', function (req, res, next) { setTimeout(next,1000) });
 app.use ( '/register', function (req, res, next) { setTimeout(next,1000) });
 app.use ( '/strategies', function (req, res, next) { setTimeout(next,1000) });
@@ -163,7 +165,7 @@ var sleep = function(what, time) {
 app.get ( '/auth', function(req, res) {
 
 	// console.log('authenticated:' + (req.isAuthenticated() ? req.user.email : 'false') );
-	res.status ( 200 ).json ( req.isAuthenticated() ? { 'user': req.user } : { 'user': null } );
+	res.status ( rc.Success.OK ).json ( req.isAuthenticated() ? { 'user': req.user } : { 'user': null } );
 });
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -262,7 +264,7 @@ app.post ('/strategies', function(req,res,next) {
 	var newStrategy = new Strategy ( req.body );
 	newStrategy.save(function (err) {
 		if (err) {
-			res.status ( 500 ).json ( err );
+			res.status ( 500 ).send ( err );
 		} else {
 			res.status ( 200 ).json ( newStrategy );
 		}
@@ -270,7 +272,7 @@ app.post ('/strategies', function(req,res,next) {
 });
 
 ///////////////////////////////////////////////////////////////////////////////
-// save (update)) 
+// delete
 app.delete ( '/strategies/:name', function (req, res, next) {
 
 	Strategy.findOne ( { name: req.params.name }, (err, strategy) => {
