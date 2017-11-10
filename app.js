@@ -82,8 +82,8 @@ passport.deserializeUser(function(id, done) {
 });
 
 //
-passport.use ( new LocalStrategy ( {usernameField: 'email'}, function(email, password, done) {
-// passport.use ( new BasicStrategy ( {usernameField: 'email'}, function(email, password, done) {
+// passport.use ( new LocalStrategy ( {usernameField: 'email'}, function(email, password, done) {
+passport.use ( new BasicStrategy ( {usernameField: 'email'}, function(email, password, done) {
 
 	User.findOne ( { email: email }, function(err, user) {
 		if ( err ) { 
@@ -174,8 +174,8 @@ app.get ( '/auth', function(req, res) {
 app.post ( '/login', function(req, res, next) {
 
 	// var user = req.body;
-	passport.authenticate('local', function(err, user, info) {
-	// passport.authenticate('basic', function(err, user, info) {
+	// passport.authenticate('local', function(err, user, info) {
+	passport.authenticate('basic', function(err, user, info) {
 
 		if ( err ) {
 			return next ( err ); // will generate a 500 error
@@ -183,7 +183,7 @@ app.post ( '/login', function(req, res, next) {
 
 		// Generate a JSON response reflecting authentication status
 		if ( ! user ) {
-			return res.status(401).send ( { success : false, message : info.message } );
+			return res.status(401).send ( { success : false, message : 'login failed' } );
 		}
 
 		req.login ( user, function(err) {
