@@ -9,6 +9,7 @@ var bodyParser = require('body-parser');
 var cookieParser = require('cookie-parser');
 var passport = require('passport');
 var LocalStrategy = require('passport-local').Strategy;
+var BasicStrategy = require('passport-http').BasicStrategy;
 var auth = require('passport-local-authenticate');
 var mongoose = require('mongoose');
 var rc = require('./returncodes');
@@ -82,6 +83,7 @@ passport.deserializeUser(function(id, done) {
 
 //
 passport.use ( new LocalStrategy ( {usernameField: 'email'}, function(email, password, done) {
+// passport.use ( new BasicStrategy ( {usernameField: 'email'}, function(email, password, done) {
 
 	User.findOne ( { email: email }, function(err, user) {
 		if ( err ) { 
@@ -146,10 +148,10 @@ app.get ( '/', function(req, res) {
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 // app.use ( '/', function (req, res, next) { setTimeout(next, 1000) });
-app.use ( '/login', function (req, res, next) { setTimeout(next,1000) });
-app.use ( '/register', function (req, res, next) { setTimeout(next,1000) });
-app.use ( '/strategies', function (req, res, next) { setTimeout(next,1000) });
-app.use ( '/strategies/:id', function (req, res, next) { setTimeout(next,1000) });
+app.use('/login', function (req, res, next) { setTimeout(next,500) });
+app.use('/register', function (req, res, next) { setTimeout(next, 500) });
+app.use('/strategies', function (req, res, next) { setTimeout(next, 500) });
+app.use('/strategies/:id', function (req, res, next) { setTimeout(next, 500) });
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -164,7 +166,6 @@ var sleep = function(what, time) {
 // route to test if the user is logged in or not
 app.get ( '/auth', function(req, res) {
 
-	// console.log('authenticated:' + (req.isAuthenticated() ? req.user.email : 'false') );
 	res.status ( rc.Success.OK ).json ( req.isAuthenticated() ? { 'user': req.user } : { 'user': null } );
 });
 
@@ -174,6 +175,7 @@ app.post ( '/login', function(req, res, next) {
 
 	// var user = req.body;
 	passport.authenticate('local', function(err, user, info) {
+	// passport.authenticate('basic', function(err, user, info) {
 
 		if ( err ) {
 			return next ( err ); // will generate a 500 error
@@ -181,7 +183,6 @@ app.post ( '/login', function(req, res, next) {
 
 		// Generate a JSON response reflecting authentication status
 		if ( ! user ) {
-			// return res.status(401).send ( { success : false, message : 'authentication failed' } );
 			return res.status(401).send ( { success : false, message : info.message } );
 		}
 
@@ -190,7 +191,6 @@ app.post ( '/login', function(req, res, next) {
 			if ( err ) {
 				return next ( err );
 			}
-			// res.redirect ( '/' );
 		});
 		
 		res.redirect ( '/' );
