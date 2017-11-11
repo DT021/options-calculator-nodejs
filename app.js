@@ -109,6 +109,8 @@ app.get ( '/', function(req, res) {
 		// this is set when user logged in successfully
 		res.render ( 'index', {
 		
+			open   : '<button class="btn btn-sm" ng-disabled="strategies.length<1" ng-hide="general.logged" ng-click="doBuy()">open all</button>' +
+					 '<button class="btn btn-sm" ng-disabled="strategies.length<1" ng-show="general.logged" ng-click="doSell()">close all</button>',
 			addnew : '<button class="btn btn-sm" ng-disabled="general.logged || ! (positions.length < 4)" ng-click="doAdd(1,11500,\'call\')">add new</button>',
 			save   : '<button class="btn btn-sm" ng-disabled="general.logged || ! strategy.changed" ng-click="doSave()">save</button>', 
 			saveas : '<button class="btn btn-sm" ng-disabled="general.logged" ng-click="doOpenSaveAsDialog()">save as</button>', 
@@ -125,6 +127,7 @@ app.get ( '/', function(req, res) {
 		// this is set when user is not logged in
 		res.render ( 'index', {
 		
+			open   : '<button class="btn btn-sm" ng-disabled="general.logged" ng-click="doRegisterFirst()">open all</button>', 
 			addnew : '<button class="btn btn-sm" ng-disabled="general.logged || ! (positions.length < 4)" ng-click="doRegisterFirst()">add new</button>',
 			save   : '<button class="btn btn-sm" ng-disabled="general.logged" ng-click="doRegisterFirst()">save</button>', 
 			saveas : '<button class="btn btn-sm" ng-disabled="general.logged" ng-click="doRegisterFirst()">save as</button>', 
