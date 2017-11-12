@@ -136,9 +136,9 @@ app.get ( '/', function(req, res) {
 			load   : '<button class="btn btn-sm" ng-disabled="general.logged" ng-click="doRegisterFirst()">load</button>', 
 			auth   : '<button class="btn btn-sm pull-right oc-register" ng-disabled="general.logged||general.register" ng-click="doRegisterFirst()">sign up</button>' +
 					 '<button class="btn btn-sm pull-right oc-login" ng-disabled="general.logged" ng-click="doLogin()">log in</button>' +
-					 '</span><input tabindex=2 class="oc-login-input pull-right" ng-enter="doLogin()" ng-disabled="general.logged||general.register" name="password" type="password" placeholder="password" ng-model="account.password"' +
+					 '</span><input tabindex=2 class="oc-login-input pull-right" ng-enter="doLogin()" ng-disabled="general.logged" name="password" type="password" placeholder="password" ng-model="account.password"' +
 							'ng-focus="account.error.login=0"/>' +
-					 '<input tabindex=1 class="oc-login-input pull-right" ng-enter="doLogin()" ng-disabled="general.logged||general.register" type="text" name="username" placeholder="email" ng-model="account.email"' +
+					 '<input tabindex=1 class="oc-login-input pull-right" ng-enter="doLogin()" ng-disabled="general.logged" type="text" name="username" placeholder="email" ng-model="account.email"' +
 							'ng-focus="account.error.login=0" >' +
 					 '</input><span class="oc-login-error pull-right" ng-show="account.error.login"><i class="oc-login-error-icon fa fa-warning"></i>{{ account.error.login }}</span>' 
 		});
