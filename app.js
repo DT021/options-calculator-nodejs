@@ -109,13 +109,14 @@ app.get ( '/', function(req, res) {
 		// this is set when user logged in successfully
 		res.render ( 'index', {
 		
-			open   : '<button class="btn btn-sm" ng-disabled="strategies.length<1" ng-hide="general.logged" ng-click="doBuy()">open all</button>' +
-					 '<button class="btn btn-sm" ng-disabled="strategies.length<1" ng-show="general.logged" ng-click="doSell()">close all</button>',
+			open   : '<button class="btn btn-sm" ng-disabled="strategies.length<1" ng-hide="general.logged" ng-click="doBuy()">open</button>' +
+					 '<button class="btn btn-sm" ng-disabled="strategies.length<1" ng-show="general.logged" ng-click="doSell()">close</button>',
 			addnew : '<button class="btn btn-sm" ng-disabled="general.logged || ! (positions.length < 4)" ng-click="doAdd(1,11500,\'call\')">add new</button>',
 			save   : '<button class="btn btn-sm" ng-disabled="general.logged || ! strategy.changed" ng-click="doSave()">save</button>', 
 			saveas : '<button class="btn btn-sm" ng-disabled="general.logged" ng-click="doOpenSaveAsDialog()">save as</button>', 
 			remove:  '<button class="btn btn-sm" ng-disabled="general.logged || strategies.length<1" ng-click="doOpenDeleteDialog()">delete</button>', 
-			select : '<select class="oc-dropdown oc-strat-dropdown" ng-options="strat as strat.name for strat in strategies"' +
+			// select : '<select class="oc-dropdown oc-strat-dropdown" ng-options="strat as strat.name for strat in strategies"' +
+			select : '<select class="oc-dropdown oc-strat-dropdown" ng-options="strat.name group by strat.symbol for strat in strategies"' +
 					 'ng-disabled="general.logged" ng-change="doUpdate()" ng-model="strategy"></select>',
 			load   : '<button class="btn btn-sm" ng-disabled="general.logged" ng-click="doLoad()">load</button>', 
 			auth   : '<button class="btn btn-sm pull-right oc-login" ng-click="doLogout()">log out</button>' +
@@ -127,12 +128,12 @@ app.get ( '/', function(req, res) {
 		// this is set when user is not logged in
 		res.render ( 'index', {
 		
-			open   : '<button class="btn btn-sm" ng-disabled="general.logged" ng-click="doRegisterFirst()">open all</button>', 
+			open   : '<button class="btn btn-sm" ng-disabled="general.logged" ng-click="doRegisterFirst()">open</button>', 
 			addnew : '<button class="btn btn-sm" ng-disabled="general.logged || ! (positions.length < 4)" ng-click="doRegisterFirst()">add new</button>',
 			save   : '<button class="btn btn-sm" ng-disabled="general.logged" ng-click="doRegisterFirst()">save</button>', 
 			saveas : '<button class="btn btn-sm" ng-disabled="general.logged" ng-click="doRegisterFirst()">save as</button>', 
 			remove : '<button class="btn btn-sm" ng-disabled="general.logged" ng-click="doRegisterFirst()">delete</button>', 
-			select : '<span style="margin-left:10px; font-size:130%;vertical-align:middle;">{{ strategy.name }}</span>',
+			select : '<span style="margin-left:10px;font-size:125%;letter-spacing:1px;vertical-align:middle;">{{ strategy.name }}</span>',
 			load   : '<button class="btn btn-sm" ng-disabled="general.logged" ng-click="doRegisterFirst()">load</button>', 
 			auth   : '<button class="btn btn-sm pull-right oc-register" ng-disabled="general.logged||general.register" ng-click="doRegisterFirst()">sign up</button>' +
 					 '<button class="btn btn-sm pull-right oc-login" ng-disabled="general.logged" ng-click="doLogin()">log in</button>' +
