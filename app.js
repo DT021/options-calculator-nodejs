@@ -117,7 +117,7 @@ app.get ( '/', function(req, res) {
 			remove:  '<button class="btn btn-sm" ng-disabled="general.logged || strategies.length<1" ng-click="doOpenDeleteDialog()">delete</button>', 
 			// select : '<select class="oc-dropdown oc-strat-dropdown" ng-options="strat as strat.name for strat in strategies"' +
 			select : '<select class="oc-dropdown oc-strat-dropdown" ng-options="strat.name group by strat.symbol for strat in strategies"' +
-					 'ng-disabled="general.logged" ng-change="doUpdate()" ng-model="strategy"></select>',
+					 'ng-disabled="general.logged" ng-change="doUpdate()" ng-model="strategy"></select><span class="oc-dropdown-arrow"></span>',
 			load   : '<button class="btn btn-sm" ng-disabled="general.logged" ng-click="doLoad()">load</button>', 
 			auth   : '<button class="btn btn-sm pull-right oc-login" ng-click="doLogout()">log out</button>' +
 					 '<span class="oc-welcome pull-right">welcome <b>' + req.user.username + '</b>, you\'re logged in</span>'
