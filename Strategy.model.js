@@ -23,8 +23,10 @@ var StrategySchema = new Schema ({
 	name : String,									// strategies name 
 	symbol : String,								// selected option
 	expiry : Date,									// selected expiration
-	// created: Date,									// 
-	// edited: Date,									// 
+	created : { type: Date,
+				default: Date.now },					// creation date
+	updated : { type: Date,
+				default: Date.now },					// update date
 
 	positions : [PositionSchema]
 });
