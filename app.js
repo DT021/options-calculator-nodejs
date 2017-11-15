@@ -113,8 +113,8 @@ app.get ( '/', function(req, res) {
 					 '<button class="btn btn-sm" ng-disabled="strategies.length<1" ng-show="general.logged" ng-click="doSell()">close</button>',
 			addnew : '<button class="btn btn-sm" ng-disabled="general.logged || ! (positions.length < 4)" ng-click="doAdd(1,11500,\'call\')">add new</button>',
 			save   : '<button class="btn btn-sm" ng-disabled="general.logged || ! strategy.changed" ng-click="doSave()">save</button>', 
-			saveas : '<button class="btn btn-sm" ng-disabled="general.logged" ng-click="doOpenSaveAsDialog()">save as</button>', 
-			remove:  '<button class="btn btn-sm" ng-disabled="general.logged || strategies.length<1" ng-click="doOpenDeleteDialog()">delete</button>', 
+			saveas : '<button class="btn btn-sm" ng-disabled="general.logged || positions.length<1" ng-click="doOpenSaveAsDialog()">save as</button>', 
+			remove : '<button class="btn btn-sm" ng-disabled="general.logged || ! strategy.name" ng-click="doOpenDeleteDialog()">delete</button>', 
 			// select : '<select class="oc-dropdown oc-strat-dropdown" ng-options="strat as strat.name for strat in strategies"' +
 			select : '<select class="oc-dropdown oc-strat-dropdown" ng-options="strat.name group by strat.symbol for strat in strategies"' +
 					 'ng-disabled="general.logged" ng-change="doUpdate()" ng-model="strategy"></select><span class="oc-dropdown-arrow"></span>',
