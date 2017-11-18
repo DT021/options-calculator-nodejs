@@ -111,7 +111,7 @@ app.get ( '/', function(req, res) {
 		
 			open   : '<button class="btn btn-sm" ng-disabled="strategies.length<1" ng-hide="general.logged" ng-click="doBuy()">open</button>' +
 					 '<button class="btn btn-sm" ng-disabled="strategies.length<1" ng-show="general.logged" ng-click="doSell()">close</button>',
-			addnew : '<button class="btn btn-sm" ng-disabled="general.logged || ! (positions.length < 4)" ng-click="doAdd(1,11500,\'call\')">add new</button>',
+			addnew : '<button class="btn btn-sm" ng-disabled="general.logged || ! (positions.length < 4)" ng-click="doOpenAddDialog()">add new</button>',
 			save   : '<button class="btn btn-sm" ng-disabled="general.logged || ! strategy.changed" ng-click="doSave()">save</button>', 
 			saveas : '<button class="btn btn-sm" ng-disabled="general.logged || positions.length<1" ng-click="doOpenSaveAsDialog()">save as</button>', 
 			remove : '<button class="btn btn-sm" ng-disabled="general.logged || ! strategy.name" ng-click="doOpenDeleteDialog()">delete</button>', 
