@@ -109,15 +109,15 @@ app.get ( '/', function(req, res) {
 		// this is set when user logged in successfully
 		res.render ( 'index', {
 		
-			open   : '<button class="btn btn-sm" ng-disabled="strategies.length<1" ng-hide="general.logged" ng-click="doBuy()">open</button>' +
-					 '<button class="btn btn-sm" ng-disabled="strategies.length<1" ng-show="general.logged" ng-click="doSell()">close</button>',
+			open   : '<button class="btn btn-sm" ng-disabled="strategies.length<1" ng-hide="general.logged" ng-click="doBuy()">buy</button>' +
+					 '<button class="btn btn-sm" ng-disabled="strategies.length<1" ng-show="general.logged" ng-click="doSell()">sell</button>',
 			addnew : '<button class="btn btn-sm" ng-disabled="general.logged || ! (positions.length < 4)" ng-click="doOpenAddDialog()">add new</button>',
 			save   : '<button class="btn btn-sm" ng-disabled="general.logged || ! strategy.changed" ng-click="doSave()">save</button>', 
 			saveas : '<button class="btn btn-sm" ng-disabled="general.logged || positions.length<1" ng-click="doOpenSaveAsDialog()">save as</button>', 
 			remove : '<button class="btn btn-sm" ng-disabled="general.logged || ! strategy.name" ng-click="doOpenDeleteDialog()">delete</button>', 
 			// select : '<select class="oc-dropdown oc-strat-dropdown" ng-options="strat as strat.name for strat in strategies"' +
-			select : '<select class="oc-dropdown oc-strat-dropdown" ng-options="strat.name group by strat.symbol for strat in strategies"' +
-					 'ng-disabled="general.logged" ng-change="doUpdate()" ng-model="strategy"></select><span class="oc-dropdown-arrow"></span>',
+			select : '<span class="oc-select-wrapper" ng-disabled="general.logged"><select class="oc-dropdown oc-strat-dropdown" ng-options="strat.name group by strat.symbol for strat in strategies"' +
+					 'ng-disabled="general.logged" ng-change="doUpdate()" ng-model="strategy"></select></span>',
 			load   : '<button class="btn btn-sm" ng-disabled="general.logged" ng-click="doLoad()">load</button>', 
 			auth   : '<button class="btn btn-sm pull-right oc-login" ng-click="doLogout()">log out</button>' +
 					 '<span class="oc-welcome pull-right">welcome <b>' + req.user.username + '</b>, you\'re logged in</span>'
@@ -128,7 +128,7 @@ app.get ( '/', function(req, res) {
 		// this is set when user is not logged in
 		res.render ( 'index', {
 		
-			open   : '<button class="btn btn-sm" ng-disabled="general.logged" ng-click="doRegisterFirst()">open</button>', 
+			open   : '<button class="btn btn-sm" ng-disabled="general.logged" ng-click="doRegisterFirst()">buy</button>', 
 			addnew : '<button class="btn btn-sm" ng-disabled="general.logged || ! (positions.length < 4)" ng-click="doRegisterFirst()">add new</button>',
 			save   : '<button class="btn btn-sm" ng-disabled="general.logged" ng-click="doRegisterFirst()">save</button>', 
 			saveas : '<button class="btn btn-sm" ng-disabled="general.logged" ng-click="doRegisterFirst()">save as</button>', 
