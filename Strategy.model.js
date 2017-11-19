@@ -9,7 +9,8 @@ var PositionSchema = new Schema ({
 
 	amt : Number,									// the position amount
 	type : String,									// the position type
-	strike : Number									// the selected strike
+	strike : Number,								// the selected strike
+	expiry: Date									// selected expiration
 });
 
 module.exports = mongoose.model ( 'Position', PositionSchema );
@@ -22,11 +23,10 @@ var StrategySchema = new Schema ({
 	userid : String,								// the user unique id
 	name : String,									// strategies name 
 	symbol : String,								// selected option
-	expiry : Date,									// selected expiration
 	created : { type: Date,
-				default: Date.now },					// creation date
+				default: Date.now },				// creation date
 	updated : { type: Date,
-				default: Date.now },					// update date
+				default: Date.now },				// update date
 
 	positions : [PositionSchema]
 });
