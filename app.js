@@ -312,7 +312,8 @@ app.post ( '/strategies/:name', function (req,res,next) {
 				strategy.positions[i] = {
 					amt: req.body.positions[i].amt,
 					type: req.body.positions[i].type,
-					strike: req.body.positions[i].strike
+					strike: req.body.positions[i].strike,
+					expiry: req.body.positions[i].expiry
 				}
 			}
 
