@@ -23,10 +23,9 @@ var UserSchema = new Schema ({
 				 required : true },     // username
 	password : { type : String,
 				 required : true },		// password
-	created : { type: Date, 
-				default: Date.now },	// creation date
-	updated : { type: Date, 
-				default: Date.now }		// update date
+
+}, {
+	timestamps: true
 });
 
 //

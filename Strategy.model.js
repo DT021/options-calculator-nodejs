@@ -23,12 +23,11 @@ var StrategySchema = new Schema ({
 	userid : String,								// the user unique id
 	name : String,									// strategies name 
 	symbol : String,								// selected option
-	created : { type: Date,
-				default: Date.now },				// creation date
-	updated : { type: Date,
-				default: Date.now },				// update date
 
 	positions : [PositionSchema]
+
+}, {
+	timestamps: true
 });
 
 StrategySchema.index ( { userid : 1, name : -1 }, { unique: true } );
