@@ -116,7 +116,7 @@ app.get ( '/', function(req, res) {
 			saveas : '<button class="btn btn-sm" ng-disabled="general.logged || positions.length<1" ng-click="doOpenSaveAsDialog()">save as</button>', 
 			remove : '<button class="btn btn-sm" ng-disabled="general.logged || ! strategy.name" ng-click="doOpenDeleteDialog()">delete</button>', 
 			// select : '<select class="oc-dropdown oc-strat-dropdown" ng-options="strat as strat.name for strat in strategies"' +
-			select : '<span class="oc-select-wrapper" ng-disabled="general.logged"><select class="oc-dropdown oc-strat-dropdown" ng-options="strat.name group by strat.symbol for strat in strategies"' +
+			select : '<span ng-class="{ \'oc-select-wrapper\': ! general.logged }" ng-disabled="general.logged"><select class="oc-dropdown oc-strat-dropdown" ng-options="strat.name group by strat.symbol for strat in strategies"' +
 					 'ng-disabled="general.logged" ng-change="doUpdate()" ng-model="strategy"></select></span>',
 			load   : '<button class="btn btn-sm" ng-disabled="general.logged" ng-click="doLoad()">load</button>', 
 			auth   : '<button class="btn btn-sm pull-right oc-login" ng-click="doLogout()">log out</button>' +
@@ -152,10 +152,10 @@ app.get ( '/', function(req, res) {
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 // app.use ( '/', function (req, res, next) { setTimeout(next, 1000) });
-app.use('/login', function (req, res, next) { setTimeout(next,500) });
-app.use('/register', function (req, res, next) { setTimeout(next, 500) });
-app.use('/strategies', function (req, res, next) { setTimeout(next, 500) });
-app.use('/strategies/:id', function (req, res, next) { setTimeout(next, 500) });
+// app.use('/login', function (req, res, next) { setTimeout(next,500) });
+// app.use('/register', function (req, res, next) { setTimeout(next, 500) });
+// app.use('/strategies', function (req, res, next) { setTimeout(next, 500) });
+// app.use('/strategies/:id', function (req, res, next) { setTimeout(next, 500) });
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
