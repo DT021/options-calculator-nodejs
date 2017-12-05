@@ -109,8 +109,8 @@ app.get ( '/', function(req, res) {
 		// this is set when user logged in successfully
 		res.render ( 'index', {
 		
-			open   : '<button class="btn btn-sm" ng-disabled="strategies.length<1" ng-hide="general.logged" ng-click="doBuy()">buy</button>' +
-					 '<button class="btn btn-sm" ng-disabled="strategies.length<1" ng-show="general.logged" ng-click="doSell()">sell</button>',
+			open   : '<button class="btn btn-sm oc-buy" ng-disabled="strategies.length<1" ng-hide="general.logged" ng-click="doBuy()">buy</button>' +
+					 '<button class="btn btn-sm oc-sell" ng-disabled="strategies.length<1" ng-show="general.logged" ng-click="doSell()">sell</button>',
 			addnew : '<button class="btn btn-sm" ng-disabled="general.logged || ! (positions.length < 4)" ng-click="doOpenAddDialog()">add new</button>',
 			save   : '<button class="btn btn-sm" ng-disabled="general.logged || ! strategy.changed" ng-click="doSave()">save</button>', 
 			saveas : '<button class="btn btn-sm" ng-disabled="general.logged || positions.length<1" ng-click="doOpenSaveAsDialog()">save as</button>', 
