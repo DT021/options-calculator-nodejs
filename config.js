@@ -5,7 +5,7 @@ var dbconfig = {
     pass: 'ig1Eeng3vu',
     host: 'localhost',
     port: 21302,
-    dbname: 'oc',
+    name: 'oc',
 };
 
 module.exports = {
@@ -15,7 +15,7 @@ module.exports = {
                                 dbconfig.pass + "@" +
                                 dbconfig.host + ":" +
                                 dbconfig.port + "/" +
-                                dbconfig.dbname,
+                                dbconfig.name,
             options: {
                 auth: { authdb: "admin" },
                 useMongoClient: true
@@ -23,7 +23,7 @@ module.exports = {
         },
         development: {
             url: "mongodb://" + dbconfig.host + "/" +
-                                dbconfig.dbname,
+                                dbconfig.name,
             options: {
                 useMongoClient: true
             }
@@ -33,7 +33,7 @@ module.exports = {
                                 dbconfig.pass + "@" +
                                 dbconfig.host + ":" +
                                 dbconfig.port + "/" +
-                                dbconfig.dbname,
+                                dbconfig.name,
             options: {
                 auth: { authdb: "admin" },
                 useMongoClient: true
