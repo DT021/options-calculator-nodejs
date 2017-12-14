@@ -13,6 +13,8 @@ var BasicStrategy = require('passport-http').BasicStrategy;
 var auth = require('passport-local-authenticate');
 var mongoose = require('mongoose');
 var rc = require('./returncodes');
+var paymill = require('paymill')('apiKey');
+var config = require('./config');
 
 // get models
 var Strategy = require('./Strategy.model');
@@ -50,9 +52,17 @@ app.use ( passport.session() );
 
 // connect database
 mongoose.Promise = global.Promise;
-mongoose.connect ( 'mongodb://localhost/oc', {
 
-	useMongoClient: true,
+console.log ( "env=" + app.settings.env );
+console.log ( "conf=" + config.db[app.settings.env] );
+
+// mongoose.connect ( 'mongodb://hph65_mongoadmin:ig1Eeng3vu@localhost:21302/db?authSource=oc', {
+// mongoose.connect ( 'mongodb://hph65_mongoadmin:ig1Eeng3vu@localhost:21302/oc', {
+mongoose.connect( "mongodb://localhost/oc", {
+// mongoose.connect ( config.db[app.settings.env], {
+
+	// auth: { authdb: "admin" },
+	useMongoClient: true
 });
 
 //Bind connection to error event (to get notification of connection errors)
@@ -86,8 +96,8 @@ passport.deserializeUser(function(id, done) {
 passport.use ( new BasicStrategy ( {usernameField: 'email'}, function(email, password, done) {
 
 	User.findOne ( { email: email }, function(err, user) {
-		if ( err ) { 
-			return done(err); 
+		if ( err ) {
+			return done(err);
 		}
 		if ( ! user ) {
 			return done(null, false, { message: 'email address does not exist' });
@@ -108,7 +118,7 @@ app.get ( '/', function(req, res) {
 
 		// this is set when user logged in successfully
 		res.render ( 'index', {
-		
+
 			open   : '<button class="btn btn-sm oc-buy" ng-disabled="strategies.length<1" ng-hide="general.logged" ng-click="doBuy()">buy</button>' +
 					 '<button class="btn btn-sm oc-sell" ng-disabled="strategies.length<1" ng-show="general.logged" ng-click="doSell()">sell</button>',
 			addnew : '<button class="btn btn-sm" ng-disabled="general.logged || ! (positions.length < 4)" ng-click="doOpenAddDialog()">add new</button>',
@@ -127,8 +137,8 @@ app.get ( '/', function(req, res) {
 
 		// this is set when user is not logged in
 		res.render ( 'index', {
-		
-			open   : '<button class="btn btn-sm" ng-disabled="general.logged" ng-click="doRegisterFirst()">buy</button>', 
+
+			open   : '<button class="btn btn-sm oc-buy" ng-disabled="general.logged" ng-click="doRegisterFirst()">buy</button>', 
 			addnew : '<button class="btn btn-sm" ng-disabled="general.logged || ! (positions.length < 4)" ng-click="doRegisterFirst()">add new</button>',
 			save   : '<button class="btn btn-sm" ng-disabled="general.logged" ng-click="doRegisterFirst()">save</button>', 
 			saveas : '<button class="btn btn-sm" ng-disabled="general.logged" ng-click="doRegisterFirst()">save as</button>', 
@@ -145,7 +155,7 @@ app.get ( '/', function(req, res) {
 		});
 	}
 });
-	
+
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 // add latency for testing purpose
@@ -196,9 +206,9 @@ app.post ( '/login', function(req, res, next) {
 				return next ( err );
 			}
 		});
-		
+
 		res.redirect ( '/' );
-		
+
 	})(req, res, next);
 });
 
