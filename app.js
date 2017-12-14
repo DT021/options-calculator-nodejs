@@ -56,10 +56,7 @@ mongoose.Promise = global.Promise;
 console.log ( "env=" + app.settings.env );
 console.log ( "conf=" + config.db[app.settings.env] );
 
-// mongoose.connect ( 'mongodb://hph65_mongoadmin:ig1Eeng3vu@localhost:21302/db?authSource=oc', {
-// mongoose.connect ( 'mongodb://hph65_mongoadmin:ig1Eeng3vu@localhost:21302/oc', {
-mongoose.connect( "mongodb://localhost/oc", {
-// mongoose.connect ( config.db[app.settings.env], {
+mongoose.connect ( config.db[app.settings.env], {
 
 	// auth: { authdb: "admin" },
 	useMongoClient: true
