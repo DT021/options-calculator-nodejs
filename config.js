@@ -1,9 +1,43 @@
 'use strict';
 
+var dbconfig = {
+    user: 'hph65_mongoadmin',
+    pass: 'ig1Eeng3vu',
+    host: 'localhost',
+    port: 21302,
+    dbname: 'oc',
+};
+
 module.exports = {
     db: {
-        production: "mongodb://hph65_mongoadmin:ig1Eeng3vu@localhost:21302/oc?authSource=admin",
-        development: "mongodb://localhost/oc",
-        test: "mongodb://hph65_mongoadmin:ig1Eeng3vu@localhost:21302/oc?authSource=admin",
+        production: {
+            url: "mongodb://" + dbconfig.user + ":" +
+                                dbconfig.pass + "@" +
+                                dbconfig.host + ":" +
+                                dbconfig.port + "/" +
+                                dbconfig.dbname,
+            options: {
+                auth: { authdb: "admin" },
+                useMongoClient: true
+            }
+        },
+        development: {
+            url: "mongodb://" + dbconfig.host + "/" +
+                                dbconfig.dbname,
+            options: {
+                useMongoClient: true
+            }
+        },
+        test: {
+            url: "mongodb://" + dbconfig.user + ":" +
+                                dbconfig.pass + "@" +
+                                dbconfig.host + ":" +
+                                dbconfig.port + "/" +
+                                dbconfig.dbname,
+            options: {
+                auth: { authdb: "admin" },
+                useMongoClient: true
+            }
+        }
     }
 };
