@@ -1,11 +1,14 @@
 'use strict';
 
+// test mongo console login
+// mongo -u hph65_mongoadmin -p ig1Eeng3vu --authenticationDatabase admin --host localhost --port 34302 oc
+
 var dbconfig = {
     user: 'hph65_mongoadmin',
     pass: 'ig1Eeng3vu',
     host: 'localhost',
     port: 21302,
-    name: 'oc',
+    name: 'oc'
 };
 
 module.exports = {
@@ -18,7 +21,7 @@ module.exports = {
                                 dbconfig.name,
             options: {
                 auth: { authdb: "admin" },
-                useMongoClient: true
+                // useMongoClient: true
             }
         },
         development: {
@@ -35,8 +38,12 @@ module.exports = {
                                 dbconfig.port + "/" +
                                 dbconfig.name,
             options: {
-                auth: { authdb: "admin" },
-                useMongoClient: true
+                auth: {
+                    // user: dbconfig.user,
+                    // pass: dbconfig.pass,
+                    authdb: "admin"
+                },
+                // useMongoClient: true
             }
         }
     }

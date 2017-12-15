@@ -61,7 +61,7 @@ console.log ( "options=" + JSON.stringify(config.db[env].options) );
 mongoose.Promise = global.Promise;
 mongoose.connect ( config.db[env].url, config.db[env].options ).then ( function(params) {
 
-    console.log ( 'coonection established');
+    console.log ( 'connection established');
 
 }).catch ( function(err) {
 
