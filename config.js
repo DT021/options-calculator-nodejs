@@ -13,6 +13,7 @@ var dbconfig = {
 
 module.exports = {
     db: {
+
         production: {
             url: "mongodb://" + dbconfig.user + ":" +
                                 dbconfig.pass + "@" +
@@ -21,9 +22,9 @@ module.exports = {
                                 dbconfig.name,
             options: {
                 auth: { authdb: "admin" },
-                // useMongoClient: true
             }
         },
+
         development: {
             url: "mongodb://" + dbconfig.host + "/" +
                                 dbconfig.name,
@@ -31,6 +32,7 @@ module.exports = {
                 useMongoClient: true
             }
         },
+
         test: {
             url: "mongodb://" + dbconfig.user + ":" +
                                 dbconfig.pass + "@" +
@@ -39,11 +41,8 @@ module.exports = {
                                 dbconfig.name,
             options: {
                 auth: {
-                    // user: dbconfig.user,
-                    // pass: dbconfig.pass,
                     authdb: "admin"
                 },
-                // useMongoClient: true
             }
         }
     }

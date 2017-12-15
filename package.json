@@ -1,0 +1,28 @@
+{
+  "name": "optionscalculator",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node ./app"
+  },
+  "dependencies": {
+    "bcrypt": "^1.0.3",
+    "body-parser": "~1.17.1",
+    "cookie-parser": "~1.4.3",
+    "debug": "~2.6.3",
+    "ejs": "^2.5.7",
+    "email-validator": "^1.1.1",
+    "express": "~4.15.2",
+    "express-session": "^1.15.6",
+    "jade": "~1.11.0",
+    "mongoose": "^4.11.14",
+    "mongoose-mongodb-errors": "0.0.2",
+    "morgan": "~1.8.1",
+    "passport": "^0.4.0",
+    "passport-http": "^0.3.0",
+    "passport-local": "^1.0.0",
+    "passport-local-authenticate": "^1.2.0",
+    "paymill": "^0.2.0",
+    "serve-favicon": "~2.4.2"
+  }
+}
