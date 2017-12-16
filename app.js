@@ -367,7 +367,7 @@ app.use ( function(err, req, res, next) {
 ///////////////////////////////////////////////////////////////////////////////
 // setup server
 var server = http.createServer ( app );
-server.listen ( 3000 );
+server.listen ( config.server.port );
 
 ///////////////////////////////////////////////////////////////////////////////
 // Event listener for HTTP server "error" event.
@@ -402,7 +402,7 @@ server.on ( 'listening', function() {
     var bind = typeof addr === 'string'
         ? 'pipe ' + addr
         : 'port ' + addr.port;
-    debug('Listening on ' + bind);
+    console.log ('listening on ' + bind );
 });
 
 module.exports = app;

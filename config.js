@@ -12,6 +12,13 @@ var dbconfig = {
 };
 
 module.exports = {
+
+    // node server settings
+    server: {
+        port: 3000
+    },
+
+    // mongodb settings
     db: {
 
         production: {
