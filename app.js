@@ -29,6 +29,7 @@ var app = express();
 
 // set view engine to EJS
 app.set ( 'view engine', 'ejs' );
+app.set ( 'views', config.server.docroot );
 
 // set constants used by session
 const COOKIE_SECRET = 'asdf33g4w4hghjkuil8saef345';
@@ -346,7 +347,7 @@ app.post ( '/strategies/:name', function (req,res,next) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // set static page route
-app.use ( express.static(path.join(__dirname, 'public')) );
+app.use ( express.static(path.join(__dirname, '../html')) );
 
 // catch 404 and forward to error handler
 app.use ( function(req, res, next) {
@@ -366,8 +367,11 @@ app.use ( function(err, req, res, next) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // setup server
+// var port = normalizePort ( process.env.PORT || config.server.port );
+var port = config.server.port;
+app.set ( 'port', port );
 var server = http.createServer ( app );
-server.listen ( config.server.port );
+server.listen ( port );
 
 ///////////////////////////////////////////////////////////////////////////////
 // Event listener for HTTP server "error" event.
@@ -404,5 +408,18 @@ server.on ( 'listening', function() {
         : 'port ' + addr.port;
     console.log ('listening on ' + bind );
 });
+
+///////////////////////////////////////////////////////////////////////////////
+//
+function normalizePort ( val ) {
+    var port = parseInt ( val, 10 );
+    if ( isNaN(port)) {
+        return val;
+    }
+    if (port >= 0) {
+        return port;
+    }
+    return false;
+}
 
 module.exports = app;

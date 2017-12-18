@@ -15,7 +15,8 @@ module.exports = {
 
     // node server settings
     server: {
-        port: 3000
+        port: 3000,
+        docroot: '../html'
     },
 
     // mongodb settings
