@@ -19,6 +19,7 @@ var config = require('./os-config');
 var debug = require('debug')('optionscalculator:server');
 var http = require('http');
 var mailer = require('nodemailer');
+var random = require('randomstring');
 
 // get models
 var Strategy = require('./Strategy.model');
@@ -272,6 +273,8 @@ app.post ( '/logout', function(req, res) {
 app.post ('/register', function(req,res,next) {
 
     var newUser = new User ( req.body );
+    newUser.secretToken = random.generate();
+    newUser.active = false;
     newUser.save(function (err) {
         if ( err ) {
             res.status( 500 ).json ( err );
