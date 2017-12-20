@@ -1,4 +1,3 @@
-
 'use strict';
 
 var express = require('express');
@@ -16,9 +15,10 @@ var auth = require('passport-local-authenticate');
 var mongoose = require('mongoose');
 var rc = require('./returncodes');
 var paymill = require('paymill')('apiKey');
-var config = require('./config');
+var config = require('./os-config');
 var debug = require('debug')('optionscalculator:server');
 var http = require('http');
+var mailer = require('nodemailer');
 
 // get models
 var Strategy = require('./Strategy.model');
@@ -63,14 +63,54 @@ console.log ( "options=" + JSON.stringify(config.db[env].options) );
 // connect database
 mongoose.Promise = global.Promise;
 mongoose.connect ( config.db[env].url, config.db[env].options ).then ( function(params) {
-
     console.log ( 'connection established');
-
 }).catch ( function(err) {
-
     console.log ( err );
-
 });
+
+// create account verification mailer
+// Generate test SMTP service account from ethereal.email
+// Only needed if you don't have a real mail account for testing
+var mailTransporter = null;
+mailer.createTestAccount((err, account) => {
+
+    // create reusable transporter object using the default SMTP transport
+    mailTransporter = mailer.createTransport({
+        host: 'smtp.ethereal.email',
+        port: 587,
+        secure: false, // true for 465, false for other ports
+        auth: {
+            user: account.user, // generated ethereal user
+            pass: account.pass  // generated ethereal password
+        }
+    });
+    console.log ( 'Account: %s %s', account.user, account.pass );
+});
+
+function sendMail(mail) {
+    // send mail with defined transport object
+    mailTransporter.sendMail(mail, (error, info) => {
+        if (error) {
+            return console.log(error);
+        } else {
+            console.log('Message sent: %s', info.messageId);
+            // Preview only available when sending through an Ethereal account
+            console.log('Preview URL: %s', mailer.getTestMessageUrl(info));
+            // Message sent: <b658f8ca-6296-ccf4-8306-87d57a0b4321@blurdybloop.com>
+            // Preview URL: https://ethereal.email/message/WaQKMgKddxQDoou...
+        }
+    });
+}
+
+function createMail(receiver,name) {
+    return {
+        from: '"IronCondorTrader" <info@ironcodortrader.com>', // sender address
+        to: receiver, // list of receivers
+        subject: 'email verification', // Subject line
+        text: 'Hello ' + name + ',', // plain text body
+        html: '<b>please click the link below in order to verifiy your email address.</b>' // html body
+    };
+}
 
 //Bind connection to error event (to get notification of connection errors)
 // mongoose.connection.on ( 'error', console.error.bind(console, 'MongoDB connection error:') );
@@ -236,6 +276,7 @@ app.post ('/register', function(req,res,next) {
         if ( err ) {
             res.status( 500 ).json ( err );
         } else {
+            sendMail ( createMail(newUser.email,newUser.name) );
             res.status ( 201 ).json ( newUser );
         }
     });

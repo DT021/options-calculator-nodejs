@@ -28,7 +28,7 @@ module.exports = {
 		PRECONDITION_FAILED : 412,
 		UNSUPPORTED_MEDIA_TYPE : 415
 	},
-	
+
 	Server : {
 
 		INTERNAL_ERROR : 500,
