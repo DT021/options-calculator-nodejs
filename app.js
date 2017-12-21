@@ -204,6 +204,8 @@ app.post ( '/login', function(req, res, next) {
         // Generate a JSON response reflecting authentication status
         if ( ! user ) {
             return res.status(401).send ( { success : false, message : 'login failed' } );
+        } else if ( user.active === false ) {
+            return res.status(401).send({ success: false, message: 'not verified' });
         }
 
         req.login ( user, function(err) {
@@ -249,15 +251,6 @@ app.post ('/register', function(req,res,next) {
 //
 app.get('/confirm/:token', function (req, res, next) {
 
-    // User.findOneAndUpdate({ secretToken: req.params.token },
-    //                           { active: true, secretToken: '' },
-    //                           { overwrite: true }, (err, user) => {
-    //     if (err) {
-    //         res.status(500).send(err);
-    //     } else {
-    //         res.status(200).send('OK');
-    //     }
-    // });
     User.findOne({ secretToken: req.params.token }, (err, user) => {
 
         if (err) {
@@ -275,10 +268,9 @@ app.get('/confirm/:token', function (req, res, next) {
                 }
             });
         } else {
-            res.status(404).send('user with such a token does not exist');
+            res.status(404).send('a user with such a token does not exist');
         }
     });
-
 });
 
 ///////////////////////////////////////////////////////////////////////////////
