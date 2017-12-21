@@ -20,6 +20,7 @@ var debug = require('debug')('optionscalculator:server');
 var http = require('http');
 var mailer = require('nodemailer');
 var random = require('randomstring');
+var mail = require('./oc-mail');
 
 // get models
 var Strategy = require('./Strategy.model');
@@ -68,50 +69,6 @@ mongoose.connect ( config.db[env].url, config.db[env].options ).then ( function(
 }).catch ( function(err) {
     console.log ( err );
 });
-
-// create account verification mailer
-// Generate test SMTP service account from ethereal.email
-// Only needed if you don't have a real mail account for testing
-var mailTransporter = null;
-mailer.createTestAccount((err, account) => {
-
-    // create reusable transporter object using the default SMTP transport
-    mailTransporter = mailer.createTransport({
-        host: 'smtp.ethereal.email',
-        port: 587,
-        secure: false, // true for 465, false for other ports
-        auth: {
-            user: account.user, // generated ethereal user
-            pass: account.pass  // generated ethereal password
-        }
-    });
-    console.log ( 'Account: %s %s', account.user, account.pass );
-});
-
-function sendMail(mail) {
-    // send mail with defined transport object
-    mailTransporter.sendMail(mail, (error, info) => {
-        if (error) {
-            return console.log(error);
-        } else {
-            console.log('Message sent: %s', info.messageId);
-            // Preview only available when sending through an Ethereal account
-            console.log('Preview URL: %s', mailer.getTestMessageUrl(info));
-            // Message sent: <b658f8ca-6296-ccf4-8306-87d57a0b4321@blurdybloop.com>
-            // Preview URL: https://ethereal.email/message/WaQKMgKddxQDoou...
-        }
-    });
-}
-
-function createMail(receiver,name) {
-    return {
-        from: '"IronCondorTrader" <info@ironcodortrader.com>', // sender address
-        to: receiver, // list of receivers
-        subject: 'email verification', // Subject line
-        text: 'Hello ' + name + ',', // plain text body
-        html: '<b>please click the link below in order to verifiy your email address.</b>' // html body
-    };
-}
 
 //Bind connection to error event (to get notification of connection errors)
 // mongoose.connection.on ( 'error', console.error.bind(console, 'MongoDB connection error:') );
@@ -224,6 +181,7 @@ var sleep = function(what, time) {
         what();
     }, 4000 );
 };
+
 ///////////////////////////////////////////////////////////////////////////////
 // route to test if the user is logged in or not
 app.get ( '/auth', function(req, res) {
@@ -279,10 +237,48 @@ app.post ('/register', function(req,res,next) {
         if ( err ) {
             res.status( 500 ).json ( err );
         } else {
-            sendMail ( createMail(newUser.email,newUser.name) );
+            mail.sendMail ( mail.createMail(newUser.email,
+                                            newUser.username,
+                                            newUser.secretToken) );
             res.status ( 201 ).json ( newUser );
         }
     });
+});
+
+///////////////////////////////////////////////////////////////////////////////
+//
+app.get('/confirm/:token', function (req, res, next) {
+
+    // User.findOneAndUpdate({ secretToken: req.params.token },
+    //                           { active: true, secretToken: '' },
+    //                           { overwrite: true }, (err, user) => {
+    //     if (err) {
+    //         res.status(500).send(err);
+    //     } else {
+    //         res.status(200).send('OK');
+    //     }
+    // });
+    User.findOne({ secretToken: req.params.token }, (err, user) => {
+
+        if (err) {
+            res.status(500).send(err);
+        } else if ( user ) {
+
+            user.active = true;
+            user.secretToken = '';
+
+            user.save((err, user) => {
+                if (err) {
+                    res.status(500).send(err);
+                } else {
+                    res.status(200).send('OK');
+                }
+            });
+        } else {
+            res.status(404).send('user with such a token does not exist');
+        }
+    });
+
 });
 
 ///////////////////////////////////////////////////////////////////////////////
