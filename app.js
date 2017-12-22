@@ -205,9 +205,13 @@ app.post ( '/login', function(req, res, next) {
 
         // Generate a JSON response reflecting authentication status
         if ( ! user ) {
+
+            // user does not exist
             return res.status(401).send ( { success : false, message : 'login failed !' } );
         } else if ( user.active === false ) {
-            return res.status(403).send({ success: false, message: 'not yet verified !' });
+
+            // user is registered but has not yet confirmed his account
+            return res.status(403).send({ success: false, message: 'not yet confirmed !' });
         }
 
         req.login ( user, function(err) {
@@ -231,7 +235,7 @@ app.post ( '/logout', function(req, res) {
 });
 
 ///////////////////////////////////////////////////////////////////////////////
-//
+// add a user to the database and send an confirmation mail
 app.post ('/register', function(req,res,next) {
 
     var newUser = new User ( req.body );
@@ -250,7 +254,7 @@ app.post ('/register', function(req,res,next) {
 });
 
 ///////////////////////////////////////////////////////////////////////////////
-//
+// confirm an account
 app.get('/confirm/:token', function (req, res, next) {
 
     User.findOne({ secretToken: req.params.token }, (err, user) => {

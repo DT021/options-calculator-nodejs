@@ -41,12 +41,15 @@ module.exports.sendMail = function sendMail(mail) {
 ///////////////////////////////////////////////////////////////////////////////
 // route to log out
 module.exports.createMail = function createMail(receiver,name,token) {
+
+    var link = config.server.host + ":" + config.server.port + "/confirm/" + token;
+
     return {
-        from: '"IronCondorTrader" <info@ironcondortrader.com>', // sender address
-        subject: 'Please verify your IronCondorTrader account', // Subject line
-        to: receiver, // list of receivers
+        from: '"IronCondorTrader" <info@ironcondortrader.com>',
+        subject: 'Please verify your IronCondorTrader account',
+        to: receiver,
         html: 'Hello ' + name + ',<br><br>' +
-            'please click the link below in order to verify your email address.<br><br>' +
-            '<a href="http://localhost:3000/confirm/' + token + '">click here</a>' // html body
+              'please click the link below in order to confirm your email address.<br><br>' +
+              '<a href="' + link + '">' + link + '</a>'
     };
 }
