@@ -48,8 +48,10 @@ module.exports.createMail = function createMail(receiver,name,token) {
         from: '"IronCondorTrader" <info@ironcondortrader.com>',
         subject: 'Please verify your IronCondorTrader account',
         to: receiver,
-        html: 'Hello ' + name + ',<br><br>' +
-              'please click the link below in order to confirm your email address.<br><br>' +
-              '<a href="' + link + '">' + link + '</a>'
+        html: '<div style="font-size:1.2em;">' +
+              '<p>Hello ' + name + ',</p>' +
+              '<p>please click the link below in order to confirm your email address.</p>' +
+              '<a href="' + link + '">' + link + '</a>' +
+              '</div>'
     };
 }
