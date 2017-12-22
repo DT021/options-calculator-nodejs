@@ -207,7 +207,7 @@ app.post ( '/login', function(req, res, next) {
         if ( ! user ) {
             return res.status(401).send ( { success : false, message : 'login failed !' } );
         } else if ( user.active === false ) {
-            return res.status(401).send({ success: false, message: 'not yet verified !' });
+            return res.status(403).send({ success: false, message: 'not yet verified !' });
         }
 
         req.login ( user, function(err) {
