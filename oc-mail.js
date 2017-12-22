@@ -47,6 +47,6 @@ module.exports.createMail = function createMail(receiver,name,token) {
         to: receiver, // list of receivers
         html: 'Hello ' + name + ',<br><br>' +
             'please click the link below in order to verify your email address.<br><br>' +
-            '<a href="localhost:3000/confirm/' + token + '">click here</a>' // html body
+            '<a href="http://localhost:3000/confirm/' + token + '">click here</a>' // html body
     };
 }
