@@ -130,7 +130,6 @@ app.get ( '/', function(req, res) {
             save   : '<button class="btn btn-sm" ng-disabled="general.logged || ! strategy.changed" ng-click="doSave()">save</button>',
             saveas : '<button class="btn btn-sm" ng-disabled="general.logged || positions.length<1" ng-click="doOpenSaveAsDialog()">save as</button>',
             remove : '<button class="btn btn-sm" ng-disabled="general.logged || ! strategy.name" ng-click="doOpenDeleteDialog()">delete</button>',
-            // select : '<select class="oc-dropdown oc-strat-dropdown" ng-options="strat as strat.name for strat in strategies"' +
             select : '<span ng-class="{ \'oc-select-wrapper\': ! general.logged }" ng-disabled="general.logged"><select class="oc-dropdown oc-strat-dropdown" ng-options="strat.name group by strat.symbol for strat in strategies"' +
                      'ng-disabled="general.logged" ng-change="doUpdate()" ng-model="strategy"></select></span>',
             load   : '<button class="btn btn-sm" ng-disabled="general.logged" ng-click="doLoad()">load</button>',
@@ -151,9 +150,7 @@ app.get ( '/', function(req, res) {
             select : '<span style="margin-left:10px;font-size:125%;letter-spacing:1px;vertical-align:middle;">{{ strategy.name }}</span>',
             load   : '<button class="btn btn-sm" ng-disabled="general.logged" ng-click="doRegisterFirst()">load</button>',
             auth   : '<button class="btn btn-sm pull-right oc-register" ng-disabled="general.logged||general.register" ng-click="doRegisterFirst()">sign up</button>' +
-                     '<button class="btn btn-sm pull-right oc-login" ng-disabled="general.logged" ng-click="doLogin()">log in</button>' +
-                    //  '</span><input tabindex=2 ng-style="{outline: account.error.login && \'5px solid red!important\'||\'none!important\'}" class="oc-login-input pull-right" ng-enter="doLogin()" ng-disabled="general.logged" name="password" type="password" placeholder="password" ng-model="account.password"' +
-                    //  '<input tabindex=2 class="oc-login-input pull-right" ng-enter="doLogin()" ng-disabled="general.logged" name="password" type="password" placeholder="password" ng-model="account.password"' +
+                     '<button class="btn btn-sm pull-right oc-login" ng-disabled="general.logged" ng-click="doLogin()">sign in</button>' +
                      '<input tabindex=2 class="oc-login-input pull-right" ng-enter="doLogin()" ng-disabled="general.logged" name="password" type="password" placeholder="password" ng-model="account.password"' +
                             'ng-focus="account.error.login=0"/>' +
                      '<input tabindex=1 class="oc-login-input pull-right" ng-enter="doLogin()" ng-disabled="general.logged" type="text" name="username" placeholder="email" ng-model="account.email"' +
@@ -270,11 +267,11 @@ app.get('/confirm/:token', function (req, res, next) {
                 if (err) {
                     res.status(500).send(err);
                 } else {
-                    res.status(200).send('OK');
+                    res.status(200).send('Thank you, your account is confirmed and you can now login.');
                 }
             });
         } else {
-            res.status(404).send('a user with such a token does not exist');
+            res.status(404).send('A user with such a token does not exist or this account is already confirmed');
         }
     });
 });
