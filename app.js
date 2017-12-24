@@ -13,18 +13,29 @@ var LocalStrategy = require('passport-local').Strategy;
 var BasicStrategy = require('passport-http').BasicStrategy;
 var auth = require('passport-local-authenticate');
 var mongoose = require('mongoose');
-var rc = require('./returncodes');
 var paymill = require('paymill')('apiKey');
-var config = require('./os-config');
 var debug = require('debug')('optionscalculator:server');
 var http = require('http');
 var mailer = require('nodemailer');
 var random = require('randomstring');
+
+// own stuff
+var rc = require('./oc-return-codes');
+var config = require('./os-config');
 var mail = require('./oc-mail');
 
 // get models
 var Strategy = require('./Strategy.model');
 var User = require('./User.model');
+
+// var log4js = require('log4js');
+// init log4js
+// log4js.configure ( {
+//     appenders: { server: { type: 'file', filename: 'server.log' } },
+//     categories: { default: { appenders: ['server'], level: 'all' } }
+// });
+// var logger = log4js.getLogger ( 'server' );
+// logger.debug ( 'started' );
 
 // get access to express
 var app = express();
@@ -78,10 +89,12 @@ app.use ( bodyParser.json() );
 app.use ( bodyParser.urlencoded({ extended: true }) );
 
 // create a write stream (in append mode)
-var accessLogStream = fs.createWriteStream ( path.join(__dirname, 'access.log'), {flags: 'a'} );
+// var accessLogStream = fs.createWriteStream ( path.join(__dirname, 'access.log'), {flags: 'a'} );
+// var serverLogStream = fs.createWriteStream ( path.join(__dirname, 'server.log'), {flags: 'a'} );
 
 // setup the logger
-app.use ( morgan ( 'dev', {stream: accessLogStream}) );
+// app.use ( morgan('dev',{stream: accessLogStream}) );
+// app.use(morgan('common', { skip: function (req, res) { return res.statusCode < 400 }, stream: accessLogStream}));
 
 //
 passport.serializeUser(function(user, done) {
@@ -204,11 +217,18 @@ app.post ( '/login', function(req, res, next) {
         if ( ! user ) {
 
             // user does not exist
-            return res.status(401).send ( { success : false, message : 'login failed !' } );
+            return res.status ( rc.Client.NOT_FOUND ).send ( {
+                success : false,
+                message : 'login failed !'
+            });
         } else if ( user.active === false ) {
 
             // user is registered but has not yet confirmed his account
-            return res.status(403).send({ success: false, message: 'not yet confirmed !' });
+            return res.status ( rc.Client.UNAUTHORIZED ).send ( {
+                success : false,
+                message : 'not yet confirmed !',
+                user    : user
+            });
         }
 
         req.login ( user, function(err) {
@@ -240,24 +260,24 @@ app.post ('/register', function(req,res,next) {
     newUser.active = false;
     newUser.save(function (err) {
         if ( err ) {
-            res.status( 500 ).json ( err );
+            res.status( rc.Server.INTERNAL_ERROR ).json ( err );
         } else {
             mail.sendMail ( mail.createMail(newUser.email,
                                             newUser.username,
                                             newUser.secretToken) );
-            res.status ( 201 ).json ( newUser );
+            res.status ( rc.Success.CREATED ).json ( newUser );
         }
     });
 });
 
 ///////////////////////////////////////////////////////////////////////////////
 // confirm an account
-app.get('/confirm/:token', function (req, res, next) {
+app.get ( '/confirm/:token', function (req, res, next) {
 
     User.findOne({ secretToken: req.params.token }, (err, user) => {
 
         if (err) {
-            res.status(500).send(err);
+            res.status ( rc.Server.INTERNAL_ERROR ).send(err);
         } else if ( user ) {
 
             user.active = true;
@@ -265,13 +285,32 @@ app.get('/confirm/:token', function (req, res, next) {
 
             user.save((err, user) => {
                 if (err) {
-                    res.status(500).send(err);
+                    res.status ( rc.Server.INTERNAL_ERROR ).send(err);
                 } else {
-                    res.status(200).send('Thank you, your account is confirmed and you can now login.');
+                    res.status ( rc.Success.OK ).send('Thank you, your account is confirmed and you can now login.');
                 }
             });
         } else {
-            res.status(404).send('A user with such a token does not exist or this account is already confirmed');
+            res.status (rc.Client.NOT_FOUND ).send('A user with such a token does not exist or this account is already confirmed');
+        }
+    });
+});
+
+///////////////////////////////////////////////////////////////////////////////
+// re-send confirmation mail
+app.post ( '/resend/:userid', function (req, res, next) {
+
+    User.findOne({ email: req.params.userid }, (err, user) => {
+
+        if (err) {
+            res.status ( rc.Server.INTERNAL_ERROR ).send(err);
+        } else if (user) {
+            mail.sendMail(mail.createMail(user.email,
+                                          user.username,
+                                          user.secretToken));
+            res.status ( rc.Success.OK ).send('OK');
+        } else {
+            res.status ( rc.Client.NOT_FOUND ).send ( 'user doesn\'t exist' );
         }
     });
 });
@@ -281,9 +320,9 @@ app.get('/confirm/:token', function (req, res, next) {
 app.get ('/users', function(req,res) {
 
     User.find().then ( function(users) {
-        res.status( 200 ).json ( users );
+        res.status ( rc.Success.OK ).json ( users );
     }).catch ( function(err) {
-        res.status ( 500 ).json ( err );
+        res.status ( rc.Server.INTERNAL_ERROR ).json ( err );
     });
 });
 
@@ -293,9 +332,9 @@ app.get ('/strategies', function(req,res) {
 
     Strategy.find().sort('name').exec(function (err, strategy) {
         if (err) {
-            res.status(500).json(err);
+            res.status ( rc.Server.INTERNAL_ERROR ).json(err);
         } else {
-            res.status(200).json(strategy);
+            res.status ( rc.Success.OK ).json(strategy);
         }
     });
 });
@@ -306,9 +345,9 @@ app.get ('/strategies/:id', function(req,res) {
 
     Strategy.find ( { userid: req.params.id }).sort('name').exec( function(err,strategy) {
         if ( err ) {
-            res.status(500).json(err);
+            res.status ( rc.Server.INTERNAL_ERROR ).json(err);
         } else {
-            res.status(200).json(strategy);
+            res.status ( rc.Success.OK ).json(strategy);
         }
     });
 });
@@ -320,9 +359,9 @@ app.post ('/strategies', function(req,res,next) {
     var newStrategy = new Strategy ( req.body );
     newStrategy.save(function (err) {
         if (err) {
-            res.status ( 500 ).send ( err );
+            res.status ( rc.Server.INTERNAL_ERROR ).send ( err );
         } else {
-            res.status ( 200 ).json ( newStrategy );
+            res.status ( rc.Success.OK ).json ( newStrategy );
         }
     });
 });
@@ -334,14 +373,14 @@ app.delete ( '/strategies/:name', function (req, res, next) {
     Strategy.findOne ( { name: req.params.name }, (err, strategy) => {
 
         if (err) {
-            res.status(500).send(err);
+            res.status ( rc.Server.INTERNAL_ERROR ).send(err);
         } else {
 
             strategy.remove((err, strategy) => {
                 if (err) {
-                    res.status(500).send(err);
+                    res.status ( rc.Server.INTERNAL_ERROR ).send(err);
                 } else {
-                    res.status(200).send(strategy);
+                    res.status ( rc.Server.INTERNAL_ERROR ).send(strategy);
                 }
             });
         }
@@ -355,7 +394,7 @@ app.post ( '/strategies/:name', function (req,res,next) {
     Strategy.findOne ( { name : req.params.name}, (err,strategy) => {
 
         if ( err ) {
-            res.status ( 500 ).send ( err );
+            res.status ( rc.Server.INTERNAL_ERROR ).send ( err );
         } else {
 
             strategy.symbol = req.body.symbol;
@@ -371,14 +410,18 @@ app.post ( '/strategies/:name', function (req,res,next) {
 
             strategy.save((err,strategy) => {
                 if ( err ) {
-                    res.status ( 500 ).send ( err );
+                    res.status ( rc.Server.INTERNAL_ERROR ).send ( err );
                 } else {
-                    res.status ( 200 ).send ( strategy );
+                    res.status ( rc.Success.OK ).send ( strategy );
                 }
             });
         }
     });
 });
+
+///////////////////////////////////////////////////////////////////////////////
+// simple route loging - prints all defined routes
+require ( 'express-route-log' )(app);
 
 ///////////////////////////////////////////////////////////////////////////////
 // set static page route
@@ -387,7 +430,7 @@ app.use ( express.static(path.join(__dirname, '../html')) );
 // catch 404 and forward to error handler
 app.use ( function(req, res, next) {
     var err = new Error('Not Found');
-    err.status = 404;
+    err.status = rc.Client.NOT_FOUND;
     next ( err );
 });
 
@@ -397,7 +440,7 @@ app.use ( function(err, req, res, next) {
     // set locals, only providing error in development
     res.locals.message = err.message;
     res.locals.error = req.app.get('env') === 'development' ? err : {};
-    res.status(err.statusCode || 500).json ( err );
+    res.status ( err.statusCode || rc.Server.INTERNAL_ERROR ).json ( err );
 });
 
 ///////////////////////////////////////////////////////////////////////////////
