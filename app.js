@@ -271,10 +271,10 @@ app.post ('/register', function(req,res,next) {
 });
 
 ///////////////////////////////////////////////////////////////////////////////
-// confirm an account
+// confirm an account via email address
 app.get ( '/confirm/:token', function (req, res, next) {
 
-    User.findOne({ secretToken: req.params.token }, (err, user) => {
+    User.findOne ( { secretToken: req.params.token }, (err, user) => {
 
         if (err) {
             res.status ( rc.Server.INTERNAL_ERROR ).send(err);
@@ -287,11 +287,11 @@ app.get ( '/confirm/:token', function (req, res, next) {
                 if (err) {
                     res.status ( rc.Server.INTERNAL_ERROR ).send(err);
                 } else {
-                    res.status ( rc.Success.OK ).send('Thank you, your account is confirmed and you can now login.');
+                    res.status ( rc.Success.OK ).send ( 'Thank you, your account is confirmed and you can now login.' );
                 }
             });
         } else {
-            res.status (rc.Client.NOT_FOUND ).send('A user with such a token does not exist or this account is already confirmed');
+            res.status (rc.Client.NOT_FOUND ).send ( 'This token does\'t exist or the associated account is already confirmed.' );
         }
     });
 });
@@ -308,9 +308,9 @@ app.post ( '/resend/:userid', function (req, res, next) {
             mail.sendMail(mail.createMail(user.email,
                                           user.username,
                                           user.secretToken));
-            res.status ( rc.Success.OK ).send('OK');
+            res.status ( rc.Success.OK ).send ( 'OK' );
         } else {
-            res.status ( rc.Client.NOT_FOUND ).send ( 'user doesn\'t exist' );
+            res.status ( rc.Client.NOT_FOUND ).send ( user.email );
         }
     });
 });
