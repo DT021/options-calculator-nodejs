@@ -74,9 +74,11 @@ console.log ( "conf=" + config.db[env].url );
 console.log ( "options=" + JSON.stringify(config.db[env].options) );
 
 // connect database
+var dbConnected = false;
 mongoose.Promise = global.Promise;
 mongoose.connect ( config.db[env].url, config.db[env].options ).then ( function(params) {
     console.log ( 'connection established');
+    dbConnected = true;
 }).catch ( function(err) {
     console.log ( err );
 });
@@ -137,8 +139,8 @@ app.get ( '/', function(req, res) {
         // this is set when user logged in successfully
         res.render ( 'index', {
 
-            open   : '<button class="btn btn-sm oc-buy" ng-disabled="strategies.length<1" ng-hide="general.logged" ng-click="doBuy()">buy</button>' +
-                     '<button class="btn btn-sm oc-sell" ng-disabled="strategies.length<1" ng-show="general.logged" ng-click="doSell()">sell</button>',
+            open   : '<button class="btn btn-sm oc-buy" ng-disabled="strategies.length<1" ng-hide="general.logged" ng-click="doBuy()">open positions</button>' +
+                     '<button class="btn btn-sm oc-sell" ng-disabled="strategies.length<1" ng-show="general.logged" ng-click="doSell()">close positions</button>',
             addnew : '<button class="btn btn-sm" ng-disabled="general.logged || ! (positions.length < 4)" ng-click="doOpenAddDialog()">add new</button>',
             save   : '<button class="btn btn-sm" ng-disabled="general.logged || ! strategy.changed" ng-click="doSave()">save</button>',
             saveas : '<button class="btn btn-sm" ng-disabled="general.logged || positions.length<1" ng-click="doOpenSaveAsDialog()">save as</button>',
@@ -155,7 +157,7 @@ app.get ( '/', function(req, res) {
         // this is set when user is not logged in
         res.render ( 'index', {
 
-            open   : '<button class="btn btn-sm oc-buy" ng-disabled="general.logged" ng-click="doRegisterFirst()">buy</button>',
+            open   : '<button class="btn btn-sm oc-buy" ng-disabled="general.logged" ng-click="doRegisterFirst()">open positions</button>',
             addnew : '<button class="btn btn-sm" ng-disabled="general.logged || ! (positions.length < 4)" ng-click="doRegisterFirst()">add new</button>',
             save   : '<button class="btn btn-sm" ng-disabled="general.logged" ng-click="doRegisterFirst()">save</button>',
             saveas : '<button class="btn btn-sm" ng-disabled="general.logged" ng-click="doRegisterFirst()">save as</button>',
@@ -204,6 +206,15 @@ app.get ( '/auth', function(req, res) {
 ///////////////////////////////////////////////////////////////////////////////
 // route to log in
 app.post ( '/login', function(req, res, next) {
+
+    if ( dbConnected === false ) {
+        // user does not exist
+        return res.status ( rc.Server.INTERNAL_ERROR ).send ( {
+            success: false,
+            message : "failed !",
+            error: "no database connection"
+        } );
+    }
 
     // var user = req.body;
     // passport.authenticate('local', function(err, user, info) {
@@ -254,6 +265,15 @@ app.post ( '/logout', function(req, res) {
 ///////////////////////////////////////////////////////////////////////////////
 // add a user to the database and send an confirmation mail
 app.post ('/register', function(req,res,next) {
+
+    if ( dbConnected === false ) {
+        // user does not exist
+        return res.status ( rc.Server.INTERNAL_ERROR ).send ({
+            success: false,
+            message: "failed !",
+            error: "no database connection"
+        });
+    }
 
     var newUser = new User ( req.body );
     newUser.secretToken = random.generate();
