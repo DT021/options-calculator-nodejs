@@ -139,15 +139,14 @@ app.get ( '/', function(req, res) {
         // this is set when user logged in successfully
         res.render ( 'index', {
 
-            open   : '<button class="btn btn-sm oc-buy" ng-disabled="strategies.length<1" ng-hide="general.logged" ng-click="doBuy()">open positions</button>' +
-                     '<button class="btn btn-sm oc-sell" ng-disabled="strategies.length<1" ng-show="general.logged" ng-click="doSell()">close positions</button>',
-            addnew : '<button class="btn btn-sm" ng-disabled="general.logged || ! (positions.length < 4)" ng-click="doOpenAddDialog()">add new</button>',
-            save   : '<button class="btn btn-sm" ng-disabled="general.logged || ! strategy.changed" ng-click="doSave()">save</button>',
-            saveas : '<button class="btn btn-sm" ng-disabled="general.logged || positions.length<1" ng-click="doOpenSaveAsDialog()">save as</button>',
-            remove : '<button class="btn btn-sm" ng-disabled="general.logged || ! strategy.name" ng-click="doOpenDeleteDialog()">delete</button>',
+            open   : '<button tooltips tooltip-template="{{tooltip.open}}" class="btn btn-sm oc-buy" ng-disabled="strategies.length<1" ng-hide="general.logged" ng-click="doBuy()">open positions</button>' +
+                     '<button tooltips tooltip-template="{{tooltip.close}}" class="btn btn-sm oc-sell" ng-disabled="strategies.length<1" ng-show="general.logged" ng-click="doSell()">close positions</button>',
+            add    : '<button tooltips tooltip-template="{{tooltip.add}}" class="btn btn-sm" ng-disabled="general.logged || ! (positions.length < 4)" ng-click="doOpenAddDialog()">add new</button>',
+            save   : '<button tooltips tooltip-template="{{tooltip.save}}" class="btn btn-sm" ng-disabled="general.logged || ! strategy.changed" ng-click="doSave()">save</button>',
+            saveas : '<button tooltips tooltip-template="{{tooltip.saveAs}}" class="btn btn-sm" ng-disabled="general.logged || positions.length<1" ng-click="doOpenSaveAsDialog()">save as</button>',
+            remove : '<button tooltips tooltip-template="{{tooltip.remove}}" class="btn btn-sm" ng-disabled="general.logged || ! strategy.name" ng-click="doOpenDeleteDialog()">delete</button>',
             select : '<span ng-class="{ \'oc-select-wrapper\': ! general.logged }" ng-disabled="general.logged"><select class="oc-dropdown oc-strat-dropdown" ng-options="strat.name group by strat.symbol for strat in strategies"' +
                      'ng-disabled="general.logged" ng-change="doUpdate()" ng-model="strategy"></select></span>',
-            load   : '<button class="btn btn-sm" ng-disabled="general.logged" ng-click="doLoad()">load</button>',
             auth   : '<button class="btn btn-sm pull-right oc-login" ng-click="doLogout()">log out</button>' +
                      '<span class="oc-welcome pull-right">welcome <b>' + req.user.username + '</b>, you\'re logged in</span>'
         });
@@ -157,13 +156,12 @@ app.get ( '/', function(req, res) {
         // this is set when user is not logged in
         res.render ( 'index', {
 
-            open   : '<button class="btn btn-sm oc-buy" ng-disabled="general.logged" ng-click="doRegisterFirst()">open positions</button>',
-            addnew : '<button class="btn btn-sm" ng-disabled="general.logged || ! (positions.length < 4)" ng-click="doRegisterFirst()">add new</button>',
-            save   : '<button class="btn btn-sm" ng-disabled="general.logged" ng-click="doRegisterFirst()">save</button>',
-            saveas : '<button class="btn btn-sm" ng-disabled="general.logged" ng-click="doRegisterFirst()">save as</button>',
-            remove : '<button class="btn btn-sm" ng-disabled="general.logged" ng-click="doRegisterFirst()">delete</button>',
+            open   : '<button tooltips tooltip-template="{{tooltip.open}}" class="btn btn-sm oc-buy" ng-disabled="general.logged" ng-click="doRegisterFirst()">open positions</button>',
+            add    : '<button tooltips tooltip-template="{{tooltip.add}}" class="btn btn-sm" ng-disabled="general.logged || ! (positions.length < 4)" ng-click="doRegisterFirst()">add new</button>',
+            save   : '<button tooltips tooltip-template="{{tooltip.save}}" class="btn btn-sm" ng-disabled="general.logged" ng-click="doRegisterFirst()">save</button>',
+            saveas : '<button tooltips tooltip-template="{{tooltip.saveAs}}" class="btn btn-sm" ng-disabled="general.logged" ng-click="doRegisterFirst()">save as</button>',
+            remove : '<button tooltips tooltip-template="{{tooltip.remove}}" class="btn btn-sm" ng-disabled="general.logged" ng-click="doRegisterFirst()">delete</button>',
             select : '<span style="margin-left:10px;font-size:125%;letter-spacing:1px;vertical-align:middle;">{{ strategy.name }}</span>',
-            load   : '<button class="btn btn-sm" ng-disabled="general.logged" ng-click="doRegisterFirst()">load</button>',
             auth   : '<button class="btn btn-sm pull-right oc-register" ng-disabled="general.logged||general.register" ng-click="doRegisterFirst()">sign up</button>' +
                      '<button class="btn btn-sm pull-right oc-login" ng-disabled="general.logged" ng-click="doLogin()">sign in</button>' +
                      '<input tabindex=2 class="oc-login-input pull-right" ng-enter="doLogin()" ng-disabled="general.logged" name="password" type="password" placeholder="password" ng-model="account.password"' +
