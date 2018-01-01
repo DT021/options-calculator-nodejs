@@ -2,6 +2,9 @@
 
 // test mongo console login
 // mongo -u hph65_mongoadmin -p ig1Eeng3vu --authenticationDatabase admin --host localhost --port 34302 oc
+//
+// add port routing:    sudo iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-ports 3000
+// remove port routing: sudo iptables -t nat -D PREROUTING -p tcp --dport 80 -j REDIRECT --to-ports 3000
 
 var dbconfig = {
     user: 'hph65_mongoadmin',

@@ -21,7 +21,7 @@ var random = require('randomstring');
 
 // own stuff
 var rc = require('./oc-return-codes');
-var config = require('./os-config');
+var config = require('./oc-config');
 var mail = require('./oc-mail');
 
 // get models
@@ -69,6 +69,7 @@ app.use ( passport.initialize() );
 app.use ( passport.session() );
 
 var env = app.settings.env;
+console.log ( "dir=" + __dirname );
 console.log ( "env=" + env );
 console.log ( "conf=" + config.db[env].url );
 console.log ( "options=" + JSON.stringify(config.db[env].options) );

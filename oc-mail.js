@@ -1,7 +1,7 @@
 'use strict';
 
 var mailer = require('nodemailer');
-var config = require('./os-config');
+var config = require('./oc-config');
 
 ///////////////////////////////////////////////////////////////////////////////
 // route to log out
