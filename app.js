@@ -92,11 +92,12 @@ app.use ( bodyParser.json() );
 app.use ( bodyParser.urlencoded({ extended: true }) );
 
 // create a write stream (in append mode)
-// var accessLogStream = fs.createWriteStream ( path.join(__dirname, 'access.log'), {flags: 'a'} );
+var accessLogStream = fs.createWriteStream ( path.join(__dirname, 'access.log'), {flags: 'a'} );
+accessLogStream.write('__dirname=' + __dirname);
 // var serverLogStream = fs.createWriteStream ( path.join(__dirname, 'server.log'), {flags: 'a'} );
 
 // setup the logger
-// app.use ( morgan('dev',{stream: accessLogStream}) );
+app.use ( morgan('dev',{stream: accessLogStream}) );
 // app.use(morgan('common', { skip: function (req, res) { return res.statusCode < 400 }, stream: accessLogStream}));
 
 //
@@ -444,7 +445,7 @@ require ( 'express-route-log' )(app);
 
 ///////////////////////////////////////////////////////////////////////////////
 // set static page route
-app.use ( express.static(path.join(__dirname, '../html')) );
+app.use ( express.static(path.join(__dirname,config.server.docroot)) );
 
 // catch 404 and forward to error handler
 app.use ( function(req, res, next) {
