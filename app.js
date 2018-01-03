@@ -18,6 +18,7 @@ var debug = require('debug')('optionscalculator:server');
 var http = require('http');
 var mailer = require('nodemailer');
 var random = require('randomstring');
+var compression = require('compression');
 
 // own stuff
 var rc = require('./oc-return-codes');
@@ -67,6 +68,9 @@ app.use ( session({
  // set intialized passport
 app.use ( passport.initialize() );
 app.use ( passport.session() );
+
+// compress all requests 
+app.use ( compression() );
 
 var env = app.settings.env;
 console.log ( "dir=" + __dirname );
