@@ -7,10 +7,10 @@ var Schema = mongoose.Schema;
 //
 var PositionSchema = new Schema ({
 
-	amt : Number,									// the position amount
-	type : String,									// the position type
-	strike : Number,								// the selected strike
-	expiry: Date									// selected expiration
+    amt : Number,	    							// the position amount
+    type : String,	    							// the position type
+    strike : Number,	    						// the selected strike
+    expiry: Date	    							// selected expiration
 });
 
 module.exports = mongoose.model ( 'Position', PositionSchema );
@@ -20,14 +20,14 @@ module.exports = mongoose.model ( 'Position', PositionSchema );
 //
 var StrategySchema = new Schema ({
 
-	userid : String,								// the user unique id
-	name : String,									// strategies name 
-	symbol : String,								// selected option
+    userid : String,	    						// the user unique id
+    name : String,	    							// strategies name
+    symbol : String,	       						// selected option
 
-	positions : [PositionSchema]
+    positions : [PositionSchema]
 
 }, {
-	timestamps: true
+    timestamps: true
 });
 
 StrategySchema.index ( { userid : 1, name : -1 }, { unique: true } );
