@@ -156,7 +156,7 @@ app.get ( '/', function(req, res) {
             auth   : '<button class="btn btn-sm pull-right oc-login" ng-click="doLogout()">log out</button>' +
                      '<span class="oc-welcome pull-right">welcome <b>' + req.user.username + '</b>, you\'re logged in</span>',
             strikes: '<label for="strike-selection" class="btn btn-sm" tooltips tooltip-template="{{ tooltip.selectedStrikes }}">select</label>' +
-                     '<input type="file" class="btn" id="strike-selection" ng-file-select="onFileSelect($files)"></input>'
+                     '<input type="file" class="btn" id="strike-selection" accept=".json" ng-file-select="onFileSelect($files)"></input>'
         });
 
     } else {
