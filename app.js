@@ -154,7 +154,9 @@ app.get ( '/', function(req, res) {
             select : '<span ng-class="{ \'oc-select-wrapper\': ! general.logged }" ng-disabled="general.logged"><select class="oc-dropdown oc-strat-dropdown" ng-options="strat.name group by strat.symbol for strat in strategies"' +
                      'ng-disabled="general.logged" ng-change="doUpdate()" ng-model="strategy"></select></span>',
             auth   : '<button class="btn btn-sm pull-right oc-login" ng-click="doLogout()">log out</button>' +
-                     '<span class="oc-welcome pull-right">welcome <b>' + req.user.username + '</b>, you\'re logged in</span>'
+                     '<span class="oc-welcome pull-right">welcome <b>' + req.user.username + '</b>, you\'re logged in</span>',
+            strikes: '<label for="strike-selection" class="btn btn-sm" tooltips tooltip-template="{{ tooltip.selectedStrikes }}">select</label>' +
+                     '<input type="file" class="btn" id="strike-selection" ng-file-select="onFileSelect($files)"></input>'
         });
 
     } else {
@@ -174,7 +176,8 @@ app.get ( '/', function(req, res) {
                             'ng-focus="account.error.login=0"/>' +
                      '<input tabindex=1 select-on-focus class="oc-login-input pull-right" ng-enter="doLogin()" ng-disabled="general.logged" type="text" name="email" placeholder="email" ng-model="account.email"' +
                             'ng-focus="account.error.login=0"/>' +
-                     '<span class="oc-login-error select-on-focus pull-right" ng-show="account.error.login"><i class="oc-login-error-icon fa fa-warning"></i>{{ account.error.login }}</span>'
+                     '<span class="oc-login-error select-on-focus pull-right" ng-show="account.error.login"><i class="oc-login-error-icon fa fa-warning"></i>{{ account.error.login }}</span>',
+            strikes: '<button tooltips tooltip-template="{{tooltip.selectedStrikes}}" class="btn btn-sm" ng-disabled="general.logged" ng-click="doRegisterFirst()">select</button>'
         });
     }
 });
