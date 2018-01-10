@@ -151,11 +151,12 @@ app.get ( '/', function(req, res) {
             save   : '<button tooltips tooltip-template="{{tooltip.save}}" class="btn btn-sm" ng-disabled="general.logged || ! strategy.changed" ng-click="doSave()">save</button>',
             saveas : '<button tooltips tooltip-template="{{tooltip.saveAs}}" class="btn btn-sm" ng-disabled="general.logged || positions.length<1" ng-click="doOpenSaveAsDialog()">save as</button>',
             remove : '<button tooltips tooltip-template="{{tooltip.remove}}" class="btn btn-sm" ng-disabled="general.logged || ! strategy.name" ng-click="doOpenDeleteDialog()">delete</button>',
-            select : '<span ng-class="{ \'oc-select-wrapper\': ! general.logged }" ng-disabled="general.logged"><select class="oc-dropdown oc-strat-dropdown" ng-options="strat.name group by strat.symbol for strat in strategies"' +
+            select : '<span ng-class="{ \'oc-select-wrapper\': ! general.logged }" ng-disabled="general.logged">' +
+                '<select class="oc-dropdown oc-strat-dropdown" ng-options="strat.name group by strat.symbol for strat in strategies | filter:filterStrategy()"' +
                      'ng-disabled="general.logged" ng-change="doUpdate()" ng-model="strategy"></select></span>',
             auth   : '<button class="btn btn-sm pull-right oc-login" ng-click="doLogout()">log out</button>' +
                      '<span class="oc-welcome pull-right">welcome <b>' + req.user.username + '</b>, you\'re logged in</span>',
-            strikes: '<label for="strike-selection" class="btn btn-sm" tooltips tooltip-template="{{ tooltip.selectedStrikes }}">select</label>' +
+            strikes: '<label for="strike-selection" class="btn btn-sm" ng-disabled="general.logged" tooltips tooltip-template="{{ tooltip.selectedStrikes }}">select</label>' +
                      '<input type="file" class="btn" id="strike-selection" accept=".json" ng-file-select="onFileSelect($files)"></input>'
         });
 

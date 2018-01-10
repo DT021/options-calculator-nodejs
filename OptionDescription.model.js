@@ -13,12 +13,13 @@ var ExpirationSchema = new Schema({
 //
 //
 //
-var ClassSchema = new Schema({
+var OptionDescriptionSchema = new Schema({
 
     symbol: String,
+    name: String,
     multiplier: Number,
+    price: Number,
     expirations: [ExpirationSchema]
-    // strikes: [OptionsClassSchema]
 });
 
-module.exports = mongoose.model('OptionsClasse', ClassSchema);
+module.exports = mongoose.model ( 'OptionDescription', OptionDescriptionSchema );
