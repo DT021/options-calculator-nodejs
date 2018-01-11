@@ -152,8 +152,8 @@ app.get ( '/', function(req, res) {
             saveas : '<button tooltips tooltip-template="{{tooltip.saveAs}}" class="btn btn-sm" ng-disabled="general.logged || positions.length<1" ng-click="doOpenSaveAsDialog()">save as</button>',
             remove : '<button tooltips tooltip-template="{{tooltip.remove}}" class="btn btn-sm" ng-disabled="general.logged || ! strategy.name" ng-click="doOpenDeleteDialog()">delete</button>',
             select : '<span ng-class="{ \'oc-select-wrapper\': ! general.logged }" ng-disabled="general.logged">' +
-                '<select class="oc-dropdown oc-strat-dropdown" ng-options="strat.name group by strat.symbol for strat in strategies | filter:filterStrategy()"' +
-                     'ng-disabled="general.logged" ng-change="doUpdate()" ng-model="strategy"></select></span>',
+                     '<select class="oc-dropdown oc-strat-dropdown" ng-options="strat.name group by strat.symbol for strat in strategies | filter:filterStrategy()"' +
+                     'ng-disabled="general.logged" ng-change="doUpdatePositions()" ng-model="strategy"><option value="">please select a strategy</option></select></span>',
             auth   : '<button class="btn btn-sm pull-right oc-login" ng-click="doLogout()">log out</button>' +
                      '<span class="oc-welcome pull-right">welcome <b>' + req.user.username + '</b>, you\'re logged in</span>',
             strikes: '<label for="strike-selection" class="btn btn-sm" ng-disabled="general.logged" tooltips tooltip-template="{{ tooltip.selectedStrikes }}">select</label>' +
@@ -175,7 +175,7 @@ app.get ( '/', function(req, res) {
                      '<button class="btn btn-sm pull-right oc-login" ng-disabled="general.logged" ng-click="doLogin()">sign in</button>' +
                      '<input tabindex=2 class="oc-login-input pull-right" ng-enter="doLogin()" ng-disabled="general.logged" name="password" type="password" placeholder="password" ng-model="account.password"' +
                             'ng-focus="account.error.login=0"/>' +
-                     '<input tabindex=1 select-on-focus class="oc-login-input pull-right" ng-enter="doLogin()" ng-disabled="general.logged" type="text" name="email" placeholder="email" ng-model="account.email"' +
+                     '<input tabindex=1 select-on-focus class="oc-login-input pull-right" ng-enter="doLogin()" ng-disabled="general.logged" type="text" name="username" placeholder="email" ng-model="account.email"' +
                             'ng-focus="account.error.login=0"/>' +
                      '<span class="oc-login-error select-on-focus pull-right" ng-show="account.error.login"><i class="oc-login-error-icon fa fa-warning"></i>{{ account.error.login }}</span>',
             strikes: '<button tooltips tooltip-template="{{tooltip.selectedStrikes}}" class="btn btn-sm" ng-disabled="general.logged" ng-click="doRegisterFirst()">select</button>'
@@ -395,27 +395,6 @@ app.post ('/strategies', function(req,res,next) {
 });
 
 ///////////////////////////////////////////////////////////////////////////////
-// delete
-app.delete ( '/strategies/:name', function (req, res, next) {
-
-    Strategy.findOne ( { name: req.params.name }, (err, strategy) => {
-
-        if (err) {
-            res.status ( rc.Server.INTERNAL_ERROR ).send(err);
-        } else {
-
-            strategy.remove((err, strategy) => {
-                if (err) {
-                    res.status ( rc.Server.INTERNAL_ERROR ).send(err);
-                } else {
-                    res.status ( rc.Server.INTERNAL_ERROR ).send(strategy);
-                }
-            });
-        }
-    });
-});
-
-///////////////////////////////////////////////////////////////////////////////
 // save (update))
 app.post ( '/strategies/:name', function (req,res,next) {
 
@@ -441,6 +420,27 @@ app.post ( '/strategies/:name', function (req,res,next) {
                     res.status ( rc.Server.INTERNAL_ERROR ).send ( err );
                 } else {
                     res.status ( rc.Success.OK ).send ( strategy );
+                }
+            });
+        }
+    });
+});
+
+///////////////////////////////////////////////////////////////////////////////
+// delete
+app.delete('/strategies/:name', function (req, res, next) {
+
+    Strategy.findOne({ name: req.params.name }, (err, strategy) => {
+
+        if (err) {
+            res.status(rc.Server.INTERNAL_ERROR).send(err);
+        } else {
+
+            strategy.remove((err, strategy) => {
+                if (err) {
+                    res.status(rc.Server.INTERNAL_ERROR).send(err);
+                } else {
+                    res.status(rc.Server.INTERNAL_ERROR).send(strategy);
                 }
             });
         }

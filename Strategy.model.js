@@ -1,6 +1,7 @@
 
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
+var OptionDescriptionSchema = require('./OptionDescription.model').schema;
 
 //
 //
@@ -24,7 +25,8 @@ var StrategySchema = new Schema ({
     name : String,	    							// strategies name
     symbol : String,	       						// selected option
 
-    positions : [PositionSchema]
+    positions : [PositionSchema],
+    optionDescription: [OptionDescriptionSchema]
 
 }, {
     timestamps: true
