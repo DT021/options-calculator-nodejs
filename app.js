@@ -414,6 +414,16 @@ app.post ( '/strategies/:name', function (req,res,next) {
                     expiry: req.body.positions[i].expiry
                 }
             }
+            strategy.optionDescription = {
+                symbol: req.body.optionDescription.symbol,
+                name: req.body.optionDescription.name,
+                multiplier: req.body.optionDescription.multiplier,
+                price: req.body.optionDescription.price,
+                strikes: []
+            }
+            for (var i = 0; i < req.body.optionDescription.strikes.length; i++) {
+                strategy.optionDescription.strikes[i] = req.body.optionDescription.strikes[i];
+            }
 
             strategy.save((err,strategy) => {
                 if ( err ) {

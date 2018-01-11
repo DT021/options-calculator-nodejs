@@ -36,7 +36,7 @@ var StrategySchema = new Schema ({
     symbol : String,        // selected option
 
     positions : [PositionSchema],
-    optionDescription: [OptionDescriptionSchema]
+    optionDescription: OptionDescriptionSchema
 
 }, {
     timestamps: true
