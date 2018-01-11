@@ -1,29 +1,39 @@
 
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
-var OptionDescriptionSchema = require('./OptionDescription.model').schema;
+// var OptionDescriptionSchema = require('./OptionDescription.model').schema;
 
 //
 //
 //
 var PositionSchema = new Schema ({
 
-    amt : Number,	    							// the position amount
-    type : String,	    							// the position type
-    strike : Number,	    						// the selected strike
-    expiry: Date	    							// selected expiration
+    amt : Number,           // the position amount
+    type : String,          // the position type
+    strike : Number,        // the selected strike
+    expiry: Date            // selected expiration
 });
 
-module.exports = mongoose.model ( 'Position', PositionSchema );
+//
+//
+//
+var OptionDescriptionSchema = new Schema({
+
+    symbol: String,         // the option symbol, like ES
+    name: String,           // the full name of the options
+    multiplier: Number,     // the multiplier i.e. contract size
+    price: Number,          // the price of the underlying used for the strategy
+    strikes: [Number]       // the stikes used for the strategy
+});
 
 //
 //
 //
 var StrategySchema = new Schema ({
 
-    userid : String,	    						// the user unique id
-    name : String,	    							// strategies name
-    symbol : String,	       						// selected option
+    userid : String,        // the user unique id
+    name : String,          // strategies name
+    symbol : String,        // selected option
 
     positions : [PositionSchema],
     optionDescription: [OptionDescriptionSchema]
