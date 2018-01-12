@@ -123,13 +123,13 @@ passport.use ( new BasicStrategy ( {usernameField: 'email'}, function(email, pas
 
     User.findOne ( { email: email }, function(err, user) {
         if ( err ) {
-            return done(err);
+            return done ( err );
         }
         if ( ! user ) {
-            return done(null, false, { message: 'email address does not exist' });
+            return done ( { message: "user doesn't exist" }, false );
         }
         if ( ! user.validPassword(password)) {
-            return done ( null, false, { message: 'incorrect password' });
+            return done ( { message: "incorrect password" }, false);
         }
         return done ( null, user );
     });
