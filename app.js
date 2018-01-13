@@ -147,7 +147,8 @@ app.get ( '/', function(req, res) {
 
             open   : '<button Xtooltips tooltip-template="{{tooltip.open}}" class="btn btn-sm oc-buy" ng-disabled="strategies.length<1" ng-hide="general.logged" ng-click="doBuy()">open positions</button>' +
                      '<button Xtooltips tooltip-template="{{tooltip.close}}" class="btn btn-sm oc-sell" ng-disabled="strategies.length<1" ng-show="general.logged" ng-click="doSell()">close positions</button>',
-            add    : '<button Xtooltips tooltip-template="{{tooltip.add}}" class="btn btn-sm" ng-disabled="general.logged || ! (positions.length < 4)" ng-click="doOpenAddDialog()">add new</button>',
+            neww   : '<button class="btn btn-sm" ng-disabled="general.logged" ng-click="doNew()">new</button>',
+            add    : '<button Xtooltips tooltip-template="{{tooltip.add}}" class="btn btn-sm" ng-disabled="general.logged || !status.strikes || ! (positions.length<4)" ng-click="doOpenAddDialog()">add</button>',
             reverse: '<button Xtooltips tooltip-template="{{tooltip.reverse}}" class="btn btn-sm" ng-disabled="general.logged || positions.length<1" ng-click="doReverse()">reverse</button>',
             save   : '<button Xtooltips tooltip-template="{{tooltip.save}}" class="btn btn-sm" ng-disabled="general.logged || ! strategy.changed" ng-click="doSave()">save</button>',
             saveas : '<button Xtooltips tooltip-template="{{tooltip.saveAs}}" class="btn btn-sm" ng-disabled="general.logged || positions.length<1" ng-click="doOpenSaveAsDialog()">save as</button>',
@@ -167,7 +168,8 @@ app.get ( '/', function(req, res) {
         res.render ( 'index', {
 
             open   : '<button Xtooltips tooltip-template="{{tooltip.open}}" class="btn btn-sm oc-buy" ng-disabled="general.logged" ng-click="doRegisterFirst()">open positions</button>',
-            add    : '<button Xtooltips tooltip-template="{{tooltip.add}}" class="btn btn-sm" ng-disabled="general.logged || ! (positions.length < 4)" ng-click="doRegisterFirst()">add new</button>',
+            neww   : '<button class="btn btn-sm" ng-disabled="general.logged" ng-click="doRegisterFirst()">new</button>',
+            add    : '<button Xtooltips tooltip-template="{{tooltip.add}}" class="btn btn-sm" ng-disabled="general.logged || ! (positions.length < 4)" ng-click="doRegisterFirst()">add</button>',
             reverse: '<button Xtooltips tooltip-template="{{tooltip.reverse}}" class="btn btn-sm" ng-disabled="general.logged || positions.length<1" ng-click="doReverse()">reverse</button>',
             save   : '<button Xtooltips tooltip-template="{{tooltip.save}}" class="btn btn-sm" ng-disabled="general.logged" ng-click="doRegisterFirst()">save</button>',
             saveas : '<button Xtooltips tooltip-template="{{tooltip.saveAs}}" class="btn btn-sm" ng-disabled="general.logged" ng-click="doRegisterFirst()">save as</button>',
