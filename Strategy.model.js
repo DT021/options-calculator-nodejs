@@ -8,10 +8,10 @@ var Schema = mongoose.Schema;
 //
 var PositionSchema = new Schema ({
 
-    amt : Number,           // the position amount
-    type : String,          // the position type
-    strike : Number,        // the selected strike
-    expiry: Date            // selected expiration
+    amt: Number,            // the position amount (positive=long, negative=short)
+    type: String,           // the position type (put/call)
+    strike: Number,         // the selected strike
+    expiry: Date            // selected expiration date
 });
 
 //
@@ -31,9 +31,8 @@ var OptionDescriptionSchema = new Schema({
 //
 var StrategySchema = new Schema ({
 
-    userid : String,        // the user unique id
-    name : String,          // strategies name
-    symbol : String,        // selected option
+    userid : String,        // owner of strategy
+    name : String,          // name of strategy
 
     positions : [PositionSchema],
     optionDescription: OptionDescriptionSchema

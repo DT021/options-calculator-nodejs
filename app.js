@@ -145,7 +145,7 @@ app.get ( '/', function(req, res) {
         // this is set when user logged in successfully
         res.render ( 'index', {
 
-            open   : '<button Xtooltips tooltip-template="{{tooltip.open}}" class="btn btn-sm oc-buy" ng-disabled="strategies.length<1" ng-hide="general.logged" ng-click="doBuy()">open positions</button>' +
+            open   : '<button Xtooltips tooltip-template="{{tooltip.open}}" class="btn btn-sm oc-buy" ng-disabled="strategies.length<1 || positions.length<1" ng-hide="general.logged" ng-click="doBuy()">open positions</button>' +
                      '<button Xtooltips tooltip-template="{{tooltip.close}}" class="btn btn-sm oc-sell" ng-disabled="strategies.length<1" ng-show="general.logged" ng-click="doSell()">close positions</button>',
             neww   : '<button class="btn btn-sm" ng-disabled="general.logged" ng-click="doNew()">new</button>',
             add    : '<button Xtooltips tooltip-template="{{tooltip.add}}" class="btn btn-sm" ng-disabled="general.logged || !status.strikes || ! (positions.length<4)" ng-click="doOpenAddDialog()">add</button>',
@@ -154,7 +154,7 @@ app.get ( '/', function(req, res) {
             saveas : '<button Xtooltips tooltip-template="{{tooltip.saveAs}}" class="btn btn-sm" ng-disabled="general.logged || positions.length<1" ng-click="doOpenSaveAsDialog()">save as</button>',
             remove : '<button Xtooltips tooltip-template="{{tooltip.remove}}" class="btn btn-sm" ng-disabled="general.logged || ! strategy.name" ng-click="doOpenDeleteDialog()">delete</button>',
             select : '<span ng-class="{ \'oc-select-wrapper\': ! general.logged }" ng-disabled="general.logged">' +
-                     '<select class="oc-dropdown oc-strat-dropdown" ng-options="strat.name group by strat.symbol for strat in strategies | filter:filterStrategy() track by strat.name"' +
+                     '<select class="oc-dropdown oc-strat-dropdown" ng-options="strat.name group by strat.optionDescription.symbol for strat in strategies track by strat.name"' +
                      'ng-disabled="general.logged" ng-change="doUpdatePositions()" ng-model="strategy"></select></span>',
             auth   : '<button class="btn btn-sm pull-right oc-login" ng-click="doLogout()">log out</button>' +
                      '<span class="oc-welcome pull-right">welcome <b>' + req.user.username + '</b>, you\'re logged in</span>',
@@ -408,7 +408,6 @@ app.post ( '/strategies/:name', function (req,res,next) {
             res.status ( rc.Server.INTERNAL_ERROR ).send ( err );
         } else {
 
-            strategy.symbol = req.body.symbol;
             strategy.expiry = req.body.expiry;
             for (var i = 0; i < req.body.positions.length; i++) {
                 strategy.positions[i] = {
