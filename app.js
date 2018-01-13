@@ -451,9 +451,9 @@ app.delete('/strategies/:name', function (req, res, next) {
 
             strategy.remove((err, strategy) => {
                 if (err) {
-                    res.status(rc.Server.INTERNAL_ERROR).send(err);
+                    res.status ( rc.Server.INTERNAL_ERROR ).send ( err );
                 } else {
-                    res.status(rc.Server.INTERNAL_ERROR).send(strategy);
+                    res.status ( rc.Success.OK ).send ( strategy );
                 }
             });
         }
