@@ -74,6 +74,7 @@ app.use ( compression() );
 
 var env = app.settings.env;
 console.log ( "dir=" + __dirname );
+console.log ( "rootdoc=" + config.server.docroot );
 console.log ( "env=" + env );
 console.log ( "conf=" + config.db[env].url );
 console.log ( "options=" + JSON.stringify(config.db[env].options) );
