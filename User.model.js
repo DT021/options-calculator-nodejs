@@ -17,14 +17,19 @@ var UserSchema = new Schema ({
                 validator: function(v) {
                     return /^([\w-\.]+@([\w-]+\.)+[\w-]{2,3})?$/.test(v);
                 },
-              message: 'not a valid email address !' }
+                message: 'not a valid email address !' 
+              }
             },
     username : { type : String,
                  required : true },     // username
     password : { type : String,
                  required : true },		// password
     secretToken: String,                // secret token for email verification
-    active: false                       // true when the email was verified
+    active: false,                      // true when the email was verified
+    plan: Number,                       // the subscription plan
+    status: String,                     // not yet defined
+    country: String,                    // users country
+    reserve: String                     // reserved
 
 }, {
     timestamps: true
