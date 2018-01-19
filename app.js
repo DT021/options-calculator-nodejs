@@ -157,7 +157,7 @@ app.get ( '/', function(req, res) {
             select : '<span ng-class="{ \'oc-select-wrapper\': ! general.logged }" ng-disabled="general.logged">' +
                      '<select class="oc-dropdown oc-strat-dropdown" ng-options="strat.name group by strat.optionDescription.symbol for strat in strategies track by strat.name"' +
                      'ng-disabled="general.logged" ng-change="doUpdatePositions()" ng-model="strategy"></select></span>',
-            auth   : '<button class="btn btn-sm pull-right oc-login" ng-click="doLogout()">log out</button>' +
+            auth   : '<button class="btn btn-sm pull-right oc-logout" ng-click="doLogout()">log out</button>' +
                      '<span class="oc-welcome pull-right">welcome <b>' + req.user.username + '</b>, you\'re logged in</span>',
             strikes: '<label for="strike-selection" class="btn btn-sm" ng-disabled="general.logged||status.strikes" Xtooltips tooltip-template="{{ tooltip.selectedStrikes }}">select</label>' +
                      '<input type="file" class="btn" id="strike-selection" accept=".json" ng-file-select="onFileSelect($files)"></input>'
@@ -175,7 +175,7 @@ app.get ( '/', function(req, res) {
             save   : '<button Xtooltips tooltip-template="{{tooltip.save}}" class="btn btn-sm" ng-disabled="general.logged" ng-click="doRegisterFirst()">save</button>',
             saveas : '<button Xtooltips tooltip-template="{{tooltip.saveAs}}" class="btn btn-sm" ng-disabled="general.logged" ng-click="doRegisterFirst()">save as</button>',
             remove : '<button Xtooltips tooltip-template="{{tooltip.remove}}" class="btn btn-sm" ng-disabled="general.logged" ng-click="doRegisterFirst()">delete</button>',
-            select : '<span style="margin-left:10px;font-size:125%;letter-spacing:1px;vertical-align:middle;">{{ strategy.name }}</span>',
+            select : '<span style="margin-right:10px;letter-spacing:1px;vertical-align:middle;">{{ strategy.name }}</span>',
             auth   : '<button class="btn btn-sm pull-right oc-register" ng-disabled="general.logged||general.register" ng-click="doRegisterFirst()">sign up</button>' +
                      '<button class="btn btn-sm pull-right oc-login" ng-disabled="general.logged" ng-click="doLogin()">sign in</button>' +
                      '<input tabindex=2 class="oc-login-input pull-right" ng-enter="doLogin()" ng-disabled="general.logged" name="password" type="password" placeholder="password" ng-model="account.password"' +
