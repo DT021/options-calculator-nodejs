@@ -26,6 +26,7 @@
     "passport-local": "^1.0.0",
     "passport-local-authenticate": "^1.2.0",
     "paymill": "^0.2.0",
+    "paymill-wrapper": "^2.2.0",
     "randomstring": "^1.1.5",
     "serve-favicon": "^2.4.5"
   }
