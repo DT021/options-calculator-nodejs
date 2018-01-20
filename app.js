@@ -182,7 +182,8 @@ app.get ( '/', function(req, res) {
                             'ng-focus="account.error.login=0"/>' +
                      '<input tabindex=1 select-on-focus class="oc-login-input pull-right" ng-enter="doLogin()" ng-disabled="general.logged" type="text" name="username" placeholder="email" ng-model="account.email"' +
                             'ng-focus="account.error.login=0"/>' +
-                     '<span class="oc-login-error select-on-focus pull-right" ng-show="account.error.login"><i class="oc-login-error-icon fa fa-warning"></i>{{ account.error.login }}</span>',
+                     '<span class="oc-login-error select-on-focus pull-right" ng-show="account.error.login">' +
+                     '<i class="oc-login-error-icon fa fa-warning"></i>{{ account.error.login }}<button ng-click="account.error.login=false" class="oc-login-error-close">X</button></span>',
             strikes: '<button Xtooltips tooltip-template="{{tooltip.selectedStrikes}}" class="btn btn-sm" ng-disabled="general.logged" ng-click="doRegisterFirst()">select</button>'
         });
     }
