@@ -8,7 +8,7 @@ pm.getContext ( config.subscription.privkey );
 ///////////////////////////////////////////////////////////////////////////////
 // route to log out
 module.exports.createPlan = function ( planId,      // the plan id [0,1,2]
-                                       userId,      // the email address of the user
+                                       clientId,    // the client id of the user
                                        name,        // the plan name [BASIC,STANDARD,PREMIUM]
                                        amt,         // the price of the plan
                                        currency,    //
@@ -21,7 +21,7 @@ module.exports.createPlan = function ( planId,      // the plan id [0,1,2]
         amount: amt,
         currency: currency,
         period: period,
-        clientId: userId,
+        clientId: clientId,
         name: name,
         valid: recurring ? null : "1 YEAR",
         startDate: start,
@@ -29,7 +29,7 @@ module.exports.createPlan = function ( planId,      // the plan id [0,1,2]
 };
 
 ///////////////////////////////////////////////////////////////////////////////
-// route to log out
+// create a new subscription
 module.exports.createSubscription = function ( plan ) {
 
     pm.subscriptions
