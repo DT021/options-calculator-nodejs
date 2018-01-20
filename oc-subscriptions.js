@@ -7,24 +7,24 @@ pm.getContext ( config.subscription.privkey );
 
 ///////////////////////////////////////////////////////////////////////////////
 // route to log out
-module.exports.createPlan = function ( planId,
-                                       userId,
-                                       name,
-                                       amt,
-                                       currency,
-                                       period,
-                                       start,
-                                       recurring ) {
+module.exports.createPlan = function ( planId,      // the plan id [0,1,2]
+                                       userId,      // the email address of the user
+                                       name,        // the plan name [BASIC,STANDARD,PREMIUM]
+                                       amt,         // the price of the plan
+                                       currency,    //
+                                       period,      // monthly or yearly
+                                       start,       // start date
+                                       recurring    //
+                                     ) {
     return {
         offerId: planId,
         amount: amt,
         currency: currency,
         period: period,
-        valid: String,
         clientId: userId,
         name: name,
+        valid: recurring ? null : "1 YEAR",
         startDate: start,
-        recurring: recurring
     };
 };
 

@@ -70,10 +70,5 @@ module.exports = {
         name: "Paymill",
         endpoint: "https://api.paymill.com/v2.1/",
         privkey: ""
-        // plans: {
-        //     basic:    plan ( "0", "BASIC",    5,   "1",  true ), // monthly $5, recurring
-        //     standard: plan ( "1", "STANDARD", 10,  "1",  true ), // monthly $10, recurring
-        //     premium:  plan ( "2", "PREMIUM",  100, "12", false ) // yearly $100, non-recurring
-        // }
     }
 };
