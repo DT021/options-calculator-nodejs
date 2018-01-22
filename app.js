@@ -146,8 +146,8 @@ app.get ( '/', function(req, res) {
         // this is set when user logged in successfully
         res.render ( 'index', {
 
-            open   : '<button Xtooltips tooltip-template="{{tooltip.open}}" class="btn btn-sm oc-buy" ng-disabled="strategies.length<1 || positions.length<1" ng-hide="general.logged" ng-click="doBuy()">open positions</button>' +
-                     '<button Xtooltips tooltip-template="{{tooltip.close}}" class="btn btn-sm oc-sell" ng-disabled="strategies.length<1" ng-show="general.logged" ng-click="doSell()">close positions</button>',
+            open   : '<button Xtooltips tooltip-template="{{tooltip.open}}" class="btn btn-sm oc-buy" ng-disabled="strategies.length<1 || positions.length<1" ng-hide="general.logged" ng-click="doBuy()">enter <i>what-if</i></button>' +
+                     '<button Xtooltips tooltip-template="{{tooltip.close}}" class="btn btn-sm oc-sell" ng-disabled="strategies.length<1" ng-show="general.logged" ng-click="doSell()">exit <i>what-if</i></button>',
             neww   : '<button class="btn btn-sm oc-wide-button" ng-disabled="general.logged" ng-click="doNew()">new strategy</button>',
             add    : '<button Xtooltips tooltip-template="{{tooltip.add}}" class="btn btn-sm oc-wide-button" ng-disabled="general.logged || !status.strikes || ! (positions.length<4)" ng-click="doOpenAddDialog()">add position</button>',
             reverse: '<button Xtooltips tooltip-template="{{tooltip.reverse}}" class="btn btn-sm" ng-disabled="general.logged || positions.length<1" ng-click="doReverse()">reverse</button>',
@@ -168,7 +168,7 @@ app.get ( '/', function(req, res) {
         // this is set when user is not logged in
         res.render ( 'index', {
 
-            open   : '<button Xtooltips tooltip-template="{{tooltip.open}}" class="btn btn-sm oc-buy" ng-disabled="general.logged" ng-click="doRegisterFirst()">open positions</button>',
+            open   : '<button Xtooltips tooltip-template="{{tooltip.open}}" class="btn btn-sm oc-buy" ng-disabled="general.logged" ng-click="doRegisterFirst()">enter <i>what-if</i></button>',
             neww   : '<button class="btn btn-sm oc-wide-button" ng-disabled="general.logged" ng-click="doRegisterFirst()">new strategy</button>',
             add    : '<button Xtooltips tooltip-template="{{tooltip.add}}" class="btn btn-sm oc-wide-button" ng-disabled="general.logged || ! (positions.length < 4)" ng-click="doRegisterFirst()">add position</button>',
             reverse: '<button Xtooltips tooltip-template="{{tooltip.reverse}}" class="btn btn-sm" ng-disabled="general.logged || positions.length<1" ng-click="doReverse()">reverse</button>',
