@@ -159,7 +159,7 @@ app.get ( '/', function(req, res) {
                      'ng-disabled="general.logged" ng-change="doUpdatePositions()" ng-model="strategy"></select></span>',
             auth   : '<button class="btn btn-sm pull-right oc-logout" ng-click="doLogout()">log out</button>' +
                      '<span class="oc-welcome pull-right">welcome <b>' + req.user.username + '</b>, you\'re logged in</span>',
-            strikes: '<label for="strike-selection" class="btn btn-sm" ng-disabled="general.logged||status.strikes" Xtooltips tooltip-template="{{ tooltip.selectedStrikes }}">select</label>' +
+            strikes: '<label for="strike-selection" class="btn btn-sm" ng-disabled="general.logged||status.strikes">select</label>' +
                      '<input type="file" class="btn" id="strike-selection" accept=".json" ng-file-select="onFileSelect($files)"></input>'
         });
 
