@@ -11,13 +11,13 @@ var SALT_WORK_FACTOR = 10;
 var SubscriptionSchema = new Schema ({
 
     offerId: String,
+    clientId: String,
+    name: String,
     amount: Number,
     currency: String,
     period: String,
-    valid: String,
-    clientId: String,
-    name: String,
     startDate: Date,
+    valid: String,
 
 });
 
