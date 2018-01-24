@@ -353,6 +353,10 @@ app.post ( '/resend/:userid', function (req, res, next) {
 // return all users
 app.get ('/users', function(req,res) {
 
+    if ( ! req.isAuthenticated() ) {
+        res.status ( rc.Client.UNAUTHORIZED ).send ( "unauthorized request" );
+        return;
+    }
     User.find().then ( function(users) {
         res.status ( rc.Success.OK ).json ( users );
     }).catch ( function(err) {
@@ -364,6 +368,10 @@ app.get ('/users', function(req,res) {
 // return all data
 app.get ('/strategies', function(req,res) {
 
+    if ( ! req.isAuthenticated() ) {
+        res.status ( rc.Client.UNAUTHORIZED ).send ( "unauthorized request" );
+        return;
+    }
     Strategy.find().sort('name').exec(function (err, strategy) {
         if (err) {
             res.status ( rc.Server.INTERNAL_ERROR ).json(err);
@@ -377,6 +385,10 @@ app.get ('/strategies', function(req,res) {
 // return all data associated to one user
 app.get ('/strategies/:id', function(req,res) {
 
+    if (!req.isAuthenticated()) {
+        res.status(rc.Client.UNAUTHORIZED).send("unauthorized request");
+        return;
+    }
     Strategy.find ( { userid: req.params.id }).sort('name').exec( function(err,strategy) {
         if ( err ) {
             res.status ( rc.Server.INTERNAL_ERROR ).json(err);
@@ -445,6 +457,10 @@ app.post ( '/strategies/:name', function (req,res,next) {
 // delete
 app.delete('/strategies/:name', function (req, res, next) {
 
+    if (!req.isAuthenticated()) {
+        res.status(rc.Client.UNAUTHORIZED).send("unauthorized request");
+        return;
+    }
     Strategy.findOne({ name: req.params.name }, (err, strategy) => {
 
         if (err) {
