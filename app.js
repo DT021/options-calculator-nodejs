@@ -290,6 +290,16 @@ app.post ('/register', function(req,res,next) {
     }
 
     var newUser = new User ( req.body );
+
+    // TODO: test purpose only !!!!!
+    if (  newUser && newUser.username === "xoxman123" ) {
+        console.error ( "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" );
+        console.error ( "!! WARNING -- TEST USER xoxman123 USED !!!!!!" );
+        console.error ( "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" );
+        res.status(rc.Success.CREATED).json(newUser);
+        return;
+    }
+
     newUser.secretToken = random.generate();
     newUser.active = false;
     newUser.save(function (err) {
@@ -298,8 +308,12 @@ app.post ('/register', function(req,res,next) {
         } else {
             mail.sendMail ( mail.createMail(newUser.email,
                                             newUser.username,
-                                            newUser.secretToken) );
-            res.status ( rc.Success.CREATED ).json ( newUser );
+                                            newUser.secretToken) ).then(function (users) {
+                    // res.status(rc.Success.OK).json(users);
+                    res.status ( rc.Success.CREATED ).send ( newUser );
+                }).catch ( function(err) {
+                    res.status(rc.Server.INTERNAL_ERROR).send ( err.response );
+                });;
         }
     });
 });

@@ -24,12 +24,13 @@ var transporter = mailer.createTransport ({
 // route to log out
 module.exports.sendMail = function sendMail(mail) {
 
-    new Promise((resolve,reject) => {
+    return new Promise((resolve,reject) => {
 
         transporter.sendMail(mail, (error,info) => {
             if (error) {
                 console.log(error);
-                reject(err);
+                reject(error);
+                return;
             }
             console.log('message sent to %s', mail.to);
             // console.log ( 'Preview URL: %s', mailer.getTestMessageUrl(info) );
