@@ -5,6 +5,34 @@ var config = require("./oc-config");
 
 pm.getContext ( config.subscription.privkey );
 
+module.exports.plans = [
+
+    {
+        id: 0,
+        name: "BASIC",
+        price: 5,
+        period: "1 MONTH",
+        recurring: true
+    },
+
+    {
+        id: 1,
+        name: "STANDARD",
+        price: 10,
+        period: "1 MONTH",
+        recurring: true
+    },
+
+    {
+        id: 2,
+        name: "PREMIUM",
+        price: 100,
+        period: "1 YEAR",
+        recurring: false
+    },
+
+];
+
 ///////////////////////////////////////////////////////////////////////////////
 // route to log out
 module.exports.createPlan = function ( planId,      // the plan id [0,1,2]

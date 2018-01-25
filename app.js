@@ -24,6 +24,7 @@ var compression = require('compression');
 var rc = require('./oc-return-codes');
 var config = require('./oc-config');
 var mail = require('./oc-mail');
+var subscriptions = require('./oc-subscriptions');
 
 // get models
 var Strategy = require('./Strategy.model');
@@ -296,7 +297,7 @@ app.post ('/register', function(req,res,next) {
         console.error ( "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" );
         console.error ( "!! WARNING -- TEST USER xoxman123 USED !!!!!!" );
         console.error ( "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" );
-        res.status(rc.Success.CREATED).json(newUser);
+        res.status(rc.Success.CREATED).send ( { user: newUser, plan : subscriptions.plans[newUser.plan] } );
         return;
     }
 
