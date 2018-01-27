@@ -13,7 +13,7 @@ var LocalStrategy = require('passport-local').Strategy;
 var BasicStrategy = require('passport-http').BasicStrategy;
 var auth = require('passport-local-authenticate');
 var mongoose = require('mongoose');
-var paymill = require('paymill')('apiKey');
+// var paymill = require('paymill')('apiKey');
 var debug = require('debug')('optionscalculator:server');
 var http = require('http');
 var mailer = require('nodemailer');
@@ -70,7 +70,7 @@ app.use ( session({
 app.use ( passport.initialize() );
 app.use ( passport.session() );
 
-// compress all requests 
+// compress all requests
 app.use ( compression() );
 
 var env = app.settings.env;
@@ -297,7 +297,9 @@ app.post ('/register', function(req,res,next) {
         console.error ( "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" );
         console.error ( "!! WARNING -- TEST USER xoxman123 USED !!!!!!" );
         console.error ( "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" );
-        res.status(rc.Success.CREATED).send ( { user: newUser, plan : subscriptions.plans[newUser.plan] } );
+        setTimeout ( function() {
+            res.status(rc.Success.CREATED).send ( { user: newUser, plan : subscriptions.plans[newUser.plan] } );
+        }, 1000 );
         return;
     }
 
@@ -307,14 +309,7 @@ app.post ('/register', function(req,res,next) {
         if ( err ) {
             res.status( rc.Server.INTERNAL_ERROR ).json ( err );
         } else {
-            mail.sendMail ( mail.createMail(newUser.email,
-                                            newUser.username,
-                                            newUser.secretToken) ).then(function (users) {
-                    // res.status(rc.Success.OK).json(users);
-                    res.status ( rc.Success.CREATED ).send ( newUser );
-                }).catch ( function(err) {
-                    res.status(rc.Server.INTERNAL_ERROR).send ( err.response );
-                });;
+            sendConfirmationMail( newUser, res );
         }
     });
 });
@@ -354,12 +349,7 @@ app.post ( '/resend/:userid', function (req, res, next) {
         if (err) {
             res.status ( rc.Server.INTERNAL_ERROR ).send(err);
         } else if (user) {
-            mail.sendMail(mail.createMail(user.email,
-                                          user.username,
-                                          user.secretToken));
-            res.status ( rc.Success.OK ).send ( 'OK' );
-        } else {
-            res.status ( rc.Client.NOT_FOUND ).send ( user.email );
+            sendConfirmationMail(user, res);
         }
     });
 });
@@ -469,7 +459,7 @@ app.post ( '/strategies/:name', function (req,res,next) {
 });
 
 ///////////////////////////////////////////////////////////////////////////////
-// delete
+// delete strategy
 app.delete('/strategies/:name', function (req, res, next) {
 
     if (!req.isAuthenticated()) {
@@ -492,6 +482,32 @@ app.delete('/strategies/:name', function (req, res, next) {
         }
     });
 });
+
+///////////////////////////////////////////////////////////////////////////////
+// delete user
+var deleteUser = function (req, res, next) {
+
+    if (!req.isAuthenticated()) {
+        res.status(rc.Client.UNAUTHORIZED).send("unauthorized request");
+        return;
+    }
+    User.findOne({ email: req.params.email }, (err, user) => {
+
+        if (err) {
+            res.status(rc.Server.INTERNAL_ERROR).send(err);
+        } else {
+
+            user.remove((err, user) => {
+                if (err) {
+                    res.status(rc.Server.INTERNAL_ERROR).send(err);
+                } else {
+                    res.status(rc.Success.OK).send(user);
+                }
+            });
+        }
+    });
+};
+app.delete('/users/:name', deleteUser );
 
 ///////////////////////////////////////////////////////////////////////////////
 // simple route loging - prints all defined routes
@@ -562,7 +578,7 @@ server.on ( 'listening', function() {
 });
 
 ///////////////////////////////////////////////////////////////////////////////
-//
+// local functions
 function normalizePort ( val ) {
     var port = parseInt ( val, 10 );
     if ( isNaN(port)) {
@@ -572,6 +588,20 @@ function normalizePort ( val ) {
         return port;
     }
     return false;
+}
+
+function sendConfirmationMail (user, res) {
+
+    mail.sendMail(mail.createMail(user.email,
+        user.username,
+        user.secretToken)).then(function (users) {
+            res.status(rc.Success.CREATED).send({
+                user: user,
+                plan: subscriptions.plans[user.plan]
+            });
+        }).catch(function (err) {
+            res.status(rc.Server.INTERNAL_ERROR).send(err.response);
+        });;
 }
 
 module.exports = app;
