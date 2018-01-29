@@ -9,6 +9,14 @@ module.exports.plans = [
 
     {
         id: 0,
+        name: "NON",
+        price: 0,
+        period: "",
+        recurring: false
+    },
+
+    {
+        id: 1,
         name: "BASIC",
         price: 5,
         period: "1 MONTH",
@@ -16,7 +24,7 @@ module.exports.plans = [
     },
 
     {
-        id: 1,
+        id: 2,
         name: "STANDARD",
         price: 10,
         period: "1 MONTH",
@@ -24,7 +32,7 @@ module.exports.plans = [
     },
 
     {
-        id: 2,
+        id: 3,
         name: "PREMIUM",
         price: 100,
         period: "1 YEAR",
