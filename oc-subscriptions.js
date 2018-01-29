@@ -9,7 +9,7 @@ module.exports.plans = [
 
     {
         id: 0,
-        name: "NON",
+        name: "NONE",
         price: 0,
         period: "",
         recurring: false

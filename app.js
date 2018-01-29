@@ -148,7 +148,7 @@ app.get ( '/', function(req, res) {
         res.render ( 'index', {
 
             open:    '<button class="btn btn-sm oc-wide-button oc-buy" ng-disabled="strategies.length<1 || positions.length<1" ng-hide="general.logged" ng-click="doBuy()">enter <i>what-if</i></button>' +
-                     '<button class="btn btn-sm oc-wide-button oc-sell" ng-disabled="strategies.length<1" ng-show="general.logged" ng-click="doSell()">exit <i>what-if</i></button>',
+                     '<button class="btn btn-sm oc-wide-button oc-sell" ng-show="general.logged" ng-click="doSell()">exit <i>what-if</i></button>',
             neww   : '<button class="btn btn-sm oc-wide-button" ng-disabled="general.logged" ng-click="doNew()">new strategy</button>',
             add    : '<button class="btn btn-sm oc-wide-button" ng-disabled="general.logged || !status.strikes || ! (positions.length<4)" ng-click="doOpenAddDialog()">add position</button>',
             reverse: '<button class="btn btn-sm" ng-disabled="general.logged || positions.length<1" ng-click="doReverse()">reverse</button>',
@@ -159,7 +159,8 @@ app.get ( '/', function(req, res) {
                      '<select class="oc-dropdown oc-strat-dropdown" ng-options="strat.name group by strat.optionDescription.symbol for strat in strategies track by strat.name"' +
                      'ng-disabled="general.logged" ng-change="doUpdatePositions()" ng-model="strategy"></select></span>',
             auth   : '<button class="btn btn-sm pull-right oc-logout" ng-click="doLogout()">log out</button>' +
-                     '<span class="oc-welcome pull-right">welcome <b>' + req.user.username + '</b>, you\'re logged in</span>',
+                     '<span class="oc-welcome pull-right">welcome <b>' + req.user.username + '</b>, you\'re current plan is <b>' +
+                     subscriptions.plans[req.user.plan].name + '</B></span>',
             strikes: '<label for="strike-selection" class="btn btn-sm" ng-disabled="general.logged||status.strikes">select</label>' +
                      '<input type="file" class="btn" id="strike-selection" accept=".json" ng-file-select="onFileSelect($files)"></input>'
         });
