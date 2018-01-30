@@ -3,5 +3,5 @@
 </button>
 <span class="oc-welcome pull-right">welcome
     <b>{{account.user.username}}</b>, you're plan is
-    <b>{{account.plan.name}}</b>
+    <b>{{ account.plan ? account.plan.name : "NONE" }}</b>
 </span>
