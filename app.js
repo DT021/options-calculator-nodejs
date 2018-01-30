@@ -144,49 +144,36 @@ app.get ( '/', function(req, res) {
 
     if ( req.isAuthenticated() ) {
 
-        // this is set when user logged in successfully
+        // this is set when user logged in
         res.render ( 'index', {
 
-            open:    '<button class="btn btn-sm oc-wide-button oc-buy" ng-disabled="strategies.length<1 || positions.length<1" ng-hide="general.logged" ng-click="doBuy()">enter <i>what-if</i></button>' +
-                     '<button class="btn btn-sm oc-wide-button oc-sell" ng-show="general.logged" ng-click="doSell()">exit <i>what-if</i></button>',
-            neww   : '<button class="btn btn-sm oc-wide-button" ng-disabled="general.logged" ng-click="doNew()">new strategy</button>',
-            add    : '<button class="btn btn-sm oc-wide-button" ng-disabled="general.logged || !status.strikes || ! (positions.length<4)" ng-click="doOpenAddDialog()">add position</button>',
-            reverse: '<button class="btn btn-sm" ng-disabled="general.logged || positions.length<1" ng-click="doReverse()">reverse</button>',
-            save   : '<button class="btn btn-sm" ng-disabled="general.logged || ! strategy.changed" ng-click="doSave()">save</button>',
-            saveas : '<button class="btn btn-sm" ng-disabled="general.logged || positions.length<1" ng-click="doOpenSaveAsDialog()">save as</button>',
-            remove : '<button class="btn btn-sm" ng-disabled="general.logged || ! strategy.name" ng-click="doOpenDeleteDialog()">delete</button>',
-            select : '<span ng-class="{ \'oc-select-wrapper\': ! general.logged }" ng-disabled="general.logged">' +
-                     '<select class="oc-dropdown oc-strat-dropdown" ng-options="strat.name group by strat.optionDescription.symbol for strat in strategies track by strat.name"' +
-                     'ng-disabled="general.logged" ng-change="doUpdatePositions()" ng-model="strategy"></select></span>',
-            auth   : '<button class="btn btn-sm pull-right oc-logout" ng-click="doLogout()">log out</button>' +
-                     '<span class="oc-welcome pull-right">welcome <b>' + req.user.username + '</b>, you\'re current plan is <b>' +
-                     subscriptions.plans[req.user.plan].name + '</B></span>',
-            strikes: '<label for="strike-selection" class="btn btn-sm" ng-disabled="general.logged||status.strikes">select</label>' +
-                     '<input type="file" class="btn" id="strike-selection" accept=".json" ng-file-select="onFileSelect($files)"></input>'
+            open   : readPartial("login/open.ejs"),
+            neww   : readPartial("login/neww.ejs"),
+            add    : readPartial("login/add.ejs"),
+            reverse: readPartial("login/reverse.ejs"),
+            save   : readPartial("login/save.ejs"),
+            saveas : readPartial("login/saveas.ejs"),
+            remove : readPartial("login/remove.ejs"),
+            select : readPartial("login/select.ejs"),
+            auth   : readPartial("login/auth.ejs"),
+            strikes: readPartial("login/strikes.ejs")
         });
 
     } else {
 
-        // this is set when user is not logged in
+        // this is set when user is logged out
         res.render ( 'index', {
 
-            open:    '<button class="btn btn-sm oc-wide-button oc-buy" ng-disabled="general.logged" ng-click="doRegisterFirst()">enter <i>what-if</i></button>',
-            neww   : '<button class="btn btn-sm oc-wide-button" ng-disabled="general.logged" ng-click="doRegisterFirst()">new strategy</button>',
-            add    : '<button class="btn btn-sm oc-wide-button" ng-disabled="general.logged || ! (positions.length < 4)" ng-click="doRegisterFirst()">add position</button>',
-            reverse: '<button class="btn btn-sm" ng-disabled="general.logged || positions.length<1" ng-click="doReverse()">reverse</button>',
-            save   : '<button class="btn btn-sm" ng-disabled="general.logged" ng-click="doRegisterFirst()">save</button>',
-            saveas : '<button class="btn btn-sm" ng-disabled="general.logged" ng-click="doRegisterFirst()">save as</button>',
-            remove : '<button class="btn btn-sm" ng-disabled="general.logged" ng-click="doRegisterFirst()">delete</button>',
-            select : '<span style="margin-right:10px;letter-spacing:1px;vertical-align:middle;">{{ strategy.name }}</span>',
-            auth   : '<button class="btn btn-sm pull-right oc-register" ng-disabled="general.logged||general.register" ng-click="doRegisterFirst()">sign up</button>' +
-                     '<button class="btn btn-sm pull-right oc-login" ng-disabled="general.logged" ng-click="doLogin()">sign in</button>' +
-                     '<input tabindex=2 class="oc-login-input pull-right" ng-enter="doLogin()" ng-disabled="general.logged" name="password" type="password" placeholder="password" ng-model="account.password"' +
-                            'ng-focus="account.error.login=0"/>' +
-                     '<input tabindex=1 select-on-focus class="oc-login-input pull-right" ng-enter="doLogin()" ng-disabled="general.logged" type="text" name="username" placeholder="email" ng-model="account.email"' +
-                            'ng-focus="account.error.login=0"/>' +
-                     '<span class="oc-login-error select-on-focus pull-right" ng-show="account.error.login">' +
-                     '<i class="oc-login-error-icon fa fa-warning"></i>{{ account.error.login }}<button ng-click="account.error.login=false" class="oc-login-error-close">X</button></span>',
-            strikes: '<button class="btn btn-sm" ng-disabled="general.logged" ng-click="doRegisterFirst()">select</button>'
+            open   : readPartial("logout/open.ejs"),
+            neww   : readPartial("logout/neww.ejs"),
+            add    : readPartial("logout/add.ejs"),
+            reverse: readPartial("logout/reverse.ejs"),
+            save   : readPartial("logout/save.ejs"),
+            saveas : readPartial("logout/saveas.ejs"),
+            remove : readPartial("logout/remove.ejs"),
+            select : readPartial("logout/select.ejs"),
+            auth   : readPartial("logout/auth.ejs"),
+            strikes: readPartial("logout/strikes.ejs")
         });
     }
 });
@@ -205,18 +192,14 @@ app.get ( '/', function(req, res) {
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-//
-var sleep = function(what, time) {
-    setTimeout ( function () {
-        what();
-    }, 4000 );
-};
 
 ///////////////////////////////////////////////////////////////////////////////
 // route to test if the user is logged in or not
 app.get ( '/auth', function(req, res) {
 
-    res.status ( rc.Success.OK ).json ( req.isAuthenticated() ? { 'user': req.user } : { 'user': null } );
+    res.status ( rc.Success.OK ).json ( req.isAuthenticated() ? { 'user': req.user,
+                                                                  'plan': subscriptions.plans[req.user.plan]}
+                                                              : { 'user': null } );
 });
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -603,6 +586,17 @@ function sendConfirmationMail (user, res) {
         }).catch(function (err) {
             res.status(rc.Server.INTERNAL_ERROR).send(err.response);
         });;
+}
+
+var sleep = function (what, time) {
+    setTimeout(function () {
+        what();
+    }, 4000);
+};
+
+function readPartial(file) {
+
+    return fs.readFileSync(__dirname + "/partials/" + file, 'utf8');
 }
 
 module.exports = app;
