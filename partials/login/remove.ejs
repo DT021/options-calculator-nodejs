@@ -1,5 +1,5 @@
 <button class="btn btn-sm"
-        ng-disabled="general.logged || ! strategy.name"
+        ng-disabled="menuService.isDisabled('remove',this)"
         ng-click="doOpenDeleteDialog()">
     delete
 </button>

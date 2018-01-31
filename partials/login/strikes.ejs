@@ -1,4 +1,4 @@
-<label for="strike-selection" class="btn btn-sm" ng-disabled="general.logged||status.strikes">
+<label for="strike-selection" class="btn btn-sm" ng-disabled="menuService.isDisabled('strikes',this)">
     select
 </label>
 <input type="file" class="btn" id="strike-selection" accept=".json" ng-file-select="onFileSelect($files)"></input>

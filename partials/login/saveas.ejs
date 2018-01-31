@@ -1,5 +1,5 @@
 <button class="btn btn-sm"
-        ng-disabled="general.logged || positions.length<1"
+        ng-disabled="menuService.isDisabled('saveas',this)"
         ng-click="doOpenSaveAsDialog()">
     save as
 </button>

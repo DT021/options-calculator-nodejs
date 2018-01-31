@@ -1,5 +1,5 @@
 <button class="btn btn-sm oc-wide-button"
-        ng-disabled="general.logged || !status.strikes || ! (positions.length<4)"
+        ng-disabled="menuService.isDisabled('add',this)"
         ng-click="doOpenAddDialog()">
     add position
 </button>
