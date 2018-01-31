@@ -142,6 +142,7 @@ passport.use ( new BasicStrategy ( {usernameField: 'email'}, function(email, pas
 // main page when logged out
 app.get ( '/', function(req, res) {
 
+    // TODO: check if a plan is already selected, otherwise go to logout partials
     if ( req.isAuthenticated() ) {
 
         // this is set when user logged in
