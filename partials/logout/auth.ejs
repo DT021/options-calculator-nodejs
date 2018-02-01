@@ -1,13 +1,13 @@
 <button class="btn btn-sm pull-right oc-register"
-        ng-disabled="general.logged||general.register"
+        ng-disabled="menuService.isDisabled('signup','out',this)"
         ng-click="doRegisterFirst()">sign up</button>
 <button class="btn btn-sm pull-right oc-login"
-        ng-disabled="general.logged"
+        ng-disabled="menuService.isDisabled('signin','out',this)"
         ng-click="doLogin()">sign in</button>
 <input tabindex=2
        class="oc-login-input pull-right"
        ng-enter="doLogin()"
-       ng-disabled="general.logged"
+       ng-disabled="menuService.isDisabled('password','out',this)"
        name="password"
        type="password"
        placeholder="password"
@@ -17,7 +17,7 @@
        select-on-focus
        class="oc-login-input pull-right"
        ng-enter="doLogin()"
-       ng-disabled="general.logged"
+       ng-disabled="menuService.isDisabled('username','out',this)"
        type="text"
        name="username"
        placeholder="email"
