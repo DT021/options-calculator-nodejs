@@ -142,11 +142,27 @@ passport.use ( new BasicStrategy ( {usernameField: 'email'}, function(email, pas
 // main page when logged out
 app.get ( '/', function(req, res) {
 
-    // TODO: check if a plan is already selected, otherwise go to logout partials
-    if ( req.isAuthenticated() ) {
+    if ( req.isAuthenticated() && req.user.plan < 1 ) {
+
+        // this is set when user logged in but has not yet subscribed
+        res.render ( 'index', {
+
+            open   : readPartial("logout/open.ejs"),
+            neww   : readPartial("logout/neww.ejs"),
+            add    : readPartial("logout/add.ejs"),
+            reverse: readPartial("logout/reverse.ejs"),
+            save   : readPartial("logout/save.ejs"),
+            saveas : readPartial("logout/saveas.ejs"),
+            remove : readPartial("logout/remove.ejs"),
+            select : readPartial("logout/select.ejs"),
+            auth   : readPartial("login/auth.ejs"),
+            strikes: readPartial("logout/strikes.ejs")
+        });
+
+    } else if (req.isAuthenticated() ) {
 
         // this is set when user logged in
-        res.render ( 'index', {
+        res.render('index', {
 
             open   : readPartial("login/open.ejs"),
             neww   : readPartial("login/neww.ejs"),

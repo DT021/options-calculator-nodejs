@@ -11,7 +11,7 @@ module.exports.plans = [
         id: 0,
         name: "NONE",
         price: 0,
-        period: "",
+        period: "NEVER",
         recurring: false
     },
 
