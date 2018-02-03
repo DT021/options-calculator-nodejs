@@ -1,12 +1,19 @@
 <button class="btn btn-sm pull-right oc-register"
         ng-show="account.plan.id<2"
         ng-click="doUpgrade()">
-    upgrade
+
+    <span ng-if="account.plan.id == 1">
+        upgrade
+    </span>
+    <span ng-if="account.plan.id == 0">
+        subscribe
+    </span>
+
 </button>
 <button class="btn btn-sm pull-right oc-logout" ng-click="doLogout()">
     log out
 </button>
 <span class="oc-welcome pull-right">welcome
-    <b>{{account.user.username}}</b>, you're plan is
+    <b>{{ account.user.username }}</b>, you're plan is
     <b>{{ account.plan ? account.plan.name : "NONE" }}</b>
 </span>
