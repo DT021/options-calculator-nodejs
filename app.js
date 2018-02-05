@@ -147,7 +147,7 @@ app.get ( '/', function(req, res) {
         // this is set when user logged in but has not yet subscribed
         res.render ( 'index', {
 
-            open   : readPartial("logout/open.ejs"),
+            whatif : readPartial("logout/whatif.ejs"),
             neww   : readPartial("logout/neww.ejs"),
             add    : readPartial("logout/add.ejs"),
             reverse: readPartial("logout/reverse.ejs"),
@@ -164,7 +164,7 @@ app.get ( '/', function(req, res) {
         // this is set when user logged in
         res.render('index', {
 
-            open   : readPartial("login/open.ejs"),
+            whatif : readPartial("login/whatif.ejs"),
             neww   : readPartial("login/neww.ejs"),
             add    : readPartial("login/add.ejs"),
             reverse: readPartial("login/reverse.ejs"),
@@ -181,7 +181,7 @@ app.get ( '/', function(req, res) {
         // this is set when user is logged out
         res.render ( 'index', {
 
-            open   : readPartial("logout/open.ejs"),
+            whatif : readPartial("logout/whatif.ejs"),
             neww   : readPartial("logout/neww.ejs"),
             add    : readPartial("logout/add.ejs"),
             reverse: readPartial("logout/reverse.ejs"),

@@ -1,11 +1,11 @@
 <button class="btn btn-sm oc-wide-button oc-buy"
         ng-disabled="menuService.isDisabled('whatif','in',this)"
         ng-hide="general.logged"
-        ng-click="doBuy()">
+        ng-click="doEnterWhatIf()">
     enter <i>what-if</i>
 </button>
 <button class="btn btn-sm oc-wide-button oc-sell"
         ng-show="general.logged"
-        ng-click="doSell()">
+        ng-click="doExitWhatIf()">
     exit <i>what-if</i>
 </button>
