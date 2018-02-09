@@ -19,6 +19,7 @@ var http = require('http');
 var mailer = require('nodemailer');
 var random = require('randomstring');
 var compression = require('compression');
+var minifyHTML = require('express-minify-html');
 
 // own stuff
 var rc = require('./oc-return-codes');
@@ -69,6 +70,19 @@ app.use ( session({
  // set intialized passport
 app.use ( passport.initialize() );
 app.use ( passport.session() );
+// ejs minifier
+app.use ( minifyHTML({
+    override: false,
+    exception_url: false,
+    htmlMinifier: {
+        removeComments: true,
+        collapseWhitespace: true,
+        collapseBooleanAttributes: true,
+        removeAttributeQuotes: true,
+        removeEmptyAttributes: true,
+        minifyJS: true
+    }
+}));
 
 // compress all requests
 app.use ( compression() );
