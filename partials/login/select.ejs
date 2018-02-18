@@ -1,8 +1,8 @@
-<span ng-class="{ 'oc-select-wrapper': ! general.logged }"
+<span ng-class="{ 'oc-select-wrapper': ! status.whatif }"
       ng-disabled="menuService.isDisabled('select','in',this)">
     <select class="oc-dropdown oc-strat-dropdown"
             ng-options="strat.name group by strat.optionDescription.symbol for strat in strategies track by strat.name"
-            ng-disabled="general.logged"
+            ng-disabled="status.whatif"
             ng-change="doUpdatePositions()"
             ng-model="strategy"></select>
 </span>
