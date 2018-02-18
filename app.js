@@ -442,7 +442,8 @@ app.post ( '/strategies/:name', function (req,res,next) {
             res.status ( rc.Server.INTERNAL_ERROR ).send ( err );
         } else {
 
-            strategy.expiry = req.body.expiry;
+            strategy.price = req.body.price;
+            strategy.vola = req.body.vola;
             for (var i = 0; i < req.body.positions.length; i++) {
                 strategy.positions[i] = {
                     amt: req.body.positions[i].amt,

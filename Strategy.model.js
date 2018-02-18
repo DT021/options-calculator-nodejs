@@ -22,7 +22,7 @@ var OptionDescriptionSchema = new Schema({
     symbol: String,         // the option symbol, like ES
     name: String,           // the full name of the options
     multiplier: Number,     // the multiplier i.e. contract size
-    price: Number,          // the price of the underlying used for the strategy
+    price: Number,          // the initial price used for first time use
     strikes: [Number]       // the stikes used for the strategy
 });
 
@@ -33,6 +33,8 @@ var StrategySchema = new Schema ({
 
     userid : String,        // owner of strategy
     name : String,          // name of strategy
+    price : Number,         // price of the underlying
+    vola : Number,          // volatility used for stragegy
 
     positions : [PositionSchema],
     optionDescription: OptionDescriptionSchema
