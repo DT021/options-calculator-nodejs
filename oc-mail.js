@@ -20,13 +20,32 @@ var transporter = mailer.createTransport ({
 
 });
 
+var awstransporter = mailer.createTransport({
+
+    service: 'AWS',
+
+    host: "email-smtp.us-east-1.amazonaws.com",
+    port: 465,
+    secure: true,
+
+    auth: {
+        user: config.aws_mail.user, // mail user
+        pass: config.aws_mail.pass  // mail password
+    },
+
+    tsl: {
+        rejectUnauthorized: false
+    }
+
+});
+
 ///////////////////////////////////////////////////////////////////////////////
 // route to log out
 module.exports.sendMail = function sendMail(mail) {
 
     return new Promise((resolve,reject) => {
 
-        transporter.sendMail(mail, (error,info) => {
+        awstransporter.sendMail(mail, (error,info) => {
             if (error) {
                 console.log(error);
                 reject(error);
