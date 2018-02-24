@@ -23,16 +23,6 @@ module.exports = {
         docroot: "./public"
     },
 
-    // mail settings from mailgun.com
-    mail: {
-        user: "postmaster@sandboxb727e194a6e748ac8d51dd5e682de3be.mailgun.org",
-        pass: "37c6e0e79a16ab458d99aa239c1b9960"
-    },
-    aws_mail: {
-        user: "AKIAIQLTR5TRSXONO75Q",
-        pass: "AqQtteZADw1khfv5ExJVBZVMMACOdZXDHQlS8G9Vibg4"
-    },
-
     // mongodb settings
     db: {
 
