@@ -155,15 +155,15 @@ passport.use ( new BasicStrategy ( {usernameField: 'email'}, function(email, pas
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-app.use ( function (req, res, next) {
+// app.use ( function (req, res, next) {
 
-    var host = req.get ( 'Host' );
-    if ( host !== "localhost:3000" && ! req.secure && req.get('X-Forwarded-Proto') !== 'https' ) {
-        res.redirect ( 'https://' + host + req.url );
-    }
-    else
-        next();
-});
+//     var host = req.get ( 'Host' );
+//     if ( host !== "localhost:3000" && ! req.secure && req.get('X-Forwarded-Proto') !== 'https' ) {
+//         res.redirect ( 'https://' + host + req.url );
+//     }
+//     else
+//         next();
+// });
 
 ///////////////////////////////////////////////////////////////////////////////
 // main page when logged out
