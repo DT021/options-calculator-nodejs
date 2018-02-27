@@ -152,6 +152,19 @@ passport.use ( new BasicStrategy ( {usernameField: 'email'}, function(email, pas
   }
 ));
 
+
+///////////////////////////////////////////////////////////////////////////////
+//
+app.use ( function (req, res, next) {
+
+    var host = req.get ( 'Host' );
+    if ( host !== "localhost:3000" && ! req.secure && req.get('X-Forwarded-Proto') !== 'https' ) {
+        res.redirect ( 'https://' + host + req.url );
+    }
+    else
+        next();
+});
+
 ///////////////////////////////////////////////////////////////////////////////
 // main page when logged out
 app.get ( '/', function(req, res) {
@@ -620,7 +633,7 @@ function sendConfirmationMail (user, res) {
         });;
 }
 
-var sleep = function (what, time) {
+function sleep (what, time) {
     setTimeout(function () {
         what();
     }, 4000);
