@@ -155,7 +155,7 @@ passport.use ( new BasicStrategy ( {usernameField: 'email'}, function(email, pas
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// app.use ( function (req, res, next) {
+// app.use ( function (req,res,next) {
 
 //     var host = req.get ( 'Host' );
 //     if ( host !== "localhost:3000" && ! req.secure && req.get('X-Forwarded-Proto') !== 'https' ) {
@@ -227,11 +227,11 @@ app.get ( '/', function(req, res) {
 // add latency for testing purpose
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-// app.use ( '/', function (req, res, next) { setTimeout(next, 1000) });
-// app.use('/login', function (req, res, next) { setTimeout(next,500) });
-// app.use('/register', function (req, res, next) { setTimeout(next, 500) });
-// app.use('/strategies', function (req, res, next) { setTimeout(next, 500) });
-// app.use('/strategies/:id', function (req, res, next) { setTimeout(next, 500) });
+// app.use ( '/', function (req,res,next) { setTimeout(next, 1000) });
+// app.use('/login', function (req,res,next) { setTimeout(next,500) });
+// app.use('/register', function (req,res,next) { setTimeout(next, 500) });
+// app.use('/strategies', function (req,res,next) { setTimeout(next, 500) });
+// app.use('/strategies/:id', function (req,res,next) { setTimeout(next, 500) });
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -248,7 +248,7 @@ app.get ( '/auth', function(req, res) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // route to log in
-app.post ( '/login', function(req, res, next) {
+app.post ( '/login', function(req,res,next) {
 
     if ( dbConnected === false ) {
         // user does not exist
@@ -294,7 +294,7 @@ app.post ( '/login', function(req, res, next) {
 
         res.redirect ( '/' );
 
-    })(req, res, next);
+    })(req,res,next);
 });
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -344,7 +344,7 @@ app.post ('/register', function(req,res,next) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // confirm an account via email address
-app.get ( '/confirm/:token', function (req, res, next) {
+app.get ( '/confirm/:token', function (req,res,next) {
 
     User.findOne ( { secretToken: req.params.token }, (err, user) => {
 
@@ -370,14 +370,14 @@ app.get ( '/confirm/:token', function (req, res, next) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // re-send confirmation mail
-app.post ( '/resend/:userid', function (req, res, next) {
+app.post ( '/resend/:userid', function (req,res,next) {
 
     User.findOne({ email: req.params.userid }, (err, user) => {
 
         if (err) {
             res.status ( rc.Server.INTERNAL_ERROR ).send(err);
         } else if (user) {
-            sendConfirmationMail(user, res);
+            sendConfirmationMail(user, req.headers.origin, res);
         }
     });
 });
@@ -489,7 +489,7 @@ app.post ( '/strategies/:name', function (req,res,next) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // delete strategy
-app.delete('/strategies/:name', function (req, res, next) {
+app.delete('/strategies/:name', function (req,res,next) {
 
     if (!req.isAuthenticated()) {
         res.status(rc.Client.UNAUTHORIZED).send("unauthorized request");
@@ -514,7 +514,7 @@ app.delete('/strategies/:name', function (req, res, next) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // delete user
-app.delete('/users/:name', function (req, res, next) {
+app.delete('/users/:name', function (req,res,next) {
 
     if (!req.isAuthenticated()) {
         res.status(rc.Client.UNAUTHORIZED).send("unauthorized request");
@@ -550,7 +550,7 @@ require ( 'express-route-log' )(app);
 app.use ( express.static(path.join(__dirname,config.server.docroot)) );
 
 // catch 404 and forward to error handler
-app.use ( function(req, res, next) {
+app.use ( function(req,res,next) {
     var err = new Error('Not Found');
     err.status = rc.Client.NOT_FOUND;
     next ( err );
