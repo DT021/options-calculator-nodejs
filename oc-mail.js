@@ -68,11 +68,12 @@ module.exports.createMail = function createMail(receiver,name,token) {
 
     return {
         from: '"IronCondorTrader" <info@ironcondortrader.com>',
-        subject: 'Please verify your IronCondorTrader account',
+        subject: 'Please verify your IronCondorTrader© account',
         to: receiver,
         html: '<div style="font-size:1.2em;">' +
               '<p>Hello ' + name + ',</p>' +
-              '<p>please click the link below in order to confirm your email address.</p>' +
+              '<p>please click the link below in order to confirm your email address.' +
+              ' In case you have not registered to IronCondorTrader© please ignore this email.</p>' +
               '<a href="' + link + '">' + link + '</a>' +
               '</div>'
     };
