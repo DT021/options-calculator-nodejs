@@ -337,7 +337,7 @@ app.post ('/register', function(req,res,next) {
         if ( err ) {
             res.status( rc.Server.INTERNAL_ERROR ).json ( err );
         } else {
-            sendConfirmationMail( newUser, res );
+            sendConfirmationMail( newUser, req.headers.origin, res );
         }
     });
 });
@@ -622,11 +622,12 @@ function normalizePort ( val ) {
     return false;
 }
 
-function sendConfirmationMail (user, res) {
+function sendConfirmationMail (user, host, res) {
 
     mail.sendMail(mail.createMail(user.email,
                                   user.username,
-                                  user.secretToken)).then(function (users) {
+                                  user.secretToken,
+                                  host)).then(function (users) {
         res.status(rc.Success.CREATED).send({
             user: user,
             plan: subscriptions.plans[user.plan]

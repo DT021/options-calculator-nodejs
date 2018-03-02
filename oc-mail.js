@@ -62,9 +62,10 @@ module.exports.sendMail = function sendMail(mail) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // route to log out
-module.exports.createMail = function createMail(receiver,name,token) {
+module.exports.createMail = function createMail(receiver,name,token,host) {
 
-    var link = config.server.host + ":" + config.server.port + "/confirm/" + token;
+    // var link = config.server.host + ":" + config.server.port + "/confirm/" + token;
+    var link = host + "/confirm/" + token;
 
     return {
         from: '"IronCondorTrader" <info@ironcondortrader.com>',
