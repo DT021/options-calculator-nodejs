@@ -327,7 +327,7 @@ app.post ('/register', function(req,res,next) {
         console.error ( "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" );
         setTimeout ( function() {
             res.status(rc.Success.CREATED).send ( { user: newUser, plan : subscriptions.plans[newUser.plan] } );
-        }, 1000 );
+        }, 2000 );
         return;
     }
 
@@ -363,7 +363,7 @@ app.get ( '/confirm/:token', function (req,res,next) {
                 }
             });
         } else {
-            res.status (rc.Client.NOT_FOUND ).send ( 'This token does\'t exist or the associated account is already confirmed.' );
+            res.status (rc.Client.NOT_FOUND ).send ( 'This token doesn\'t exist or the associated account is already confirmed.' );
         }
     });
 });
@@ -378,6 +378,8 @@ app.post ( '/resend/:userid', function (req,res,next) {
             res.status ( rc.Server.INTERNAL_ERROR ).send(err);
         } else if (user) {
             sendConfirmationMail(user, req.headers.origin, res);
+        } else {
+            res.status(rc.Client.NOT_FOUND).send('The user <' + req.params.userid + '> doesn\'t exist.');
         }
     });
 });
