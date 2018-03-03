@@ -10,8 +10,6 @@ var mgconfig = {
     service: 'MailGun',
 
     auth: {
-        // user: config.mail.user, // mail user
-        // pass: config.mail.pass  // mail password
         user: "postmaster@sandboxb727e194a6e748ac8d51dd5e682de3be.mailgun.org",
         pass: "37c6e0e79a16ab458d99aa239c1b9960"
     },
@@ -39,7 +37,7 @@ var awsconfig = {
     }
 };
 
-var transporter = mailer.createTransport ( awsconfig );
+var transporter = mailer.createTransport ( mgconfig );
 
 ///////////////////////////////////////////////////////////////////////////////
 // route to log out

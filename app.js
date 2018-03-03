@@ -338,10 +338,7 @@ app.post ('/register', function(req,res,next) {
             res.status( rc.Server.INTERNAL_ERROR ).json ( err );
         } else {
             sendConfirmationMail(newUser, req.headers.origin, res).then(function (users) {
-                res.status(rc.Success.CREATED).send({
-                    user: user,
-                    plan: subscriptions.plans[user.plan]
-                });
+                res.status(rc.Success.CREATED).json("OK");
             }).catch(function (err) {
                 res.status(rc.Server.INTERNAL_ERROR).send ( err );
             });
