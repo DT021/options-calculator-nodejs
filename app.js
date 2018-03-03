@@ -337,7 +337,14 @@ app.post ('/register', function(req,res,next) {
         if ( err ) {
             res.status( rc.Server.INTERNAL_ERROR ).json ( err );
         } else {
-            sendConfirmationMail( newUser, req.headers.origin, res );
+            sendConfirmationMail(newUser, req.headers.origin, res).then(function (users) {
+                res.status(rc.Success.CREATED).send({
+                    user: user,
+                    plan: subscriptions.plans[user.plan]
+                });
+            }).catch(function (err) {
+                res.status(rc.Server.INTERNAL_ERROR).send ( err );
+            });
         }
     });
 });
@@ -377,9 +384,13 @@ app.post ( '/resend/:userid', function (req,res,next) {
         if (err) {
             res.status ( rc.Server.INTERNAL_ERROR ).send(err);
         } else if (user) {
-            sendConfirmationMail(user, req.headers.origin, res);
+            sendConfirmationMail(user, req.headers.origin, res).then(function (users) {
+                res.status(rc.Success.OK).send(req.params.userid);
+            }).catch(function (err) {
+                res.status(rc.Server.INTERNAL_ERROR).send(err.response);
+            });
         } else {
-            res.status(rc.Client.NOT_FOUND).send('The user <' + req.params.userid + '> doesn\'t exist.');
+            res.status(rc.Client.NOT_FOUND).json('The user <' + req.params.userid + '> doesn\'t exist.');
         }
     });
 });
@@ -516,32 +527,28 @@ app.delete('/strategies/:name', function (req,res,next) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // delete user
-app.delete('/users/:name', function (req,res,next) {
+app.delete('/users/:userid', function (req,res,next) {
 
-    if (!req.isAuthenticated()) {
-        res.status(rc.Client.UNAUTHORIZED).send("unauthorized request");
-        return;
-    }
-    User.findOne({ email: req.params.email }, (err, user) => {
+    // if (!req.isAuthenticated()) {
+    //     res.status(rc.Client.UNAUTHORIZED).send("unauthorized request");
+    //     return;
+    // }
+    User.findOne({ email: req.params.userid }, (err, user) => {
 
         if (err) {
-            res.status(rc.Server.INTERNAL_ERROR).send(err);
+            res.status(rc.Client.NOT_FOUND).send(err);
         } else {
-            deleteUser ( user, res );
+
+            user.remove((err, user) => {
+                if (err) {
+                    res.status ( rc.Server.INTERNAL_ERROR ).send ( err );
+                } else {
+                    res.status ( rc.Success.OK ).send ( user );
+                }
+            });
         }
     });
 });
-
-///////////////////////////////////////////////////////////////////////////////
-// delete user
-var deleteUser = function (user,res) {
-    user.remove((err, user) => {
-        if (err) {
-            return err;
-        }
-        return null;
-    });
-}
 
 ///////////////////////////////////////////////////////////////////////////////
 // simple route loging - prints all defined routes
@@ -626,26 +633,10 @@ function normalizePort ( val ) {
 
 function sendConfirmationMail (user, host, res) {
 
-    mail.sendMail(mail.createMail(user.email,
-                                  user.username,
-                                  user.secretToken,
-                                  host)).then(function (users) {
-        res.status(rc.Success.CREATED).send({
-            user: user,
-            plan: subscriptions.plans[user.plan]
-        });
-    }).catch(function (err) {
-
-        deleteUser ( user, res );
-
-        var errcode = null;
-        if (err.code === "ECONNECTION" && err.errno === "ENOTFOUND") {
-            errcode = "Confirmation mail could not be sent. Please check your internet connection.";
-            res.status(rc.Client.PRECONDITION_FAILED).send( errcode );
-        } else {
-            res.status(rc.Server.INTERNAL_ERROR).send( err.response );
-        }
-    });
+    return mail.sendMail(mail.createMail(user.email,
+                                         user.username,
+                                         user.secretToken,
+                                         host));
 }
 
 function sleep (what, time) {
