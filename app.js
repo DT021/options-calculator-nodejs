@@ -252,10 +252,9 @@ app.post ( '/login', function(req,res,next) {
 
     if ( dbConnected === false ) {
         // user does not exist
-        return res.status ( rc.Server.INTERNAL_ERROR ).send ( {
-            success: false,
-            message : "failed !",
-            error: "no database connection"
+        return res.status ( rc.Server.INTERNAL_ERROR ).send ( { success: false,
+                                                                message : "failed !",
+                                                                error: "no database connection"
         } );
     }
 
@@ -278,10 +277,9 @@ app.post ( '/login', function(req,res,next) {
         } else if ( user.active === false ) {
 
             // user is registered but has not yet confirmed his account
-            return res.status ( rc.Client.UNAUTHORIZED ).send ( {
-                success : false,
-                message : 'not yet confirmed !',
-                user    : user
+            return res.status ( rc.Client.UNAUTHORIZED ).send ( { success : false,
+                                                                  message : 'not yet confirmed !',
+                                                                  user    : user
             });
         }
 
@@ -397,7 +395,7 @@ app.post ( '/resend/:userid', function (req,res,next) {
 app.get ('/users', function(req,res) {
 
     if ( ! req.isAuthenticated() ) {
-        res.status ( rc.Client.UNAUTHORIZED ).send ( "unauthorized request" );
+        res.status ( rc.Client.UNAUTHORIZED ).json ( "unauthorized request" );
         return;
     }
     User.find().then ( function(users) {
@@ -412,7 +410,7 @@ app.get ('/users', function(req,res) {
 app.get ('/strategies', function(req,res) {
 
     if ( ! req.isAuthenticated() ) {
-        res.status ( rc.Client.UNAUTHORIZED ).send ( "unauthorized request" );
+        res.status ( rc.Client.UNAUTHORIZED ).json ( "unauthorized request" );
         return;
     }
     Strategy.find().sort('name').exec(function (err, strategy) {
@@ -429,7 +427,7 @@ app.get ('/strategies', function(req,res) {
 app.get ('/strategies/:id', function(req,res) {
 
     if (!req.isAuthenticated()) {
-        res.status(rc.Client.UNAUTHORIZED).send("unauthorized request");
+        res.status ( rc.Client.UNAUTHORIZED ).json ( "unauthorized request" );
         return;
     }
     Strategy.find ( { userid: req.params.id }).sort('name').exec( function(err,strategy) {
@@ -502,7 +500,7 @@ app.post ( '/strategies/:name', function (req,res,next) {
 app.delete('/strategies/:name', function (req,res,next) {
 
     if (!req.isAuthenticated()) {
-        res.status(rc.Client.UNAUTHORIZED).send("unauthorized request");
+        res.status ( rc.Client.UNAUTHORIZED ).json ( "unauthorized request" );
         return;
     }
     Strategy.findOne({ name: req.params.name }, (err, strategy) => {
