@@ -242,7 +242,7 @@ app.get ( '/', function(req, res) {
 app.get ( '/auth', function(req, res) {
 
     res.status ( rc.Success.OK ).json ( req.isAuthenticated() ? { 'user': req.user,
-                                                                  'plan': subscriptions.plans[req.user.plan]}
+                                                                  'plan': subscriptions.plans[req.user.plan] }
                                                               : { 'user': null } );
 });
 
@@ -270,9 +270,8 @@ app.post ( '/login', function(req,res,next) {
         if ( ! user ) {
 
             // user does not exist
-            return res.status ( rc.Client.NOT_FOUND ).send ( {
-                success : false,
-                message : 'login failed !'
+            return res.status ( rc.Client.NOT_FOUND ).send ( { success : false,
+                                                               message : 'login failed !'
             });
         } else if ( user.active === false ) {
 
@@ -309,10 +308,9 @@ app.post ('/register', function(req,res,next) {
 
     if ( dbConnected === false ) {
         // user does not exist
-        return res.status ( rc.Server.INTERNAL_ERROR ).send ({
-            success: false,
-            message: "failed !",
-            error: "no database connection"
+        return res.status ( rc.Server.INTERNAL_ERROR ).send ( { success: false,
+                                                                message: "failed !",
+                                                                error: "no database connection"
         });
     }
 
@@ -324,7 +322,8 @@ app.post ('/register', function(req,res,next) {
         console.error ( "!! WARNING -- TEST USER xoxman123 USED !!!!!!" );
         console.error ( "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" );
         setTimeout ( function() {
-            res.status(rc.Success.CREATED).send ( { user: newUser, plan : subscriptions.plans[newUser.plan] } );
+            res.status(rc.Success.CREATED).send ( { user: newUser,
+                                                    plan : subscriptions.plans[newUser.plan] } );
         }, 2000 );
         return;
     }
@@ -365,7 +364,7 @@ app.get ( '/confirm/:token', function (req,res,next) {
                 }
             });
         } else {
-            res.status (rc.Client.NOT_FOUND ).send ( 'This token doesn\'t exist or the associated account is already confirmed.' );
+            res.status ( rc.Client.NOT_FOUND ).send ( 'This token doesn\'t exist or the associated account is already confirmed.' );
         }
     });
 });
@@ -375,9 +374,8 @@ app.get ( '/confirm/:token', function (req,res,next) {
 app.post ( '/resend/:userid', function (req,res,next) {
 
     User.findOne({ email: req.params.userid }, (err, user) => {
-
         if (err) {
-            res.status ( rc.Server.INTERNAL_ERROR ).send(err);
+            res.status ( rc.Server.INTERNAL_ERROR ).send ( err );
         } else if (user) {
             sendConfirmationMail(user, req.headers.origin, res).then(function (users) {
                 res.status(rc.Success.OK).send(req.params.userid);
@@ -385,7 +383,7 @@ app.post ( '/resend/:userid', function (req,res,next) {
                 res.status(rc.Server.INTERNAL_ERROR).send(err.response);
             });
         } else {
-            res.status(rc.Client.NOT_FOUND).json('The user <' + req.params.userid + '> doesn\'t exist.');
+            res.status(rc.Client.NOT_FOUND).send('The user <' + req.params.userid + '> doesn\'t exist.');
         }
     });
 });
