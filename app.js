@@ -332,10 +332,10 @@ app.post ('/register', function(req,res,next) {
     newUser.active = false;
     newUser.save(function (err) {
         if ( err ) {
-            res.status( rc.Server.INTERNAL_ERROR ).json ( err );
+            res.status( rc.Server.INTERNAL_ERROR ).send ( err );
         } else {
             sendConfirmationMail(newUser, req.headers.origin, res).then(function (users) {
-                res.status(rc.Success.CREATED).json("OK");
+                res.status(rc.Success.CREATED).send ( "OK" );
             }).catch(function (err) {
                 res.status(rc.Server.INTERNAL_ERROR).send ( err );
             });
@@ -383,7 +383,7 @@ app.post ( '/resend/:userid', function (req,res,next) {
                 res.status(rc.Server.INTERNAL_ERROR).send(err.response);
             });
         } else {
-            res.status(rc.Client.NOT_FOUND).send('The user <' + req.params.userid + '> doesn\'t exist.');
+            res.status(rc.Client.NOT_FOUND).send ( 'The user <' + req.params.userid + '> doesn\'t exist.' );
         }
     });
 });
@@ -393,13 +393,13 @@ app.post ( '/resend/:userid', function (req,res,next) {
 app.get ('/users', function(req,res) {
 
     if ( ! req.isAuthenticated() ) {
-        res.status ( rc.Client.UNAUTHORIZED ).json ( "unauthorized request" );
+        res.status ( rc.Client.UNAUTHORIZED ).send ( "unauthorized request" );
         return;
     }
     User.find().then ( function(users) {
-        res.status ( rc.Success.OK ).json ( users );
+        res.status ( rc.Success.OK ).send ( users );
     }).catch ( function(err) {
-        res.status ( rc.Server.INTERNAL_ERROR ).json ( err );
+        res.status ( rc.Server.INTERNAL_ERROR ).send ( err );
     });
 });
 
@@ -408,14 +408,14 @@ app.get ('/users', function(req,res) {
 app.get ('/strategies', function(req,res) {
 
     if ( ! req.isAuthenticated() ) {
-        res.status ( rc.Client.UNAUTHORIZED ).json ( "unauthorized request" );
+        res.status ( rc.Client.UNAUTHORIZED ).send ( "unauthorized request" );
         return;
     }
     Strategy.find().sort('name').exec(function (err, strategy) {
         if (err) {
-            res.status ( rc.Server.INTERNAL_ERROR ).json(err);
+            res.status ( rc.Server.INTERNAL_ERROR ).send ( err );
         } else {
-            res.status ( rc.Success.OK ).json(strategy);
+            res.status ( rc.Success.OK ).send ( strategy );
         }
     });
 });
@@ -424,15 +424,15 @@ app.get ('/strategies', function(req,res) {
 // return all data associated to one user
 app.get ('/strategies/:id', function(req,res) {
 
-    if (!req.isAuthenticated()) {
-        res.status ( rc.Client.UNAUTHORIZED ).json ( "unauthorized request" );
+    if ( ! req.isAuthenticated() ) {
+        res.status ( rc.Client.UNAUTHORIZED ).send ( "unauthorized request" );
         return;
     }
     Strategy.find ( { userid: req.params.id }).sort('name').exec( function(err,strategy) {
         if ( err ) {
-            res.status ( rc.Server.INTERNAL_ERROR ).json(err);
+            res.status ( rc.Server.INTERNAL_ERROR ).send ( err );
         } else {
-            res.status ( rc.Success.OK ).json(strategy);
+            res.status ( rc.Success.OK ).send ( strategy );
         }
     });
 });
@@ -446,7 +446,7 @@ app.post ('/strategies', function(req,res,next) {
         if (err) {
             res.status ( rc.Server.INTERNAL_ERROR ).send ( err );
         } else {
-            res.status ( rc.Success.OK ).json ( newStrategy );
+            res.status ( rc.Success.OK ).send ( newStrategy );
         }
     });
 });
@@ -498,7 +498,7 @@ app.post ( '/strategies/:name', function (req,res,next) {
 app.delete('/strategies/:name', function (req,res,next) {
 
     if (!req.isAuthenticated()) {
-        res.status ( rc.Client.UNAUTHORIZED ).json ( "unauthorized request" );
+        res.status ( rc.Client.UNAUTHORIZED ).send ( "unauthorized request" );
         return;
     }
     Strategy.findOne({ name: req.params.name }, (err, strategy) => {
@@ -564,7 +564,7 @@ app.use ( function(err, req, res, next) {
     // set locals, only providing error in development
     res.locals.message = err.message;
     res.locals.error = req.app.get('env') === 'development' ? err : {};
-    res.status ( err.statusCode || rc.Server.INTERNAL_ERROR ).json ( err );
+    res.status ( err.statusCode || rc.Server.INTERNAL_ERROR ).send ( err );
 });
 
 ///////////////////////////////////////////////////////////////////////////////
