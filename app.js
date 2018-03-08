@@ -241,9 +241,10 @@ app.get ( '/', function(req, res) {
 // route to test if the user is logged in or not
 app.get ( '/auth', function(req, res) {
 
-    res.status ( rc.Success.OK ).json ( req.isAuthenticated() ? { 'user': req.user,
-                                                                  'plan': subscriptions.plans[req.user.plan] }
-                                                              : { 'user': null } );
+    if ( ! checkAuthenticaton(req,res) ) { return; }
+
+    res.status ( rc.Success.OK ).send( { 'user': req.user,
+                                         'plan': subscriptions.plans[req.user.plan] } );
 });
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -254,8 +255,7 @@ app.post ( '/login', function(req,res,next) {
         // user does not exist
         return res.status ( rc.Server.INTERNAL_ERROR ).send ( { success: false,
                                                                 message : "failed !",
-                                                                error: "no database connection"
-        } );
+                                                                error: "no database connection" } );
     }
 
     // var user = req.body;
@@ -298,6 +298,8 @@ app.post ( '/login', function(req,res,next) {
 // route to log out
 app.post ( '/logout', function(req, res) {
 
+    if ( ! checkAuthenticaton(req,res) ) { return; }
+
     req.logOut();
     res.redirect ( '/' );
 });
@@ -310,8 +312,7 @@ app.post ('/register', function(req,res,next) {
         // user does not exist
         return res.status ( rc.Server.INTERNAL_ERROR ).send ( { success: false,
                                                                 message: "failed !",
-                                                                error: "no database connection"
-        });
+                                                                error: "no database connection" });
     }
 
     var newUser = new User ( req.body );
@@ -347,6 +348,8 @@ app.post ('/register', function(req,res,next) {
 // confirm an account via email address
 app.get ( '/confirm/:token', function (req,res,next) {
 
+    if (!checkAuthenticaton(req, res)) { return; }
+
     User.findOne ( { secretToken: req.params.token }, (err, user) => {
 
         if (err) {
@@ -373,6 +376,8 @@ app.get ( '/confirm/:token', function (req,res,next) {
 // re-send confirmation mail
 app.post ( '/resend/:userid', function (req,res,next) {
 
+    if (!checkAuthenticaton(req, res)) { return; }
+
     User.findOne({ email: req.params.userid }, (err, user) => {
         if (err) {
             res.status ( rc.Server.INTERNAL_ERROR ).send ( err );
@@ -392,10 +397,8 @@ app.post ( '/resend/:userid', function (req,res,next) {
 // return all users
 app.get ('/users', function(req,res) {
 
-    if ( ! req.isAuthenticated() ) {
-        res.status ( rc.Client.UNAUTHORIZED ).send ( "unauthorized request" );
-        return;
-    }
+    if (!checkAuthenticaton(req, res)) { return; }
+
     User.find().then ( function(users) {
         res.status ( rc.Success.OK ).send ( users );
     }).catch ( function(err) {
@@ -407,10 +410,8 @@ app.get ('/users', function(req,res) {
 // return all data
 app.get ('/strategies', function(req,res) {
 
-    if ( ! req.isAuthenticated() ) {
-        res.status ( rc.Client.UNAUTHORIZED ).send ( "unauthorized request" );
-        return;
-    }
+    if (!checkAuthenticaton(req, res)) { return; }
+
     Strategy.find().sort('name').exec(function (err, strategy) {
         if (err) {
             res.status ( rc.Server.INTERNAL_ERROR ).send ( err );
@@ -424,10 +425,8 @@ app.get ('/strategies', function(req,res) {
 // return all data associated to one user
 app.get ('/strategies/:id', function(req,res) {
 
-    if ( ! req.isAuthenticated() ) {
-        res.status ( rc.Client.UNAUTHORIZED ).send ( "unauthorized request" );
-        return;
-    }
+    if (!checkAuthenticaton(req, res)) { return; }
+
     Strategy.find ( { userid: req.params.id }).sort('name').exec( function(err,strategy) {
         if ( err ) {
             res.status ( rc.Server.INTERNAL_ERROR ).send ( err );
@@ -440,6 +439,8 @@ app.get ('/strategies/:id', function(req,res) {
 ///////////////////////////////////////////////////////////////////////////////
 // save as (new)
 app.post ('/strategies', function(req,res,next) {
+
+    if (!checkAuthenticaton(req, res)) { return; }
 
     var newStrategy = new Strategy ( req.body );
     newStrategy.save(function (err) {
@@ -454,6 +455,8 @@ app.post ('/strategies', function(req,res,next) {
 ///////////////////////////////////////////////////////////////////////////////
 // save (update))
 app.post ( '/strategies/:name', function (req,res,next) {
+
+    if (!checkAuthenticaton(req, res)) { return; }
 
     Strategy.findOne ( { name : req.params.name}, (err,strategy) => {
 
@@ -497,6 +500,8 @@ app.post ( '/strategies/:name', function (req,res,next) {
 // delete strategy
 app.delete('/strategies/:name', function (req,res,next) {
 
+    if (!checkAuthenticaton(req, res)) { return; }
+
     if (!req.isAuthenticated()) {
         res.status ( rc.Client.UNAUTHORIZED ).send ( "unauthorized request" );
         return;
@@ -521,6 +526,8 @@ app.delete('/strategies/:name', function (req,res,next) {
 ///////////////////////////////////////////////////////////////////////////////
 // delete user
 app.delete('/users/:userid', function (req,res,next) {
+
+    if (!checkAuthenticaton(req, res)) { return; }
 
     // if (!req.isAuthenticated()) {
     //     res.status(rc.Client.UNAUTHORIZED).send("unauthorized request");
@@ -613,6 +620,14 @@ server.on ( 'listening', function() {
 
 ///////////////////////////////////////////////////////////////////////////////
 // local functions
+function checkAuthenticaton (req, res) {
+    if ( ! req.isAuthenticated()) {
+        res.status ( rc.Client.UNAUTHORIZED ).send ( "unauthorized request" );
+        return false;
+    }
+    return true;
+}
+
 function normalizePort ( val ) {
     var port = parseInt ( val, 10 );
     if ( isNaN(port)) {
