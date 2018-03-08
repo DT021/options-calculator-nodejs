@@ -1,8 +1,9 @@
 'use strict';
 
 var mailer = require('nodemailer');
-var config = require('./oc-config');
 var verifier = require('email-verify');
+var emailExistence = require('email-existence');
+var config = require('./oc-config');
 
 ///////////////////////////////////////////////////////////////////////////////
 // route to log out
@@ -46,35 +47,61 @@ module.exports.sendMail = function sendMail(mail) {
 
     return new Promise((resolve,reject) => {
 
-        verifier.verify ( mail.to, function (err,info) {
-
+        emailExistence.check ( mail.to, function(err,response) {
             if ( err ) {
-
-                console.log ( err );
+                // console.log('emailExistence: ' + err );
                 reject ( err );
-
-            } else if ( info.success ) {
-
-                console.log ( "Success (T/F): " + info.success );
-                console.log ( "Info: " + info.info );
-                // transporter.sendMail(mail, (error, info) => {
-                //     if (error) {
-                //         console.log(error);
-                //         reject(error);
-                //         return;
-                //     }
-                //     console.log('message sent to %s', mail.to);
-                //     // console.log ( 'Preview URL: %s', mailer.getTestMessageUrl(info) );
-                //     resolve(info);
-                // });
-                resolve ( "Ok" );
-
+            }
+            else if ( ! response ) {
+                // console.log ( 'emailExistence: ' + response );
+                reject ( "invalid address" );
             } else {
-
-                reject ( info.info );
-
+                resolve ( "OK" );
             }
         });
+
+        // verifier.verify ( mail.to, function (err,info) {
+
+        //     if ( err ) {
+
+        //         console.log ( err );
+        //         reject ( err );
+
+        //     } else if ( info.success ) {
+
+        //         console.log ( "Success: %s", info.success );
+        //         // transporter.sendMail(mail, (error, info) => {
+        //         //     if (error) {
+        //         //         console.log(error);
+        //         //         reject(error);
+        //         //         return;
+        //         //     }
+        //         //     console.log('message sent to %s', mail.to);
+        //         //     // console.log ( 'Preview URL: %s', mailer.getTestMessageUrl(info) );
+        //         //     resolve(info);
+        //         // });
+        //         resolve ( "Ok" );
+
+        //     } else {
+
+        //         // switch ( info.code ) {
+        //         //     //Connected to SMTP server and finished email verification
+        //         //     case verifier.infoCodes.finishedVerification): {}
+        //         //     //Domain not found
+        //         //     case verifier.infoCodes.domainNotFound): {}
+        //         //     //Email is not valid
+        //         //     case verifier.infoCodes.invalidEmailStructure): {}
+        //         //     //No MX record in domain name
+        //         //     case verifier.infoCodes.noMxRecords): {}
+        //         //     //SMTP connection timeout
+        //         //     case verifier.infoCodes.SMTPConnectionTimeout): {}
+        //         //     //SMTP connection error
+        //         //     case verifier.infoCodes.SMTPConnectionError): {}
+        //         // }
+        //         console.log ( "Info: %s", info.info );
+        //         reject ( info.info );
+        //     }
+        // });
     });
 }
 
@@ -96,45 +123,4 @@ module.exports.createMail = function createMail(receiver,name,token,host) {
               '<a href="' + link + '">' + link + '</a>' +
               '</div>'
     };
-}
-
-///////////////////////////////////////////////////////////////////////////////
-// validate email address
-var checkMail = function (receiver ) {
-
-    return new Promise((resolve, reject) => {
-
-        verifier.verify ( receiver, function (err, info) {
-
-            if (err) {
-                console.log ( err );
-                reject ( err );
-            } else {
-                console.log ( "Success (T/F): " + info.success );
-                console.log ( "Info: " + info.info );
-
-                var infoCodes = verifier.infoCodes;
-                //Info object returns a code which representing a state of validation:
-
-                //Connected to SMTP server and finished email verification
-                // console.log(info.code === infoCodes.finishedVerification);
-
-                //Domain not found
-                // console.log(info.code === infoCodes.domainNotFound);
-
-                //Email is not valid
-                // console.log(info.code === infoCodes.invalidEmailStructure);
-
-                //No MX record in domain name
-                // console.log(info.code === infoCodes.noMxRecords);
-
-                //SMTP connection timeout
-                // console.log(info.code === infoCodes.SMTPConnectionTimeout);
-
-                //SMTP connection error
-                // console.log(info.code === infoCodes.SMTPConnectionError)
-                resolve ( info );
-            }
-        });
-    });
 }
