@@ -329,18 +329,26 @@ app.post ('/register', function(req,res,next) {
         return;
     }
 
-    newUser.secretToken = random.generate();
-    newUser.active = false;
-    newUser.save(function (err) {
-        if ( err ) {
-            res.status( rc.Server.INTERNAL_ERROR ).send ( err );
-        } else {
-            sendConfirmationMail(newUser, req.headers.origin, res).then(function (users) {
-                res.status(rc.Success.CREATED).send ( "OK" );
-            }).catch(function (err) {
-                res.status(rc.Server.INTERNAL_ERROR).send ( err );
-            });
+    mail.checkMail ( newUser.email, function (err,response) {
+        if ( err || ! response )
+        {
+            res.status ( rc.Client.REQUEST_FAILED ).send ( err || "invalid mail address" );
+            return;
         }
+
+        newUser.secretToken = random.generate();
+        newUser.active = false;
+        newUser.save(function (err) {
+            if ( err ) {
+                res.status( rc.Server.INTERNAL_ERROR ).send ( err );
+            } else {
+                sendConfirmationMail(newUser, req.headers.origin, res).then(function (users) {
+                    res.status(rc.Success.CREATED).send ( "OK" );
+                }).catch(function (err) {
+                    res.status(rc.Server.INTERNAL_ERROR).send ( err );
+                });
+            }
+        });
     });
 });
 
@@ -376,7 +384,7 @@ app.get ( '/confirm/:token', function (req,res,next) {
 // re-send confirmation mail
 app.post ( '/resend/:userid', function (req,res,next) {
 
-    if (!checkAuthenticaton(req, res)) { return; }
+    // if (!checkAuthenticaton(req, res)) { return; }
 
     User.findOne({ email: req.params.userid }, (err, user) => {
         if (err) {

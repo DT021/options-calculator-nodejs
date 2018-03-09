@@ -1,7 +1,7 @@
 'use strict';
 
 var mailer = require('nodemailer');
-var verifier = require('email-verify');
+// var verifier = require('email-verify');
 var emailExistence = require('email-existence');
 var config = require('./oc-config');
 
@@ -47,43 +47,42 @@ module.exports.sendMail = function sendMail(mail) {
 
     return new Promise((resolve,reject) => {
 
-        emailExistence.check ( mail.to, function(err,response) {
-            if ( err ) {
-                // console.log('emailExistence: ' + err );
-                reject ( err );
-            }
-            else if ( ! response ) {
-                // console.log ( 'emailExistence: ' + response );
-                reject ( "invalid address" );
-            } else {
-                resolve ( "OK" );
-            }
-        });
+        // TODO: for test purpose only
+        setTimeout(function () {
+            resolve ( "OK" );
+        }, 2000);
+
+        // checkMail ( mail.to, function(err,response) {
+        //     if ( err ) {
+        //         // console.log('emailExistence: ' + err );
+        //         reject ( err );
+        //     }
+        //     else if ( ! response ) {
+        //         // console.log ( 'emailExistence: ' + response );
+        //         reject ( "invalid address" );
+        //     } else {
+        //         resolve ( "OK" );
+        //     }
+        // });
+
+        // transporter.sendMail(mail.to, (error, info) => {
+        //     if (error) {
+        //         console.log(error);
+        //         reject(error);
+        //         return;
+        //     }
+        //     console.log('message sent to %s', mail.to);
+        //     // console.log ( 'Preview URL: %s', mailer.getTestMessageUrl(info) );
+        //     resolve(info);
+        // });
+
 
         // verifier.verify ( mail.to, function (err,info) {
-
         //     if ( err ) {
-
         //         console.log ( err );
         //         reject ( err );
-
         //     } else if ( info.success ) {
-
-        //         console.log ( "Success: %s", info.success );
-        //         // transporter.sendMail(mail, (error, info) => {
-        //         //     if (error) {
-        //         //         console.log(error);
-        //         //         reject(error);
-        //         //         return;
-        //         //     }
-        //         //     console.log('message sent to %s', mail.to);
-        //         //     // console.log ( 'Preview URL: %s', mailer.getTestMessageUrl(info) );
-        //         //     resolve(info);
-        //         // });
-        //         resolve ( "Ok" );
-
         //     } else {
-
         //         // switch ( info.code ) {
         //         //     //Connected to SMTP server and finished email verification
         //         //     case verifier.infoCodes.finishedVerification): {}
@@ -123,4 +122,11 @@ module.exports.createMail = function createMail(receiver,name,token,host) {
               '<a href="' + link + '">' + link + '</a>' +
               '</div>'
     };
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// 
+module.exports.checkMail = function checkMail(receiver,callback) {
+
+    emailExistence.check ( receiver, callback );
 }
