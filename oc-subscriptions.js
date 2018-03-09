@@ -6,7 +6,7 @@ var config = require("./oc-config");
 
 pm.getContext ( config.subscription.privkey );
 
-var plans = [
+module.exports.plans = [
 
     {
         id: 0,
@@ -41,11 +41,11 @@ var plans = [
     },
 
 ];
-module.exports.plans;
+// module.exports.plans;
 
 ///////////////////////////////////////////////////////////////////////////////
 // retrieve plans from stripe
-module.exports.getSubscriptionPlans = function () {
+module.exports.getSubscriptionPlans = function (plans) {
 
     stripe.plans.list ( function (err,splans) {
         for ( var i in splans.data ) {
