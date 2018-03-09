@@ -19,24 +19,24 @@ module.exports.plans = [
     {
         id: 1,
         name: "BASIC",
-        price: 0,
-        period: "",
+        price: 5,
+        period: "1 MONTH",
         recurring: true
     },
 
     {
         id: 2,
         name: "STANDARD",
-        price: 0,
-        period: "",
+        price: 10,
+        period: "1 MONTH",
         recurring: true
     },
 
     {
         id: 3,
         name: "PREMIUM",
-        price: 0,
-        period: "",
+        price: 100,
+        period: "1 YEAR",
         recurring: false
     },
 
@@ -48,12 +48,15 @@ module.exports.plans = [
 module.exports.getSubscriptionPlans = function (plans) {
 
     stripe.plans.list ( function (err,splans) {
-        for ( var i in splans.data ) {
-            var plan = splans.data[i];
 
-            plans[plan.id].price = plan.amount / 100;
-            plans[plan.id].period = plan.interval_count + " " +
-                                    plan.interval.toUpperCase();
+        if ( splans ) {
+            for ( var i in splans.data ) {
+                var plan = splans.data[i];
+
+                plans[plan.id].price = plan.amount / 100;
+                plans[plan.id].period = plan.interval_count + " " +
+                                        plan.interval.toUpperCase();
+            }
         }
 
         for ( var id in plans ) {
