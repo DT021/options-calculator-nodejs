@@ -1,8 +1,6 @@
 'use strict';
 
 var mailer = require('nodemailer');
-// var verifier = require('email-verify');
-var emailExistence = require('email-existence');
 var dns = require('dns');
 var net = require('net');
 var os = require('os');
@@ -57,24 +55,6 @@ module.exports.sendMail = function sendMail(mail) {
             resolve ( "OK" );
         }, 2000);
 
-        // PASS Syntax is valid.
-        // PASS MX server hotmail - com.olc.protection.outlook.com found.
-        // PASS Successfully connected to hotmail - com.olc.protection.outlook.com: 25.
-        // PASS Email account exists.
-
-        // checkMail ( mail.to, function(err,response) {
-        //     if ( err ) {
-        //         // console.log('emailExistence: ' + err );
-        //         reject ( err );
-        //     }
-        //     else if ( ! response ) {
-        //         // console.log ( 'emailExistence: ' + response );
-        //         reject ( "invalid address" );
-        //     } else {
-        //         resolve ( "OK" );
-        //     }
-        // });
-
         // transporter.sendMail(mail.to, (error, info) => {
         //     if (error) {
         //         console.log(error);
@@ -84,32 +64,6 @@ module.exports.sendMail = function sendMail(mail) {
         //     console.log('message sent to %s', mail.to);
         //     // console.log ( 'Preview URL: %s', mailer.getTestMessageUrl(info) );
         //     resolve(info);
-        // });
-
-
-        // verifier.verify ( mail.to, function (err,info) {
-        //     if ( err ) {
-        //         console.log ( err );
-        //         reject ( err );
-        //     } else if ( info.success ) {
-        //     } else {
-        //         // switch ( info.code ) {
-        //         //     //Connected to SMTP server and finished email verification
-        //         //     case verifier.infoCodes.finishedVerification): {}
-        //         //     //Domain not found
-        //         //     case verifier.infoCodes.domainNotFound): {}
-        //         //     //Email is not valid
-        //         //     case verifier.infoCodes.invalidEmailStructure): {}
-        //         //     //No MX record in domain name
-        //         //     case verifier.infoCodes.noMxRecords): {}
-        //         //     //SMTP connection timeout
-        //         //     case verifier.infoCodes.SMTPConnectionTimeout): {}
-        //         //     //SMTP connection error
-        //         //     case verifier.infoCodes.SMTPConnectionError): {}
-        //         // }
-        //         console.log ( "Info: %s", info.info );
-        //         reject ( info.info );
-        //     }
         // });
     });
 }
@@ -138,14 +92,10 @@ module.exports.createMail = function createMail(receiver,name,token,host) {
 //
 module.exports.checkMail = function checkMail(email, callback, timeout, from_email) {
 
-    // emailExistence.check ( receiver, callback );
-
-    // module.exports = function (email, callback, timeout, from_email) {
     timeout = timeout || 5000;
     from_email = from_email || email;
 
     /* Does it look like a valid email? */
-
     /* Our email regex is vulnerable to REDOS on very large input.
         *  Valid emails shouldn't be more than 300 characters anyway.
         *  https://www.rfc-editor.org/errata_search.php?eid=1690 */
