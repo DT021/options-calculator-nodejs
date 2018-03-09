@@ -20,6 +20,7 @@ var mailer = require('nodemailer');
 var random = require('randomstring');
 var compression = require('compression');
 var minifyHTML = require('express-minify-html');
+// var stripe = require("stripe")("pk_test_IiQ8Sa8qMjNVQ6rfG07GDEhb");
 
 // own stuff
 var rc = require('./oc-return-codes');
@@ -581,6 +582,10 @@ app.use ( function(err, req, res, next) {
     res.locals.error = req.app.get('env') === 'development' ? err : {};
     res.status ( err.statusCode || rc.Server.INTERNAL_ERROR ).send ( err );
 });
+
+///////////////////////////////////////////////////////////////////////////////
+// retrieve subscription plans from stripe
+subscriptions.getSubscriptionPlans();
 
 ///////////////////////////////////////////////////////////////////////////////
 // setup server

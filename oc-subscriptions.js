@@ -1,11 +1,12 @@
 "use strict";
 
 var pm = require("paymill-wrapper");
+var stripe = require("stripe")("sk_test_Zq5hjqL7e3qJOCh3TaO2eFqR");
 var config = require("./oc-config");
 
 pm.getContext ( config.subscription.privkey );
 
-module.exports.plans = [
+var plans = [
 
     {
         id: 0,
@@ -18,28 +19,50 @@ module.exports.plans = [
     {
         id: 1,
         name: "BASIC",
-        price: 5,
-        period: "1 MONTH",
+        price: 0,
+        period: "",
         recurring: true
     },
 
     {
         id: 2,
         name: "STANDARD",
-        price: 10,
-        period: "1 MONTH",
+        price: 0,
+        period: "",
         recurring: true
     },
 
     {
         id: 3,
         name: "PREMIUM",
-        price: 100,
-        period: "1 YEAR",
+        price: 0,
+        period: "",
         recurring: false
     },
 
 ];
+module.exports.plans;
+
+///////////////////////////////////////////////////////////////////////////////
+// retrieve plans from stripe
+module.exports.getSubscriptionPlans = function () {
+
+    stripe.plans.list ( function (err,splans) {
+        for ( var i in splans.data ) {
+            var plan = splans.data[i];
+
+            plans[plan.id].price = plan.amount / 100;
+            plans[plan.id].period = plan.interval_count + " " +
+                                    plan.interval.toUpperCase();
+        }
+
+        for ( var id in plans ) {
+            console.log("%s %d %s", plans[id].id,
+                                    plans[id].price,
+                                    plans[id].period );
+        }
+    });
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // route to log out
