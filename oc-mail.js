@@ -14,6 +14,8 @@ var mgconfig = {
 
     service: 'MailGun',
 
+    host: "smtp.mailgun.com",
+
     auth: {
         user: "postmaster@sandboxb727e194a6e748ac8d51dd5e682de3be.mailgun.org",
         pass: "37c6e0e79a16ab458d99aa239c1b9960"
@@ -52,17 +54,18 @@ var transporter = mailer.createTransport ( mgconfig );
 
 ///////////////////////////////////////////////////////////////////////////////
 // route to log out
-module.exports.sendMail = function sendMail(mail) {
+module.exports.sendMail = function sendMail(mail,callback) {
 
-    return new Promise((resolve,reject) => {
+    // return new Promise((resolve,reject) => {
 
         // TODO: for test purpose only
-        if ( isDevelop() ) {
-            setTimeout(function () {
-                resolve ( "OK" );
-            }, 2000);
-        }
+        // if ( isDevelop() ) {
+        //     setTimeout(function () {
+        //         resolve ( "OK" );
+        //     }, 2000);
+        // }
 
+        transporter.sendMail ( mail, callback );
         // transporter.sendMail(mail.to, (error, info) => {
         //     if (error) {
         //         console.log(error);
@@ -73,7 +76,7 @@ module.exports.sendMail = function sendMail(mail) {
         //     // console.log ( 'Preview URL: %s', mailer.getTestMessageUrl(info) );
         //     resolve(info);
         // });
-    });
+    // });
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -101,10 +104,10 @@ module.exports.createMail = function createMail(receiver,name,token,host) {
 module.exports.checkMail = function checkMail(email, callback, timeout, from_email) {
 
     // TODO: for test purpose only
-    if ( isDevelop() && ! awstest.includes(email) ) {
-        callback ( "invalid amazon test address", false );
-        return;
-    }
+    // if ( isDevelop() && ! awstest.includes(email) ) {
+    //     callback ( "invalid amazon test address", false );
+    //     return;
+    // }
 
     timeout = timeout || 5000;
     from_email = from_email || email;
@@ -187,7 +190,7 @@ module.exports.checkMail = function checkMail(email, callback, timeout, from_ema
                         data.indexOf("250") == 0 ||
                         data.indexOf("\n220") != -1 ||
                         data.indexOf("\n250") != -1) {
-                        if ( data.indexOf("Amazon SES") != -1 ) {
+                        if ( data.indexOf("Amazon SES Mailbox Simulator" ) != -1 ) {
                             res = true;
                             undetermined = false;
                             cond = false;

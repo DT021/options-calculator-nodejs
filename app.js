@@ -326,10 +326,12 @@ app.post ('/register', function(req,res,next) {
             if ( err ) {
                 res.status( rc.Server.INTERNAL_ERROR ).send ( err );
             } else {
-                sendConfirmationMail(newUser, req.headers.origin, res).then(function (users) {
-                    res.status(rc.Success.CREATED).send ( "OK" );
-                }).catch(function (err) {
-                    res.status(rc.Server.INTERNAL_ERROR).send ( err );
+                sendConfirmationMail(newUser, req.headers.origin, function (err,info) {
+                    if ( err ) {
+                        res.status(rc.Server.INTERNAL_ERROR).send ( { code : err.code, message : err.message } );
+                    } else {
+                        res.status(rc.Success.CREATED).send ( "OK" );
+                    }
                 });
             }
         });
@@ -374,11 +376,18 @@ app.post ( '/resend/:userid', function (req,res,next) {
         if (err) {
             res.status ( rc.Server.INTERNAL_ERROR ).send ( err );
         } else if (user) {
-            sendConfirmationMail(user, req.headers.origin, res).then(function (users) {
-                res.status(rc.Success.OK).send(req.params.userid);
-            }).catch(function (err) {
-                res.status(rc.Server.INTERNAL_ERROR).send(err.response);
-            });
+            // sendConfirmationMail(user, req.headers.origin, res).then(function (users) {
+            //     res.status(rc.Success.OK).send(req.params.userid);
+            // }).catch(function (err) {
+            //     res.status(rc.Server.INTERNAL_ERROR).send(err.response);
+            // });
+            sendConfirmationMail(user, req.headers.origin, function (err, info) {
+                if (err) {
+                    res.status(rc.Server.INTERNAL_ERROR).send({ code: err.code, message: err.message });
+                } else {
+                    res.status(rc.Success.CREATED).send("OK");
+                }
+            });            
         } else {
             res.status(rc.Client.NOT_FOUND).send ( 'The user <' + req.params.userid + '> doesn\'t exist.' );
         }
@@ -643,12 +652,13 @@ function normalizePort ( val ) {
     return false;
 }
 
-function sendConfirmationMail (user, host, res) {
+function sendConfirmationMail (user,host,callback) {
 
-    return mail.sendMail(mail.createMail(user.email,
-                                         user.username,
-                                         user.secretToken,
-                                         host));
+    mail.sendMail(mail.createMail(user.email,
+                                  user.username,
+                                  user.secretToken,
+                                  host),
+                                  callback);
 }
 
 function sleep (what, time) {
