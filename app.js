@@ -570,12 +570,12 @@ app.use ( function(err, req, res, next) {
 // retrieve subscription plans from stripe
 subscriptions.getSubscriptionPlans ( subscriptions.plans );
 
-const httpsOptions = {
-    key: fs.readFileSync('.ssl/key.pem'),
-    cert: fs.readFileSync('.ssl/cert.pem'),
-    requestCert: false,
-    rejectUnauthorized: false
-}
+// const httpsOptions = {
+//     key: fs.readFileSync('.ssl/key.pem'),
+//     cert: fs.readFileSync('.ssl/cert.pem'),
+//     requestCert: false,
+//     rejectUnauthorized: false
+// }
 
 ///////////////////////////////////////////////////////////////////////////////
 // setup server
