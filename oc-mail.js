@@ -101,11 +101,9 @@ module.exports.createMail = function createMail(receiver,name,token,host) {
 module.exports.checkMail = function checkMail(email, callback, timeout, from_email) {
 
     // TODO: for test purpose only
-    if ( isDevelop() ) {
-        if ( ! awstest.includes(email) ) {
-            callback ( "invalid amazon test address", false );
-            return;
-        }
+    if ( isDevelop() && ! awstest.includes(email) ) {
+        callback ( "invalid amazon test address", false );
+        return;
     }
 
     timeout = timeout || 5000;

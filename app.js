@@ -14,14 +14,12 @@ var LocalStrategy = require('passport-local').Strategy;
 var BasicStrategy = require('passport-http').BasicStrategy;
 var auth = require('passport-local-authenticate');
 var mongoose = require('mongoose');
-// var paymill = require('paymill')('apiKey');
 var debug = require('debug')('optionscalculator:server');
 var http = require('http');
 var mailer = require('nodemailer');
 var random = require('randomstring');
 var compression = require('compression');
 var minifyHTML = require('express-minify-html');
-// var stripe = require("stripe")("pk_test_IiQ8Sa8qMjNVQ6rfG07GDEhb");
 
 // own stuff
 var rc = require('./oc-return-codes');
@@ -154,19 +152,6 @@ passport.use ( new BasicStrategy ( {usernameField: 'email'}, function(email, pas
   }
 ));
 
-
-///////////////////////////////////////////////////////////////////////////////
-//
-// app.use ( function (req,res,next) {
-
-//     var host = req.get ( 'Host' );
-//     if ( host !== "localhost:3000" && ! req.secure && req.get('X-Forwarded-Proto') !== 'https' ) {
-//         res.redirect ( 'https://' + host + req.url );
-//     }
-//     else
-//         next();
-// });
-
 ///////////////////////////////////////////////////////////////////////////////
 // main page when logged out
 app.get ( '/', function(req, res) {
@@ -228,7 +213,6 @@ app.get ( '/', function(req, res) {
 ///////////////////////////////////////////////////////////////////////////////
 // add latency for testing purpose
 ///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
 // app.use ( '/', function (req,res,next) { setTimeout(next, 1000) });
 // app.use('/login', function (req,res,next) { setTimeout(next,500) });
 // app.use('/register', function (req,res,next) { setTimeout(next, 500) });
@@ -236,8 +220,6 @@ app.get ( '/', function(req, res) {
 // app.use('/strategies/:id', function (req,res,next) { setTimeout(next, 500) });
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-
 
 ///////////////////////////////////////////////////////////////////////////////
 // route to test if the user is logged in or not
@@ -680,4 +662,4 @@ function readPartial(file) {
     return fs.readFileSync(__dirname + "/partials/" + file, 'utf8');
 }
 
-module.exports = app;
+// module.exports = app;
