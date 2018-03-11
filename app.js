@@ -6,6 +6,7 @@ var path = require('path');
 var favicon = require('serve-favicon');
 var morgan = require('morgan');
 var fs = require('fs');
+var https = require('https');
 var bodyParser = require('body-parser');
 var cookieParser = require('cookie-parser');
 var passport = require('passport');
@@ -587,12 +588,20 @@ app.use ( function(err, req, res, next) {
 // retrieve subscription plans from stripe
 subscriptions.getSubscriptionPlans ( subscriptions.plans );
 
+const httpsOptions = {
+    key: fs.readFileSync('.ssl/key.pem'),
+    cert: fs.readFileSync('.ssl/cert.pem'),
+    requestCert: false,
+    rejectUnauthorized: false
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // setup server
 // var port = normalizePort ( process.env.PORT || config.server.port );
 var port = config.server.port;
 app.set ( 'port', port );
 var server = http.createServer ( app );
+// var server = https.createServer ( httpsOptions, app );
 server.listen ( port );
 
 ///////////////////////////////////////////////////////////////////////////////

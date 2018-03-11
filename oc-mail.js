@@ -42,6 +42,12 @@ var awsconfig = {
     }
 };
 
+var awstest = ["success@simulator.amazonses.com",
+               "bounce@simulator.amazonses.com",
+               "ooto@simulator.amazonses.com",
+               "complaint@simulator.amazonses.com",
+               "suppressionlist@simulator.amazonses.com"];
+
 var transporter = mailer.createTransport ( mgconfig );
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -51,9 +57,11 @@ module.exports.sendMail = function sendMail(mail) {
     return new Promise((resolve,reject) => {
 
         // TODO: for test purpose only
-        setTimeout(function () {
-            resolve ( "OK" );
-        }, 2000);
+        if ( isDevelop() ) {
+            setTimeout(function () {
+                resolve ( "OK" );
+            }, 2000);
+        }
 
         // transporter.sendMail(mail.to, (error, info) => {
         //     if (error) {
@@ -91,6 +99,14 @@ module.exports.createMail = function createMail(receiver,name,token,host) {
 ///////////////////////////////////////////////////////////////////////////////
 //
 module.exports.checkMail = function checkMail(email, callback, timeout, from_email) {
+
+    // TODO: for test purpose only
+    if ( isDevelop() ) {
+        if ( ! awstest.includes(email) ) {
+            callback ( "invalid amazon test address", false );
+            return;
+        }
+    }
 
     timeout = timeout || 5000;
     from_email = from_email || email;
@@ -169,8 +185,20 @@ module.exports.checkMail = function checkMail(email, callback, timeout, from_ema
                     conn.emit('undetermined');
                 });
                 conn.on('data', function (data) {
-                    if (data.indexOf("220") == 0 || data.indexOf("250") == 0 || data.indexOf("\n220") != -1 || data.indexOf("\n250") != -1) {
-                        conn.emit('prompt');
+                    if (data.indexOf("220") == 0 ||
+                        data.indexOf("250") == 0 ||
+                        data.indexOf("\n220") != -1 ||
+                        data.indexOf("\n250") != -1) {
+                        if ( data.indexOf("Amazon SES") != -1 ) {
+                            res = true;
+                            undetermined = false;
+                            cond = false;
+                            done(err, true);
+                            conn.removeAllListeners();
+                            conn.destroy(); //destroy socket manually
+                        } else {
+                            conn.emit('prompt');
+                        }
                     } else if (data.indexOf("\n550") != -1 || data.indexOf("550") == 0) {
                         err = data;
                         conn.emit('false');
@@ -186,5 +214,10 @@ module.exports.checkMail = function checkMail(email, callback, timeout, from_ema
             callback(err, res, undetermined);
         })
     });
+}
 
+///////////////////////////////////////////////////////////////////////////////
+// check for development enviroment
+var isDevelop = function() {
+    return ( ! process.env.NODE_ENV  || process.env.NODE_ENV === "development");
 }
