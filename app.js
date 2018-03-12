@@ -373,8 +373,8 @@ app.post ( '/checkout', function (req,res) {
     var token = req.body.token;
     var price = req.body.price;
     var amt = price.price;
-    console.log ( JSON.stringify(token) );
-    console.log ( JSON.stringify(price) );
+    // console.log ( JSON.stringify(token) );
+    // console.log ( JSON.stringify(price) );
 
     stripe.customers.create ( { email: token.email,
                                 source: token.id }).then(customer =>
