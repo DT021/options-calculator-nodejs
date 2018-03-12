@@ -296,6 +296,13 @@ app.post ( '/logout', function(req, res) {
 });
 
 ///////////////////////////////////////////////////////////////////////////////
+// checkout subscription plan
+app.post('/checkout', function (req, res, next) {
+    var token = req.body.token;
+    console.log ( JSON.stringify(token) );
+});
+
+///////////////////////////////////////////////////////////////////////////////
 // add a user to the database and send an confirmation mail
 app.post ('/register', function(req,res,next) {
 
