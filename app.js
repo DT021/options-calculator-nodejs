@@ -232,6 +232,13 @@ app.get ( '/auth', function(req, res) {
 });
 
 ///////////////////////////////////////////////////////////////////////////////
+// route return available subscription plans
+app.get('/plans', function (req, res) {
+
+    res.status(rc.Success.OK).send ( { "plans" : subscriptions.plans } );
+});
+
+///////////////////////////////////////////////////////////////////////////////
 // route to log in
 app.post ( '/login', function(req,res,next) {
 

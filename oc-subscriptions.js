@@ -20,7 +20,7 @@ module.exports.plans = [
         id: 1,
         name: "BASIC",
         price: 5,
-        period: "1 MONTH",
+        period: "MONTH",
         recurring: true
     },
 
@@ -28,7 +28,7 @@ module.exports.plans = [
         id: 2,
         name: "STANDARD",
         price: 10,
-        period: "1 MONTH",
+        period: "MONTH",
         recurring: true
     },
 
@@ -36,7 +36,7 @@ module.exports.plans = [
         id: 3,
         name: "PREMIUM",
         price: 100,
-        period: "1 YEAR",
+        period: "YEAR",
         recurring: false
     },
 
