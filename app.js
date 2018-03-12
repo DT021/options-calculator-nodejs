@@ -20,12 +20,13 @@ var mailer = require('nodemailer');
 var random = require('randomstring');
 var compression = require('compression');
 var minifyHTML = require('express-minify-html');
+var stripe = require("stripe")("sk_test_Zq5hjqL7e3qJOCh3TaO2eFqR");
 
 // own stuff
 var rc = require('./oc-return-codes');
 var config = require('./oc-config');
 var mail = require('./oc-mail');
-var subscriptions = require('./oc-subscriptions');
+// var subscriptions = require('./oc-subscriptions');
 
 // get models
 var Strategy = require('./Strategy.model');
@@ -39,6 +40,43 @@ var User = require('./User.model');
 // });
 // var logger = log4js.getLogger ( 'server' );
 // logger.debug ( 'started' );
+
+const subscriptionsPlans = [
+
+    {
+        id: 0,
+        name: "NONE",
+        price: 0,
+        period: "NEVER",
+        recurring: false
+    },
+
+    {
+        id: 1,
+        name: "BASIC",
+        price: 5,
+        period: "MONTH",
+        recurring: true
+    },
+
+    {
+        id: 2,
+        name: "STANDARD",
+        price: 10,
+        period: "MONTH",
+        recurring: true
+    },
+
+    {
+        id: 3,
+        name: "PREMIUM",
+        price: 100,
+        period: "YEAR",
+        recurring: false
+    },
+
+];
+
 
 // get access to express
 var app = express();
@@ -228,14 +266,14 @@ app.get ( '/auth', function(req, res) {
     if ( ! checkAuthenticaton(req,res) ) { return; }
 
     res.status ( rc.Success.OK ).send( { 'user': req.user,
-                                         'plan': subscriptions.plans[req.user.plan] } );
+                                         'plan': subscriptionsPlans[req.user.plan] } );
 });
 
 ///////////////////////////////////////////////////////////////////////////////
 // route return available subscription plans
 app.get('/plans', function (req, res) {
 
-    res.status(rc.Success.OK).send ( { "plans" : subscriptions.plans } );
+    res.status(rc.Success.OK).send ( { "plans" : subscriptionsPlans } );
 });
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -297,9 +335,56 @@ app.post ( '/logout', function(req, res) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // checkout subscription plan
-app.post('/checkout', function (req, res, next) {
+// {
+// 	"id": "tok_1C4tuOKgiHRkLWkcxitxFMvF",
+// 	"object": "token",
+// 	"card": {
+// 		"id": "card_1C4tuOKgiHRkLWkc65AfITWW",
+// 		"object": "card",
+// 		"address_city": null,
+// 		"address_country": null,
+// 		"address_line1": null,
+// 		"address_line1_check": null,
+// 		"address_line2": null,
+// 		"address_state": null,
+// 		"address_zip": "12345",
+// 		"address_zip_check": "pass",
+// 		"brand": "Visa",
+// 		"country": "US",
+// 		"cvc_check": "pass",
+// 		"dynamic_last4": null,
+// 		"exp_month": 9,
+// 		"exp_year": 2019,
+// 		"funding": "credit",
+// 		"last4": "4242",
+// 		"metadata": {},
+// 		"name": "qq@qq.qq",
+// 		"tokenization_method": null
+// 	},
+// 	"client_ip": "80.187.104.197",
+// 	"created": 1520873640,
+// 	"email": "qq@qq.qq",
+// 	"livemode": false,
+// 	"type": "card",
+// 	"used": false
+// }
+app.post ( '/checkout', function (req,res) {
+
     var token = req.body.token;
+    var price = req.body.price;
+    var amt = price.price;
     console.log ( JSON.stringify(token) );
+    console.log ( JSON.stringify(price) );
+
+    stripe.customers.create ( { email: token.email,
+                                source: token.id }).then(customer =>
+            stripe.charges.create ( { amount: amt,
+                                      description: price.description,
+                                      currency: price.currency,
+                                      customer: customer.id
+            })).then ( charge => {
+                res.status ( rc.Success.ACCEPTED ).send ( { charge : charge } );
+            });
 });
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -322,7 +407,7 @@ app.post ('/register', function(req,res,next) {
         console.error ( "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" );
         setTimeout ( function() {
             res.status(rc.Success.CREATED).send ( { user: newUser,
-                                                    plan : subscriptions.plans[newUser.plan] } );
+                                                    plan : subscriptionsPlans[newUser.plan] } );
         }, 2000 );
         return;
     }
@@ -584,7 +669,7 @@ app.use ( function(err, req, res, next) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // retrieve subscription plans from stripe
-subscriptions.getSubscriptionPlans ( subscriptions.plans );
+// subscriptions.getSubscriptionPlans ( subscriptions.plans );
 
 // const httpsOptions = {
 //     key: fs.readFileSync('.ssl/key.pem'),
