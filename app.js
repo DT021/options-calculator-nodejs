@@ -326,9 +326,10 @@ app.post ('/register', function(req,res,next) {
             if ( err ) {
                 res.status( rc.Server.INTERNAL_ERROR ).send ( err );
             } else {
-                sendConfirmationMail(newUser, req.headers.origin, function (err,info) {
+                sendConfirmationMail(newUser, req.headers.origin, function(err,info) {
                     if ( err ) {
-                        res.status(rc.Server.INTERNAL_ERROR).send ( { code : err.code, message : err.message } );
+                        res.status(rc.Server.INTERNAL_ERROR).send ( { code : err.code,
+                                                                      message : err.message } );
                     } else {
                         res.status(rc.Success.CREATED).send ( "OK" );
                     }
@@ -341,8 +342,6 @@ app.post ('/register', function(req,res,next) {
 ///////////////////////////////////////////////////////////////////////////////
 // confirm an account via email address
 app.get ( '/confirm/:token', function (req,res,next) {
-
-    if (!checkAuthenticaton(req, res)) { return; }
 
     User.findOne ( { secretToken: req.params.token }, (err, user) => {
 
@@ -370,24 +369,18 @@ app.get ( '/confirm/:token', function (req,res,next) {
 // re-send confirmation mail
 app.post ( '/resend/:userid', function (req,res,next) {
 
-    // if (!checkAuthenticaton(req, res)) { return; }
-
     User.findOne({ email: req.params.userid }, (err, user) => {
         if (err) {
             res.status ( rc.Server.INTERNAL_ERROR ).send ( err );
         } else if (user) {
-            // sendConfirmationMail(user, req.headers.origin, res).then(function (users) {
-            //     res.status(rc.Success.OK).send(req.params.userid);
-            // }).catch(function (err) {
-            //     res.status(rc.Server.INTERNAL_ERROR).send(err.response);
-            // });
-            sendConfirmationMail(user, req.headers.origin, function (err, info) {
+            sendConfirmationMail(user, req.headers.origin, function(err,info) {
                 if (err) {
-                    res.status(rc.Server.INTERNAL_ERROR).send({ code: err.code, message: err.message });
+                    res.status(rc.Server.INTERNAL_ERROR).send ( { code: err.code,
+                                                                  message: err.message });
                 } else {
                     res.status(rc.Success.CREATED).send("OK");
                 }
-            });            
+            });
         } else {
             res.status(rc.Client.NOT_FOUND).send ( 'The user <' + req.params.userid + '> doesn\'t exist.' );
         }

@@ -56,27 +56,7 @@ var transporter = mailer.createTransport ( mgconfig );
 // route to log out
 module.exports.sendMail = function sendMail(mail,callback) {
 
-    // return new Promise((resolve,reject) => {
-
-        // TODO: for test purpose only
-        // if ( isDevelop() ) {
-        //     setTimeout(function () {
-        //         resolve ( "OK" );
-        //     }, 2000);
-        // }
-
-        transporter.sendMail ( mail, callback );
-        // transporter.sendMail(mail.to, (error, info) => {
-        //     if (error) {
-        //         console.log(error);
-        //         reject(error);
-        //         return;
-        //     }
-        //     console.log('message sent to %s', mail.to);
-        //     // console.log ( 'Preview URL: %s', mailer.getTestMessageUrl(info) );
-        //     resolve(info);
-        // });
-    // });
+    transporter.sendMail ( mail, callback );
 }
 
 ///////////////////////////////////////////////////////////////////////////////
