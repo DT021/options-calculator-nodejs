@@ -335,24 +335,35 @@ app.post ( '/logout', function(req, res) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // subscribe to a plan
-app.post( '/subscribe', function (req,res) {
+app.post( '/subscribe', async function (req,res) {
 
     var token = req.body.token;
     var subscription = req.body.subscription;
+    var customerID = null;
     // console.log ( JSON.stringify(token) );
     // console.log ( JSON.stringify(subscription) );
 
-    // create customer
-    stripe.customers.create ( { email: token.email,
-                                source: token.id }).then(customer =>
-        // create subscription
-        stripe.subscriptions.create ( { customer: customer.id,
-                                        items: [{ plan: subscription.planid }],
-        }).then ( subscription => {
+    // check if customer exists (should never happen)
+    var customers = await stripe.customers.list ( { email: token.email } );
+    if ( customers && customers.data.length ) {
+        customerID = customers.data[0].id;
+    }
+
+    // create customer if not yet existing (should never happen)
+    if ( ! customerID ) {
+        var customer = await stripe.customers.create ( { email: token.email,
+                                                         source: token.id } );
+        if ( customer ) {
+            customerID = customer.id;
+        }
+    }
+
+    // create subscription
+    stripe.subscriptions.create ( { customer: customerID,
+                                    items: [{ plan: subscription.planid }] } ).then ( subscription => {
             // customer charged automatically
             res.redirect  ( "/" );
-            // res.status ( rc.Success.ACCEPTED ).send ( { subscription : subscription } );
-        })).catch(err => {
+        }).catch(err => {
             res.status ( rc.Client.REQUEST_FAILED ).send ( err );
         });
 });
