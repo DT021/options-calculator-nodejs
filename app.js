@@ -340,17 +340,25 @@ app.post( '/subscribe', async function (req,res) {
     var token = req.body.token;
     var subscription = req.body.subscription;
     var customerID = null;
+    var subscriptionID = null;
+    var itemID = null;
     // console.log ( JSON.stringify(token) );
     // console.log ( JSON.stringify(subscription) );
 
-    // check if customer exists (should never happen)
-    var customers = await stripe.customers.list ( { email: token.email } );
+    // check if customer exists (if customer exists he/she changes the subscription plan)
+    var customers = await stripe.customers.list({ email: subscription.email } );
     if ( customers && customers.data.length ) {
         customerID = customers.data[0].id;
     }
 
-    // create customer if not yet existing (should never happen)
-    if ( ! customerID ) {
+    // get subscripton id
+    if ( customerID ) {
+        var subscriptions = await stripe.subscriptions.list({ customer: customerID });
+        if (subscriptions && subscriptions.data.length) {
+            subscriptionID = subscriptions.data[0].id;
+        }
+    } else {
+        // create customer if not yet existing
         var customer = await stripe.customers.create ( { email: token.email,
                                                          source: token.id } );
         if ( customer ) {
@@ -358,14 +366,29 @@ app.post( '/subscribe', async function (req,res) {
         }
     }
 
-    // create subscription
-    stripe.subscriptions.create ( { customer: customerID,
-                                    items: [{ plan: subscription.planid }] } ).then ( subscription => {
-            // customer charged automatically
-            res.redirect  ( "/" );
-        }).catch(err => {
+    if ( ! subscriptionID ) {
+        // create subscription
+        stripe.subscriptions.create ( { customer: customerID,
+                                        items: [{ plan: subscription.planid }] } ).then ( subscription => {
+                // customer charged automatically
+                res.redirect  ( "/" );
+            }).catch(err => {
+                res.status ( rc.Client.REQUEST_FAILED ).send ( err );
+            });
+    } else {
+        // get items (plans)
+        var items = await stripe.subscriptionItems.list ( { subscription: subscriptionID } );
+        if ( items && items.data.length ) {
+            itemID = items.data[0].id;
+        }
+
+        // update subscription plan
+        stripe.subscriptionItems.update ( itemID, { plan: subscription.planid } ).then ( transfer => {
+            res.redirect ( "/" );
+        }).catch ( err => {
             res.status ( rc.Client.REQUEST_FAILED ).send ( err );
         });
+    }
 });
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -444,6 +467,30 @@ app.post ('/register', function(req,res,next) {
 });
 
 ///////////////////////////////////////////////////////////////////////////////
+// re-send confirmation mail
+app.post('/resend/:userid', function (req, res, next) {
+
+    User.findOne({ email: req.params.userid }, (err, user) => {
+        if (err) {
+            res.status(rc.Server.INTERNAL_ERROR).send(err);
+        } else if (user) {
+            sendConfirmationMail(user, req.headers.origin, function (err, info) {
+                if (err) {
+                    res.status(rc.Server.INTERNAL_ERROR).send({
+                        code: err.code,
+                        message: err.message
+                    });
+                } else {
+                    res.status(rc.Success.CREATED).send("OK");
+                }
+            });
+        } else {
+            res.status(rc.Client.NOT_FOUND).send('The user <' + req.params.userid + '> doesn\'t exist.');
+        }
+    });
+});
+
+///////////////////////////////////////////////////////////////////////////////
 // confirm an account via email address
 app.get ( '/confirm/:token', function (req,res,next) {
 
@@ -466,41 +513,6 @@ app.get ( '/confirm/:token', function (req,res,next) {
         } else {
             res.status ( rc.Client.NOT_FOUND ).send ( 'This token doesn\'t exist or the associated account is already confirmed.' );
         }
-    });
-});
-
-///////////////////////////////////////////////////////////////////////////////
-// re-send confirmation mail
-app.post ( '/resend/:userid', function (req,res,next) {
-
-    User.findOne({ email: req.params.userid }, (err, user) => {
-        if (err) {
-            res.status ( rc.Server.INTERNAL_ERROR ).send ( err );
-        } else if (user) {
-            sendConfirmationMail(user, req.headers.origin, function(err,info) {
-                if (err) {
-                    res.status(rc.Server.INTERNAL_ERROR).send ( { code: err.code,
-                                                                  message: err.message });
-                } else {
-                    res.status(rc.Success.CREATED).send("OK");
-                }
-            });
-        } else {
-            res.status(rc.Client.NOT_FOUND).send ( 'The user <' + req.params.userid + '> doesn\'t exist.' );
-        }
-    });
-});
-
-///////////////////////////////////////////////////////////////////////////////
-// return all users
-app.get ('/users', function(req,res) {
-
-    if (!checkAuthenticaton(req, res)) { return; }
-
-    User.find().then ( function(users) {
-        res.status ( rc.Success.OK ).send ( users );
-    }).catch ( function(err) {
-        res.status ( rc.Server.INTERNAL_ERROR ).send ( err );
     });
 });
 
@@ -596,12 +608,12 @@ app.post ( '/strategies/:name', function (req,res,next) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // delete strategy
-app.delete('/strategies/:name', function (req,res,next) {
+app.delete('/strategies/:name', function (req, res, next) {
 
     if (!checkAuthenticaton(req, res)) { return; }
 
     if (!req.isAuthenticated()) {
-        res.status ( rc.Client.UNAUTHORIZED ).send ( "unauthorized request" );
+        res.status(rc.Client.UNAUTHORIZED).send("unauthorized request");
         return;
     }
     Strategy.findOne({ name: req.params.name }, (err, strategy) => {
@@ -612,9 +624,46 @@ app.delete('/strategies/:name', function (req,res,next) {
 
             strategy.remove((err, strategy) => {
                 if (err) {
-                    res.status ( rc.Server.INTERNAL_ERROR ).send ( err );
+                    res.status(rc.Server.INTERNAL_ERROR).send(err);
                 } else {
-                    res.status ( rc.Success.OK ).send ( strategy );
+                    res.status(rc.Success.OK).send(strategy);
+                }
+            });
+        }
+    });
+});
+
+///////////////////////////////////////////////////////////////////////////////
+// return all users
+app.get('/users', function (req, res) {
+
+    if (!checkAuthenticaton(req, res)) { return; }
+
+    User.find().then(function (users) {
+        res.status(rc.Success.OK).send(users);
+    }).catch(function (err) {
+        res.status(rc.Server.INTERNAL_ERROR).send(err);
+    });
+});
+
+///////////////////////////////////////////////////////////////////////////////
+// update user
+app.post ( '/users/:userid', function (req, res) {
+
+    if (!checkAuthenticaton(req, res)) { return; }
+
+    User.findOne({ email: req.params.userid }, (err, user) => {
+
+        if (err) {
+            res.status(rc.Client.NOT_FOUND).send(err);
+        } else {
+
+            user.plan = parseInt ( req.body.plan );
+            user.save((err, user) => {
+                if (err) {
+                    res.status(rc.Server.INTERNAL_ERROR).send(err);
+                } else {
+                    res.status(rc.Success.OK).send(user);
                 }
             });
         }

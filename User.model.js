@@ -8,22 +8,6 @@ var SALT_WORK_FACTOR = 10;
 //
 //
 //
-var SubscriptionSchema = new Schema ({
-
-    offerId: String,
-    clientId: String,
-    name: String,
-    amount: Number,
-    currency: String,
-    period: String,
-    startDate: Date,
-    valid: String,
-
-});
-
-//
-//
-//
 var UserSchema = new Schema ({
 
     email : { type : String,			// email address
