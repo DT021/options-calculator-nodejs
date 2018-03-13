@@ -334,57 +334,51 @@ app.post ( '/logout', function(req, res) {
 });
 
 ///////////////////////////////////////////////////////////////////////////////
-// checkout subscription plan
-// {
-// 	"id": "tok_1C4tuOKgiHRkLWkcxitxFMvF",
-// 	"object": "token",
-// 	"card": {
-// 		"id": "card_1C4tuOKgiHRkLWkc65AfITWW",
-// 		"object": "card",
-// 		"address_city": null,
-// 		"address_country": null,
-// 		"address_line1": null,
-// 		"address_line1_check": null,
-// 		"address_line2": null,
-// 		"address_state": null,
-// 		"address_zip": "12345",
-// 		"address_zip_check": "pass",
-// 		"brand": "Visa",
-// 		"country": "US",
-// 		"cvc_check": "pass",
-// 		"dynamic_last4": null,
-// 		"exp_month": 9,
-// 		"exp_year": 2019,
-// 		"funding": "credit",
-// 		"last4": "4242",
-// 		"metadata": {},
-// 		"name": "qq@qq.qq",
-// 		"tokenization_method": null
-// 	},
-// 	"client_ip": "80.187.104.197",
-// 	"created": 1520873640,
-// 	"email": "qq@qq.qq",
-// 	"livemode": false,
-// 	"type": "card",
-// 	"used": false
-// }
-app.post ( '/checkout', function (req,res) {
+// subscribe to a plan
+app.post( '/subscribe', function (req,res) {
 
     var token = req.body.token;
-    var price = req.body.price;
-    var amt = price.price;
+    var subscription = req.body.subscription;
     // console.log ( JSON.stringify(token) );
-    // console.log ( JSON.stringify(price) );
+    // console.log ( JSON.stringify(subscription) );
 
+    // create customer
     stripe.customers.create ( { email: token.email,
                                 source: token.id }).then(customer =>
-            stripe.charges.create ( { amount: amt,
-                                      description: price.description,
-                                      currency: price.currency,
-                                      customer: customer.id
-            })).then ( charge => {
-                res.status ( rc.Success.ACCEPTED ).send ( { charge : charge } );
-            });
+        // create subscription
+        stripe.subscriptions.create ( { customer: customer.id,
+                                        items: [{ plan: subscription.planid }],
+        }).then ( subscription => {
+            // customer charged automatically
+            res.redirect  ( "/" );
+            // res.status ( rc.Success.ACCEPTED ).send ( { subscription : subscription } );
+        })).catch(err => {
+            res.status ( rc.Client.REQUEST_FAILED ).send ( err );
+        });
+});
+
+///////////////////////////////////////////////////////////////////////////////
+// checkout payment
+app.post('/checkout', function (req, res) {
+
+    var token = req.body.token;
+    var checkout = req.body.checkout;
+    // console.log ( JSON.stringify(token) );
+    // console.log ( JSON.stringify(checkout) );
+
+    // create customer
+    stripe.customers.create ( { email: token.email,
+                                source: token.id }).then ( customer =>
+        // charge customer
+        stripe.charges.create ( { amount: checkout.price,
+                                  description: checkout.description,
+                                  currency: checkout.currency,
+                                  customer: customer.id
+        }).then ( charge => {
+            res.status ( rc.Success.ACCEPTED ).send ( { charge : charge } );
+        })).catch(err => {
+            res.status ( rc.Client.REQUEST_FAILED ).send ( err );
+        });
 });
 
 ///////////////////////////////////////////////////////////////////////////////
