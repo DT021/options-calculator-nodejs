@@ -310,10 +310,10 @@ app.post('/login', function(req,res,next) {
         });
         // TODO: enable webtoken
         // create a token
-        // var token = jwt.sign ( { id: newUser._id }, config.webtoken.secret, {
-        //     expiresIn: 86400 // expires in 24 hours
-        // });
-        res.status ( rc.Success.CREATED ).send ( { success: true, token: "token" } );
+        var token = jwt.sign ( { id: user.id }, config.webtoken.secret, {
+            expiresIn: 86400 // expires in 24 hours
+        });
+        res.status ( rc.Success.CREATED ).send ( { success: true, token: token } );
 
     })(req,res,next);
 });
@@ -528,26 +528,26 @@ app.get('/confirm/:token', function (req,res,next) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // return all data
-app.get('/strategies', function(req,res) {
+// app.get('/strategies', function(req,res) {
 
-    if (!checkAuthenticaton(req, res)) { return; }
+//     if (!checkAuthenticaton(req, res)) { return; }
 
-    Strategy.find().sort('name').exec(function (err, strategy) {
-        if (err) {
-            res.status ( rc.Server.INTERNAL_ERROR ).send ( err );
-        } else {
-            res.status ( rc.Success.OK ).send ( strategy );
-        }
-    });
-});
+//     Strategy.find().sort('name').exec(function (err, strategy) {
+//         if (err) {
+//             res.status ( rc.Server.INTERNAL_ERROR ).send ( err );
+//         } else {
+//             res.status ( rc.Success.OK ).send ( strategy );
+//         }
+//     });
+// });
 
 ///////////////////////////////////////////////////////////////////////////////
 // return all data associated to one user
-app.get('/strategies/:id', function(req,res) {
+app.get('/strategies/:name', function(req,res) {
 
     if (!checkAuthenticaton(req, res)) { return; }
 
-    Strategy.find ( { userid: req.params.id }).sort('name').exec( function(err,strategy) {
+    Strategy.find ( { userid: req.params.name }).sort('name').exec( function(err,strategy) {
         if ( err ) {
             res.status ( rc.Server.INTERNAL_ERROR ).send ( err );
         } else {
@@ -645,16 +645,16 @@ app.delete('/strategies/:name', function (req, res, next) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // return all users
-app.get('/users', function (req, res) {
+// app.get('/users', function (req, res) {
 
-    if (!checkAuthenticaton(req, res)) { return; }
+//     if (!checkAuthenticaton(req, res)) { return; }
 
-    User.find().then(function (users) {
-        res.status(rc.Success.OK).send(users);
-    }).catch(function (err) {
-        res.status(rc.Server.INTERNAL_ERROR).send(err);
-    });
-});
+//     User.find().then(function (users) {
+//         res.status(rc.Success.OK).send(users);
+//     }).catch(function (err) {
+//         res.status(rc.Server.INTERNAL_ERROR).send(err);
+//     });
+// });
 
 ///////////////////////////////////////////////////////////////////////////////
 // update user
