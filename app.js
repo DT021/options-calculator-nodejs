@@ -41,42 +41,34 @@ var User = require('./User.model');
 // var logger = log4js.getLogger ( 'server' );
 // logger.debug ( 'started' );
 
+// TODO: should be populized from stripe
 const subscriptionsPlans = [
-
     {
         id: 0,
         name: "NONE",
         price: 0,
         period: "NEVER",
         recurring: false
-    },
-
-    {
+    },{
         id: 1,
         name: "BASIC",
         price: 5,
         period: "MONTH",
         recurring: true
-    },
-
-    {
+    },{
         id: 2,
         name: "STANDARD",
         price: 10,
         period: "MONTH",
         recurring: true
-    },
-
-    {
+    },{
         id: 3,
         name: "PREMIUM",
         price: 100,
         period: "YEAR",
         recurring: false
-    },
-
+    }
 ];
-
 
 // get access to express
 var app = express();
@@ -342,23 +334,21 @@ app.post( '/subscribe', async function (req,res) {
     var customerID = null;
     var subscriptionID = null;
     var itemID = null;
-    // console.log ( JSON.stringify(token) );
-    // console.log ( JSON.stringify(subscription) );
 
-    // check if customer exists (if customer exists he/she changes the subscription plan)
+    // check if customer exists
     var customers = await stripe.customers.list({ email: subscription.email } );
     if ( customers && customers.data.length ) {
         customerID = customers.data[0].id;
     }
 
-    // get subscripton id
+    // get subscripton id if customer already exists
     if ( customerID ) {
         var subscriptions = await stripe.subscriptions.list({ customer: customerID });
         if (subscriptions && subscriptions.data.length) {
             subscriptionID = subscriptions.data[0].id;
         }
+    // create new customer
     } else {
-        // create customer if not yet existing
         var customer = await stripe.customers.create ( { email: token.email,
                                                          source: token.id } );
         if ( customer ) {
@@ -366,8 +356,8 @@ app.post( '/subscribe', async function (req,res) {
         }
     }
 
+    // create new subscription
     if ( ! subscriptionID ) {
-        // create subscription
         stripe.subscriptions.create ( { customer: customerID,
                                         items: [{ plan: subscription.planid }] } ).then ( subscription => {
                 // customer charged automatically
@@ -375,8 +365,8 @@ app.post( '/subscribe', async function (req,res) {
             }).catch(err => {
                 res.status ( rc.Client.REQUEST_FAILED ).send ( err );
             });
+    // change exsisting subscription
     } else {
-        // get items (plans)
         var items = await stripe.subscriptionItems.list ( { subscription: subscriptionID } );
         if ( items && items.data.length ) {
             itemID = items.data[0].id;
