@@ -20,13 +20,16 @@ var mailer = require('nodemailer');
 var random = require('randomstring');
 var compression = require('compression');
 var minifyHTML = require('express-minify-html');
+// TODO: put private key in env variable !!!!
 var stripe = require("stripe")("sk_test_Zq5hjqL7e3qJOCh3TaO2eFqR");
+
+var jwt = require('jsonwebtoken');
+// var bcrypt = require('bcryptjs'); npm install bcryptjs --save
 
 // own stuff
 var rc = require('./oc-return-codes');
 var config = require('./oc-config');
 var mail = require('./oc-mail');
-// var subscriptions = require('./oc-subscriptions');
 
 // get models
 var Strategy = require('./Strategy.model');
@@ -38,8 +41,8 @@ var User = require('./User.model');
 //     appenders: { server: { type: 'file', filename: 'server.log' } },
 //     categories: { default: { appenders: ['server'], level: 'all' } }
 // });
-// var logger = log4js.getLogger ( 'server' );
-// logger.debug ( 'started' );
+// var logger = log4js.getLogger('server' );
+// logger.debug('started' );
 
 // TODO: should be populized from stripe
 const subscriptionsPlans = [
@@ -74,8 +77,8 @@ const subscriptionsPlans = [
 var app = express();
 
 // set view engine to EJS
-app.set ( 'view engine', 'ejs' );
-app.set ( 'views', config.server.docroot );
+app.set('view engine', 'ejs' );
+app.set('views', config.server.docroot );
 
 // set constants used by session
 const COOKIE_SECRET = 'asdf33g4w4hghjkuil8saef345';
@@ -128,18 +131,18 @@ console.log ( "options=" + JSON.stringify(config.db[env].options) );
 var dbConnected = false;
 mongoose.Promise = global.Promise;
 mongoose.connect ( config.db[env].url, config.db[env].options ).then ( function(params) {
-    console.log ( 'connection established');
+    console.log('connection established');
     dbConnected = true;
 }).catch ( function(err) {
     console.log ( err );
 });
 
 //Bind connection to error event (to get notification of connection errors)
-// mongoose.connection.on ( 'error', console.error.bind(console, 'MongoDB connection error:') );
+// mongoose.connection.on('error', console.error.bind(console, 'MongoDB connection error:') );
 
 // set body parser
 app.use ( bodyParser.json() );
-app.use ( bodyParser.urlencoded({ extended: true }) );
+app.use ( bodyParser.urlencoded({ extended: false }) );
 
 // create a write stream (in append mode)
 var accessLogStream = fs.createWriteStream ( path.join(__dirname, 'access.log'), {flags: 'a'} );
@@ -152,12 +155,11 @@ app.use ( morgan('dev',{stream: accessLogStream}) );
 
 //
 passport.serializeUser(function(user, done) {
-  done ( null, user.id );
+    done ( null, user.id );
 });
 
 //
 passport.deserializeUser(function(id, done) {
-
     User.findById ( id, function(err,user) {
         done ( err, user );
     });
@@ -184,12 +186,12 @@ passport.use ( new BasicStrategy ( {usernameField: 'email'}, function(email, pas
 
 ///////////////////////////////////////////////////////////////////////////////
 // main page when logged out
-app.get ( '/', function(req, res) {
+app.get('/', function(req, res) {
 
     if ( req.isAuthenticated() && req.user.plan < 1 ) {
 
         // this is set when user logged in but has not yet subscribed
-        res.render ( 'index', {
+        res.render('index', {
 
             whatif : readPartial("logout/whatif.ejs"),
             neww   : readPartial("logout/neww.ejs"),
@@ -243,7 +245,7 @@ app.get ( '/', function(req, res) {
 ///////////////////////////////////////////////////////////////////////////////
 // add latency for testing purpose
 ///////////////////////////////////////////////////////////////////////////////
-// app.use ( '/', function (req,res,next) { setTimeout(next, 1000) });
+// app.use('/', function (req,res,next) { setTimeout(next, 1000) });
 // app.use('/login', function (req,res,next) { setTimeout(next,500) });
 // app.use('/register', function (req,res,next) { setTimeout(next, 500) });
 // app.use('/strategies', function (req,res,next) { setTimeout(next, 500) });
@@ -253,7 +255,7 @@ app.get ( '/', function(req, res) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // route to test if the user is logged in or not
-app.get ( '/auth', function(req, res) {
+app.get('/auth', function(req, res) {
 
     if ( ! checkAuthenticaton(req,res) ) { return; }
 
@@ -270,7 +272,7 @@ app.get('/plans', function (req, res) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // route to log in
-app.post ( '/login', function(req,res,next) {
+app.post('/login', function(req,res,next) {
 
     if ( dbConnected === false ) {
         // user does not exist
@@ -281,7 +283,7 @@ app.post ( '/login', function(req,res,next) {
 
     // var user = req.body;
     // passport.authenticate('local', function(err, user, info) {
-    passport.authenticate('basic', function(err, user, info) {
+    passport.authenticate('basic', function(err,user,info) {
 
         if ( err ) {
             return next ( err ); // will generate a 500 error
@@ -289,13 +291,11 @@ app.post ( '/login', function(req,res,next) {
 
         // Generate a JSON response reflecting authentication status
         if ( ! user ) {
-
             // user does not exist
             return res.status ( rc.Client.NOT_FOUND ).send ( { success : false,
                                                                message : 'login failed !'
             });
         } else if ( user.active === false ) {
-
             // user is registered but has not yet confirmed his account
             return res.status ( rc.Client.UNAUTHORIZED ).send ( { success : false,
                                                                   message : 'not yet confirmed !',
@@ -304,21 +304,23 @@ app.post ( '/login', function(req,res,next) {
         }
 
         req.login ( user, function(err) {
-
             if ( err ) {
                 return next ( err );
             }
         });
-
-        res.redirect ( '/' );
+        // TODO: enable webtoken
+        // create a token
+        // var token = jwt.sign ( { id: newUser._id }, config.webtoken.secret, {
+        //     expiresIn: 86400 // expires in 24 hours
+        // });
+        res.status ( rc.Success.CREATED ).send ( { success: true, token: "token" } );
 
     })(req,res,next);
 });
 
 ///////////////////////////////////////////////////////////////////////////////
 // route to log out
-app.post ( '/logout', function(req, res) {
-
+app.post('/logout', function(req, res) {
     if ( ! checkAuthenticaton(req,res) ) { return; }
 
     req.logOut();
@@ -336,48 +338,60 @@ app.post( '/subscribe', async function (req,res) {
     var itemID = null;
 
     // check if customer exists
-    var customers = await stripe.customers.list({ email: subscription.email } );
-    if ( customers && customers.data.length ) {
-        customerID = customers.data[0].id;
+    try {
+        var customers = await stripe.customers.list({ email: subscription.email } );
+        if ( customers && customers.data.length ) {
+            customerID = customers.data[0].id;
+        }
+    } catch ( err ) {
+        res.status ( rc.Client.REQUEST_FAILED ).send ( err );
     }
 
-    // get subscripton id if customer already exists
-    if ( customerID ) {
-        var subscriptions = await stripe.subscriptions.list({ customer: customerID });
-        if (subscriptions && subscriptions.data.length) {
-            subscriptionID = subscriptions.data[0].id;
+    try {
+        // get subscripton id if customer already exists
+        if ( customerID ) {
+            var subscriptions = await stripe.subscriptions.list({ customer: customerID });
+            if (subscriptions && subscriptions.data.length) {
+                subscriptionID = subscriptions.data[0].id;
+            }
+        // create new customer
+        } else {
+            var customer = await stripe.customers.create ( { email: token.email,
+                                                            source: token.id } );
+            if ( customer ) {
+                customerID = customer.id;
+            }
         }
-    // create new customer
-    } else {
-        var customer = await stripe.customers.create ( { email: token.email,
-                                                         source: token.id } );
-        if ( customer ) {
-            customerID = customer.id;
-        }
+    } catch ( err ) {
+        res.status ( rc.Client.REQUEST_FAILED ).send ( err );
     }
 
-    // create new subscription
-    if ( ! subscriptionID ) {
-        stripe.subscriptions.create ( { customer: customerID,
-                                        items: [{ plan: subscription.planid }] } ).then ( subscription => {
-                // customer charged automatically
-                res.redirect  ( "/" );
-            }).catch(err => {
+    try {
+        // create new subscription
+        if ( ! subscriptionID ) {
+            stripe.subscriptions.create ( { customer: customerID,
+                                            items: [{ plan: subscription.planid }] } ).then ( subscription => {
+                    // customer charged automatically
+                    res.redirect  ( "/" );
+                }).catch(err => {
+                    res.status ( rc.Client.REQUEST_FAILED ).send ( err );
+                });
+        // change exsisting subscription
+        } else {
+            var items = await stripe.subscriptionItems.list ( { subscription: subscriptionID } );
+            if ( items && items.data.length ) {
+                itemID = items.data[0].id;
+            }
+
+            // update subscription plan
+            stripe.subscriptionItems.update ( itemID, { plan: subscription.planid } ).then ( transfer => {
+                res.redirect ( "/" );
+            }).catch ( err => {
                 res.status ( rc.Client.REQUEST_FAILED ).send ( err );
             });
-    // change exsisting subscription
-    } else {
-        var items = await stripe.subscriptionItems.list ( { subscription: subscriptionID } );
-        if ( items && items.data.length ) {
-            itemID = items.data[0].id;
         }
-
-        // update subscription plan
-        stripe.subscriptionItems.update ( itemID, { plan: subscription.planid } ).then ( transfer => {
-            res.redirect ( "/" );
-        }).catch ( err => {
-            res.status ( rc.Client.REQUEST_FAILED ).send ( err );
-        });
+    } catch ( err ) {
+        res.status ( rc.Client.REQUEST_FAILED ).send ( err );
     }
 });
 
@@ -407,7 +421,7 @@ app.post('/checkout', function (req, res) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // add a user to the database and send an confirmation mail
-app.post ('/register', function(req,res,next) {
+app.post('/register', function(req,res,next) {
 
     if ( dbConnected === false ) {
         // user does not exist
@@ -418,6 +432,9 @@ app.post ('/register', function(req,res,next) {
 
     var newUser = new User ( req.body );
 
+    //////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////
     // TODO: test purpose only !!!!!
     if (  newUser && newUser.username === "xoxman123" ) {
         console.error ( "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" );
@@ -429,6 +446,8 @@ app.post ('/register', function(req,res,next) {
         }, 2000 );
         return;
     }
+    //////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////
 
     mail.checkMail ( newUser.email, function (err,response) {
         if ( err || ! response )
@@ -448,7 +467,8 @@ app.post ('/register', function(req,res,next) {
                         res.status(rc.Server.INTERNAL_ERROR).send ( { code : err.code,
                                                                       message : err.message } );
                     } else {
-                        res.status(rc.Success.CREATED).send ( "OK" );
+                        res.status(rc.Success.CREATED).send ( { user: newUser,
+                                                                plan : subscriptionsPlans[newUser.plan] } );
                     }
                 });
             }
@@ -471,7 +491,7 @@ app.post('/resend/:userid', function (req, res, next) {
                         message: err.message
                     });
                 } else {
-                    res.status(rc.Success.CREATED).send("OK");
+                    res.status(rc.Success.CREATED).send ( { success: true } );
                 }
             });
         } else {
@@ -482,7 +502,7 @@ app.post('/resend/:userid', function (req, res, next) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // confirm an account via email address
-app.get ( '/confirm/:token', function (req,res,next) {
+app.get('/confirm/:token', function (req,res,next) {
 
     User.findOne ( { secretToken: req.params.token }, (err, user) => {
 
@@ -508,7 +528,7 @@ app.get ( '/confirm/:token', function (req,res,next) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // return all data
-app.get ('/strategies', function(req,res) {
+app.get('/strategies', function(req,res) {
 
     if (!checkAuthenticaton(req, res)) { return; }
 
@@ -523,7 +543,7 @@ app.get ('/strategies', function(req,res) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // return all data associated to one user
-app.get ('/strategies/:id', function(req,res) {
+app.get('/strategies/:id', function(req,res) {
 
     if (!checkAuthenticaton(req, res)) { return; }
 
@@ -538,7 +558,7 @@ app.get ('/strategies/:id', function(req,res) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // save as (new)
-app.post ('/strategies', function(req,res,next) {
+app.post('/strategies', function(req,res,next) {
 
     if (!checkAuthenticaton(req, res)) { return; }
 
@@ -554,7 +574,7 @@ app.post ('/strategies', function(req,res,next) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // save (update))
-app.post ( '/strategies/:name', function (req,res,next) {
+app.post('/strategies/:name', function (req,res,next) {
 
     if (!checkAuthenticaton(req, res)) { return; }
 
@@ -638,7 +658,7 @@ app.get('/users', function (req, res) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // update user
-app.post ( '/users/:userid', function (req, res) {
+app.post('/users/:userid', function (req, res) {
 
     if (!checkAuthenticaton(req, res)) { return; }
 
@@ -689,7 +709,7 @@ app.delete('/users/:userid', function (req,res,next) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // simple route loging - prints all defined routes
-require ( 'express-route-log' )(app);
+require('express-route-log' )(app);
 
 ///////////////////////////////////////////////////////////////////////////////
 // set static page route
@@ -726,14 +746,14 @@ app.use ( function(err, req, res, next) {
 // setup server
 // var port = normalizePort ( process.env.PORT || config.server.port );
 var port = config.server.port;
-app.set ( 'port', port );
+app.set('port', port );
 var server = http.createServer ( app );
 // var server = https.createServer ( httpsOptions, app );
 server.listen ( port );
 
 ///////////////////////////////////////////////////////////////////////////////
 // Event listener for HTTP server "error" event.
-server.on ( 'error', function(error) {
+server.on('error', function(error) {
     if (error.syscall !== 'listen') {
         throw error;
     }
@@ -759,7 +779,7 @@ server.on ( 'error', function(error) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // Event listener for HTTP server "listening" event.
-server.on ( 'listening', function() {
+server.on('listening', function() {
     var addr = server.address();
     var bind = typeof addr === 'string'
         ? 'pipe ' + addr
@@ -770,6 +790,21 @@ server.on ( 'listening', function() {
 ///////////////////////////////////////////////////////////////////////////////
 // local functions
 function checkAuthenticaton (req, res) {
+
+    // parse login and password from headers
+    const b64auth = ( req.headers.authorization || '' ).split(' ')[1] || '';
+    const [login, password] = new Buffer ( b64auth, 'base64' ).toString().split(':');
+
+    // var token = req.headers['x-access-token'];
+    // if  ( ! token ) {
+    //     return false;
+    // }
+    // jwt.verify ( token, config.webtoken.secret, function (err,decoded) {
+    //     if ( err ) {
+    //         return false;
+    //     }
+    // });
+
     if ( ! req.isAuthenticated()) {
         res.status ( rc.Client.UNAUTHORIZED ).send ( "unauthorized request" );
         return false;
@@ -797,15 +832,13 @@ function sendConfirmationMail (user,host,callback) {
                                   callback);
 }
 
-function sleep (what, time) {
+function sleep (what,time) {
     setTimeout(function () {
         what();
     }, 4000);
 };
 
-function readPartial(file) {
+function readPartial (file) {
 
     return fs.readFileSync(__dirname + "/partials/" + file, 'utf8');
 }
-
-// module.exports = app;

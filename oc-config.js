@@ -61,8 +61,12 @@ module.exports = {
 
     // subscription service provider
     subscription: {
-        name: "Paymill",
-        endpoint: "https://api.paymill.com/v2.1/",
+        name: "Stripe",
         privkey: ""
+    },
+
+    // webtoken
+    webtoken: {
+        secret: "somying"
     }
 };
