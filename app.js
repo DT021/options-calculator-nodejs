@@ -73,6 +73,9 @@ const subscriptionsPlans = [
     }
 ];
 
+const ENDPOINT_SECRETS = "whsec_daeR1paBWMn6r9MA1XXgYm3AMmHpr66o";
+
+
 // get access to express
 var app = express();
 
@@ -255,7 +258,7 @@ app.get('/', function(req, res) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // route to test if the user is logged in or not
-app.get('/auth', function(req, res) {
+app.get('/auth', function(req,res) {
 
     if ( ! checkAuthenticaton(req,res) ) { return; }
 
@@ -264,8 +267,25 @@ app.get('/auth', function(req, res) {
 });
 
 ///////////////////////////////////////////////////////////////////////////////
+// stripe webhooks
+app.get('/webhooks', function (req,res) {
+
+    var sig = req.headers["stripe-signature"];
+
+    try {
+        var event = stripe.webhooks.constructEvent ( req.body, sig, ENDPOINT_SECRETS );
+        console.log  ( "webhook received: " + event );
+    }
+    catch ( err ) {
+        res.status ( rc.Client.BAD_REQUEST ).end();
+    }
+
+    res.status ( rc.Success.OK ).end();
+});
+
+///////////////////////////////////////////////////////////////////////////////
 // route return available subscription plans
-app.get('/plans', function (req, res) {
+app.get('/plans', function (req,res) {
 
     res.status(rc.Success.OK).send ( { "plans" : subscriptionsPlans } );
 });
@@ -320,7 +340,7 @@ app.post('/login', function(req,res,next) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // route to log out
-app.post('/logout', function(req, res) {
+app.post('/logout', function(req,res) {
     if ( ! checkAuthenticaton(req,res) ) { return; }
 
     req.logOut();
@@ -397,7 +417,7 @@ app.post( '/subscribe', async function (req,res) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // checkout payment
-app.post('/checkout', function (req, res) {
+app.post('/checkout', function (req,res) {
 
     var token = req.body.token;
     var checkout = req.body.checkout;
@@ -478,7 +498,7 @@ app.post('/register', function(req,res,next) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // re-send confirmation mail
-app.post('/resend/:userid', function (req, res, next) {
+app.post('/resend/:userid', function (req,res,next) {
 
     User.findOne({ email: req.params.userid }, (err, user) => {
         if (err) {
@@ -603,7 +623,7 @@ app.post('/strategies/:name', function (req,res,next) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // delete strategy
-app.delete('/strategies/:name', function (req, res, next) {
+app.delete('/strategies/:name', function (req,res,next) {
 
     if (!checkAuthenticaton(req, res)) { return; }
 
@@ -630,7 +650,7 @@ app.delete('/strategies/:name', function (req, res, next) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // update user
-app.post('/users/:userid', function (req, res) {
+app.post('/users/:userid', function (req,res) {
 
     if (!checkAuthenticaton(req, res)) { return; }
 
@@ -695,7 +715,7 @@ app.use ( function(req,res,next) {
 });
 
 // error handler
-app.use ( function(err, req, res, next) {
+app.use ( function(err,req,res,next) {
 
     // set locals, only providing error in development
     res.locals.message = err.message;
@@ -704,7 +724,7 @@ app.use ( function(err, req, res, next) {
 });
 
 // force https
-app.use ( function (req, res, next) {
+app.use ( function (req,res,next) {
     if ( ! req.secure && req.get('X-Forwarded-Proto') !== 'https' ) {
         res.redirect  ('https://' + req.get('Host') + req.url );
     }
