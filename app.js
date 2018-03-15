@@ -527,21 +527,6 @@ app.get('/confirm/:token', function (req,res,next) {
 });
 
 ///////////////////////////////////////////////////////////////////////////////
-// return all data
-// app.get('/strategies', function(req,res) {
-
-//     if (!checkAuthenticaton(req, res)) { return; }
-
-//     Strategy.find().sort('name').exec(function (err, strategy) {
-//         if (err) {
-//             res.status ( rc.Server.INTERNAL_ERROR ).send ( err );
-//         } else {
-//             res.status ( rc.Success.OK ).send ( strategy );
-//         }
-//     });
-// });
-
-///////////////////////////////////////////////////////////////////////////////
 // return all data associated to one user
 app.get('/strategies/:name', function(req,res) {
 
@@ -644,19 +629,6 @@ app.delete('/strategies/:name', function (req, res, next) {
 });
 
 ///////////////////////////////////////////////////////////////////////////////
-// return all users
-// app.get('/users', function (req, res) {
-
-//     if (!checkAuthenticaton(req, res)) { return; }
-
-//     User.find().then(function (users) {
-//         res.status(rc.Success.OK).send(users);
-//     }).catch(function (err) {
-//         res.status(rc.Server.INTERNAL_ERROR).send(err);
-//     });
-// });
-
-///////////////////////////////////////////////////////////////////////////////
 // update user
 app.post('/users/:userid', function (req, res) {
 
@@ -729,6 +701,16 @@ app.use ( function(err, req, res, next) {
     res.locals.message = err.message;
     res.locals.error = req.app.get('env') === 'development' ? err : {};
     res.status ( err.statusCode || rc.Server.INTERNAL_ERROR ).send ( err );
+});
+
+// force https
+app.use ( function (req, res, next) {
+    if ( ! req.secure && req.get('X-Forwarded-Proto') !== 'https' ) {
+        res.redirect  ('https://' + req.get('Host') + req.url );
+    }
+    else {
+        next();
+    }
 });
 
 ///////////////////////////////////////////////////////////////////////////////
