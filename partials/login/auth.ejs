@@ -1,14 +1,7 @@
 <button class="btn btn-sm pull-right oc-register oc-conversion"
-        ng-show="account.plan.id<2"
+        ng-show="account.plan.id<1"
         ng-click="doUpgrade()">
-
-    <span ng-if="account.plan.id == 1">
-        upgrade
-    </span>
-    <span ng-if="account.plan.id == 0">
         subscribe
-    </span>
-
 </button>
 <button class="btn btn-sm pull-right oc-logout" ng-click="doLogout()">
     log out
