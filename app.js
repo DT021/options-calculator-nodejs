@@ -301,8 +301,6 @@ app.post('/login', function(req,res,next) {
                                                                 error: "no database connection" } );
     }
 
-    // var user = req.body;
-    // passport.authenticate('local', function(err, user, info) {
     passport.authenticate('basic', function(err,user,info) {
 
         if ( err ) {
@@ -341,15 +339,16 @@ app.post('/login', function(req,res,next) {
 ///////////////////////////////////////////////////////////////////////////////
 // route to log out
 app.post('/logout', function(req,res) {
+
     if ( ! checkAuthenticaton(req,res) ) { return; }
 
     req.logOut();
-    res.redirect ( '/' );
+    res.redirect ('/' );
 });
 
 ///////////////////////////////////////////////////////////////////////////////
 // subscribe to a plan
-app.post( '/subscribe', async function (req,res) {
+app.post('/subscribe', async function (req,res) {
 
     var token = req.body.token;
     var subscription = req.body.subscription;
@@ -421,8 +420,6 @@ app.post('/checkout', function (req,res) {
 
     var token = req.body.token;
     var checkout = req.body.checkout;
-    // console.log ( JSON.stringify(token) );
-    // console.log ( JSON.stringify(checkout) );
 
     // create customer
     stripe.customers.create ( { email: token.email,
@@ -622,39 +619,35 @@ app.post('/strategies/:name', function (req,res,next) {
 });
 
 ///////////////////////////////////////////////////////////////////////////////
-// delete strategy
-app.delete('/strategies/:name', function (req,res,next) {
+// delete strategies
+app.delete('/strategies/:userid', function (req,res,next) {
 
     if (!checkAuthenticaton(req, res)) { return; }
 
-    if (!req.isAuthenticated()) {
-        res.status(rc.Client.UNAUTHORIZED).send("unauthorized request");
-        return;
-    }
-    Strategy.findOne({ name: req.params.name }, (err, strategy) => {
+    // Strategy.findOne({ name: req.params.userid }, (err, strategy) => {
 
-        if (err) {
-            res.status(rc.Server.INTERNAL_ERROR).send(err);
-        } else {
+    //     if (err) {
+    //         res.status(rc.Server.INTERNAL_ERROR).send(err);
+    //     } else {
 
-            strategy.remove((err, strategy) => {
-                if (err) {
-                    res.status(rc.Server.INTERNAL_ERROR).send(err);
-                } else {
-                    res.status(rc.Success.OK).send(strategy);
-                }
-            });
-        }
-    });
+    //         strategy.remove((err, strategy) => {
+    //             if (err) {
+    //                 res.status(rc.Server.INTERNAL_ERROR).send(err);
+    //             } else {
+                    res.status(rc.Success.OK).send ( { success : true } );
+    //             }
+    //         });
+    //     }
+    // });
 });
 
 ///////////////////////////////////////////////////////////////////////////////
-// update user
-app.post('/users/:userid', function (req,res) {
+// update account
+app.post('/account/:id', function (req,res) {
 
     if (!checkAuthenticaton(req, res)) { return; }
 
-    User.findOne({ email: req.params.userid }, (err, user) => {
+    User.findOne ( { email: req.params.id }, (err, user) => {
 
         if (err) {
             res.status(rc.Client.NOT_FOUND).send(err);
@@ -673,30 +666,27 @@ app.post('/users/:userid', function (req,res) {
 });
 
 ///////////////////////////////////////////////////////////////////////////////
-// delete user
-app.delete('/users/:userid', function (req,res,next) {
+// delete account
+app.delete('/account/:id', function (req,res,next) {
 
     if (!checkAuthenticaton(req, res)) { return; }
 
-    // if (!req.isAuthenticated()) {
-    //     res.status(rc.Client.UNAUTHORIZED).send("unauthorized request");
-    //     return;
-    // }
-    User.findOne({ email: req.params.userid }, (err, user) => {
+    // User.findOne ( { email: req.params.id }, (err, user) => {
 
-        if (err) {
-            res.status(rc.Client.NOT_FOUND).send(err);
-        } else {
+    //     if (err) {
+    //         res.status(rc.Client.NOT_FOUND).send(err);
+    //     } else {
 
-            user.remove((err, user) => {
-                if (err) {
-                    res.status ( rc.Server.INTERNAL_ERROR ).send ( err );
-                } else {
-                    res.status ( rc.Success.OK ).send ( user );
-                }
-            });
-        }
-    });
+    //         user.remove((err, user) => {
+    //             if (err) {
+    //                 res.status ( rc.Server.INTERNAL_ERROR ).send ( err );
+    //             } else {
+    //                 res.status ( rc.Success.OK ).send ( user );
+    res.status(rc.Success.OK).send({ success: true });
+    //             }
+    //         });
+    //     }
+    // });
 });
 
 ///////////////////////////////////////////////////////////////////////////////
