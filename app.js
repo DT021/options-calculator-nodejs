@@ -48,7 +48,7 @@ var User = require('./User.model');
 const subscriptionsPlans = [
     {
         id: 0,
-        name: "NONE",
+        name: "DEMO",
         price: 0,
         period: "NEVER",
         recurring: false
@@ -74,7 +74,6 @@ const subscriptionsPlans = [
 ];
 
 const ENDPOINT_SECRETS = "whsec_daeR1paBWMn6r9MA1XXgYm3AMmHpr66o";
-
 
 // get access to express
 var app = express();
@@ -267,8 +266,8 @@ app.get('/auth', function(req,res) {
 });
 
 ///////////////////////////////////////////////////////////////////////////////
-// stripe webhooks
-app.get('/webhooks', function (req,res) {
+// stripe webhook
+app.get('/webhook', function (req,res) {
 
     var sig = req.headers["stripe-signature"];
 
@@ -287,7 +286,26 @@ app.get('/webhooks', function (req,res) {
 // route return available subscription plans
 app.get('/plans', function (req,res) {
 
-    res.status(rc.Success.OK).send ( { "plans" : subscriptionsPlans } );
+    // TODO: testing purpose only
+    // stripe.plans.list().then ( plans => {
+    //     for ( var i in plans.data ) {
+    //         subscriptionsPlans[i].name = plans.data[i].nickname;
+    //         subscriptionsPlans[i].price = plans.data[i].amount/100;
+    //         subscriptionsPlans[i].period = plans.data[i].interval.toUpperCase();
+    //         // subscriptionsPlans[i].created = plans.data[i].created
+    //         // subscriptionsPlans[i].currency = plans.data[i].currency
+    //         // subscriptionsPlans[i].id = plans.data[i].id
+    //         // subscriptionsPlans[i].interval_count = plans.data[i].interval_count
+    //         // subscriptionsPlans[i].livemode = plans.data[i].livemode
+    //         // subscriptionsPlans[i].metadata = plans.data[i].metadata
+    //         // subscriptionsPlans[i].object = plans.data[i].object
+    //         // subscriptionsPlans[i].product = plans.data[i].product
+    //         // subscriptionsPlans[i].trial_period_days = plans.data[i].trial_period_days
+    //     }
+        res.status ( rc.Success.OK ).send ( { "plans" : subscriptionsPlans } );
+    // }).catch ( err => {
+    //     res.status(rc.Client.REQUEST_FAILED).send({ "plans": subscriptionsPlans } );
+    // });
 });
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -364,6 +382,7 @@ app.post('/subscribe', async function (req,res) {
         }
     } catch ( err ) {
         res.status ( rc.Client.REQUEST_FAILED ).send ( err );
+        return;
     }
 
     try {
@@ -383,6 +402,7 @@ app.post('/subscribe', async function (req,res) {
         }
     } catch ( err ) {
         res.status ( rc.Client.REQUEST_FAILED ).send ( err );
+        return;
     }
 
     try {
@@ -394,6 +414,7 @@ app.post('/subscribe', async function (req,res) {
                     res.redirect  ( "/" );
                 }).catch(err => {
                     res.status ( rc.Client.REQUEST_FAILED ).send ( err );
+                    return;
                 });
         // change exsisting subscription
         } else {
@@ -407,6 +428,7 @@ app.post('/subscribe', async function (req,res) {
                 res.redirect ( "/" );
             }).catch ( err => {
                 res.status ( rc.Client.REQUEST_FAILED ).send ( err );
+                return;
             });
         }
     } catch ( err ) {
@@ -624,21 +646,13 @@ app.delete('/strategies/:userid', function (req,res,next) {
 
     if (!checkAuthenticaton(req, res)) { return; }
 
-    // Strategy.findOne({ name: req.params.userid }, (err, strategy) => {
-
-    //     if (err) {
-    //         res.status(rc.Server.INTERNAL_ERROR).send(err);
-    //     } else {
-
-    //         strategy.remove((err, strategy) => {
-    //             if (err) {
-    //                 res.status(rc.Server.INTERNAL_ERROR).send(err);
-    //             } else {
-                    res.status(rc.Success.OK).send ( { success : true } );
-    //             }
-    //         });
-    //     }
-    // });
+    Strategy.remove({ name: req.params.userid }, (err) => {
+        if (err) {
+            res.status(rc.Server.INTERNAL_ERROR).send(err);
+        } else {
+            res.status(rc.Success.OK).send ( { success : true } );
+        }
+    });
 });
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -667,26 +681,39 @@ app.post('/account/:id', function (req,res) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // delete account
-app.delete('/account/:id', function (req,res,next) {
+app.delete('/account/:id', async function (req,res,next) {
 
     if (!checkAuthenticaton(req, res)) { return; }
 
-    // User.findOne ( { email: req.params.id }, (err, user) => {
+    var customerID = null;
 
-    //     if (err) {
-    //         res.status(rc.Client.NOT_FOUND).send(err);
-    //     } else {
+    // find customer
+    try {
+        var customers = await stripe.customers.list({ email: req.params.id });
+        if (customers && customers.data.length) {
+            customerID = customers.data[0].id;
+        }
+    } catch (err) {
+        res.status(rc.Client.REQUEST_FAILED).send(err);
+        return;
+    }
 
-    //         user.remove((err, user) => {
-    //             if (err) {
-    //                 res.status ( rc.Server.INTERNAL_ERROR ).send ( err );
-    //             } else {
-    //                 res.status ( rc.Success.OK ).send ( user );
-    res.status(rc.Success.OK).send({ success: true });
-    //             }
-    //         });
-    //     }
-    // });
+    // delete customer
+    try {
+        await stripe.customers.del ( customerID );
+    } catch (err) {
+        res.status(rc.Client.REQUEST_FAILED).send(err);
+        return;
+    }
+
+    // delete user
+    User.remove ( { email: req.params.id }, (err) => {
+        if (err) {
+            res.status(rc.Client.NOT_FOUND).send(err);
+        } else {
+            res.status(rc.Success.OK).send({ success: true });
+        }
+    });
 });
 
 ///////////////////////////////////////////////////////////////////////////////
