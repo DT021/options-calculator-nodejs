@@ -646,7 +646,7 @@ app.delete('/strategies/:userid', function (req,res,next) {
 
     if (!checkAuthenticaton(req, res)) { return; }
 
-    Strategy.remove({ name: req.params.userid }, (err) => {
+    Strategy.remove({ userid: req.params.userid }, (err) => {
         if (err) {
             res.status(rc.Server.INTERNAL_ERROR).send(err);
         } else {
