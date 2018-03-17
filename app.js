@@ -309,7 +309,7 @@ app.get('/plans', function (req,res) {
 });
 
 ///////////////////////////////////////////////////////////////////////////////
-// route to log in
+// verify passed password
 app.post('/verify', function(req,res,next) {
 
     var email = req.body.credentials.email;
@@ -327,6 +327,32 @@ app.post('/verify', function(req,res,next) {
             return;
         } else {
             res.status ( rc.Success.OK ).send ( "OK" );
+        }
+    });
+});
+
+///////////////////////////////////////////////////////////////////////////////
+// change password
+app.post('/changepass', function (req,res) {
+
+    var email = req.body.credentials.email;
+    var newpassword = req.body.credentials.newpassword;
+
+    User.findOne({ email: email }, function(err,user) {
+        if (err) {
+            res.status(rc.Server.INTERNAL_ERROR).send(err);
+            return;
+        } else if (!user) {
+            res.status(rc.Client.UNAUTHORIZED).send("user doesn't exist");
+            return;
+        } else {
+            user.password = newpassword;
+            user.save(function (err) {
+                if ( err ) {
+                    res.status ( rc.Server.INTERNAL_ERROR ).send ( err );
+                };
+                res.status ( rc.Success.OK ).send ( "OK" );
+            });
         }
     });
 });
