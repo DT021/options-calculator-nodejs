@@ -279,7 +279,7 @@ app.get('/webhook', function (req,res) {
         res.status ( rc.Client.BAD_REQUEST ).end();
     }
 
-    res.status ( rc.Success.OK ).end();
+    res.status ( rc.Success.OK ).send ( "OK" );
 });
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -306,6 +306,29 @@ app.get('/plans', function (req,res) {
     // }).catch ( err => {
     //     res.status(rc.Client.REQUEST_FAILED).send({ "plans": subscriptionsPlans } );
     // });
+});
+
+///////////////////////////////////////////////////////////////////////////////
+// route to log in
+app.post('/verify', function(req,res,next) {
+
+    var email = req.body.credentials.email;
+    var password = req.body.credentials.password;
+
+    User.findOne({ email: email }, function(err,user) {
+        if ( err ) {
+            res.status ( rc.Server.INTERNAL_ERROR ).send ( err );
+            return;
+        } else if ( ! user ) {
+            res.status ( rc.Client.UNAUTHORIZED ).send ( "user doesn't exist" );
+            return;
+        } else if ( ! user.validPassword(password) ) {
+            res.status ( rc.Client.UNAUTHORIZED ).send ( "incorrect password" );
+            return;
+        } else {
+            res.status ( rc.Success.OK ).send ( "OK" );
+        }
+    });
 });
 
 ///////////////////////////////////////////////////////////////////////////////
