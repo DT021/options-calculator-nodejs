@@ -695,6 +695,21 @@ app.delete('/strategies/:userid', function (req,res,next) {
 });
 
 ///////////////////////////////////////////////////////////////////////////////
+// delete a single strategy
+app.delete('/strategy/:name', function(req,res) {
+
+    if (!checkAuthenticaton(req, res)) { return; }
+
+    Strategy.remove({ name: req.params.name }, (err) => {
+        if (err) {
+            res.status(rc.Server.INTERNAL_ERROR).send(err);
+        } else {
+            res.status(rc.Success.OK).send({ success: true });
+        }
+    });
+});
+
+///////////////////////////////////////////////////////////////////////////////
 // update account
 app.post('/account/:id', function (req,res) {
 
