@@ -371,21 +371,10 @@ app.post('/login', function(req,res,next) {
     passport.authenticate('basic', function(err,user,info) {
 
         if ( err ) {
-            return next ( err ); // will generate a 500 error
-        }
-
-        // Generate a JSON response reflecting authentication status
-        if ( ! user ) {
-            // user does not exist
-            return res.status ( rc.Client.NOT_FOUND ).send ( { success : false,
-                                                               message : 'login failed !'
-            });
-        } else if ( user.active === false ) {
+            return next ( "invalid username and password combination" ); // will generate a 500 error
+        } else if ( user.active === false) {
             // user is registered but has not yet confirmed his account
-            return res.status ( rc.Client.UNAUTHORIZED ).send ( { success : false,
-                                                                  message : 'not yet confirmed !',
-                                                                  user    : user
-            });
+            return next ( "account not yet confirmed" );
         }
 
         req.login ( user, function(err) {
@@ -393,6 +382,7 @@ app.post('/login', function(req,res,next) {
                 return next ( err );
             }
         });
+
         // TODO: enable webtoken
         // create a token
         var token = jwt.sign ( { id: user.id }, config.webtoken.secret, {
