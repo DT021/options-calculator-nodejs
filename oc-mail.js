@@ -1,5 +1,7 @@
 'use strict';
 
+var fs = require('fs');
+var ejs = require("ejs");
 var mailer = require('nodemailer');
 var dns = require('dns');
 var net = require('net');
@@ -61,39 +63,32 @@ module.exports.sendMail = function sendMail(mail,callback) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // create account confirmation mail
-module.exports.createConfirmationMail = function createConfirmationMail(receiver,name,token,host) {
+module.exports.createConfirmationMail = function createConfirmationMail(receiver,name,token,host,ip) {
 
     var link = host + "/confirm/" + token;
+    var html = readMailPartial ( 'confirmation', { link : link,
+                                                   name : name,
+                                                   ip : ip } );
     return {
         from: '"IronCondorTrader" <info@ironcondortrader.com>',
         subject: 'Please verify your IronCondorTrader© account',
         to: receiver,
-        html: '<div style="font-size:1.2em;">' +
-              '<p>Dear ' + name + ',</p>' +
-              '<p>please click the link below in order to confirm your email address.' +
-              ' In case you have not registered to IronCondorTrader© please ignore this email.</p>' +
-              '<a href="' + link + '">' + link + '</a>' +
-              '<br><p>Your IronCondorTrader© Team</p>' +
-              '</div>'
+        html: html
     };
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 // create recovery  mail
-module.exports.createRecoveryMail = function createRecoveryMail(receiver,name,token,ip) {
+module.exports.createRecoveryMail = function createRecoveryMail(receiver,token,host,ip) {
 
-    var link = host + "/reset/" + token;
+    var link = host + "/recovery/" + token;
+    var html = readMailPartial ( 'recovery', { link : link,
+                                               ip : ip } );
     return {
         from: '"IronCondorTrader" <info@ironcondortrader.com>',
-        subject: 'Resetting your password',
+        subject: 'Changing your password',
         to: receiver,
-        html: '<div style="font-size:1.2em;">' +
-              '<p>Dear ' + name + ',</p>' +
-              '<p></p>' +
-              '<a href="' + link + '">' + link + '</a>' +
-              '<p>' + ip + '</p>' +
-              '<br><p>Your IronCondorTrader© Team</p>' +
-              '</div>'
+        html: html
     };
 }
 
@@ -236,4 +231,11 @@ module.exports.checkMail = function checkMail(email, callback, timeout, from_ema
 // check for development enviroment
 var isDevelop = function() {
     return ( ! process.env.NODE_ENV  || process.env.NODE_ENV === "development");
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// read the partial file and replaces ejs placeholders
+function readMailPartial(file,tags) {
+    var f = fs.readFileSync(__dirname + "/partials/mails/" + file + ".ejs", 'utf8');
+    return ejs.render(f,tags);
 }

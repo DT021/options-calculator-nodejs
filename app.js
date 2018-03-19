@@ -20,6 +20,7 @@ var mailer = require('nodemailer');
 var random = require('randomstring');
 var compression = require('compression');
 var minifyHTML = require('express-minify-html');
+var ejs = require("ejs");
 // TODO: put private key in env variable !!!!
 var stripe = require("stripe")("sk_test_Zq5hjqL7e3qJOCh3TaO2eFqR");
 
@@ -195,16 +196,16 @@ app.get('/', function(req, res) {
         // this is set when user logged in but has not yet subscribed
         res.render('index', {
 
-            whatif : readPartial("logout/whatif.ejs"),
-            neww   : readPartial("logout/neww.ejs"),
-            add    : readPartial("logout/add.ejs"),
-            reverse: readPartial("logout/reverse.ejs"),
-            save   : readPartial("logout/save.ejs"),
-            saveas : readPartial("logout/saveas.ejs"),
-            remove : readPartial("logout/remove.ejs"),
-            select : readPartial("logout/select.ejs"),
-            auth   : readPartial("login/auth.ejs"),
-            strikes: readPartial("logout/strikes.ejs")
+            whatif : readPartial("logout/whatif"),
+            neww   : readPartial("logout/neww"),
+            add    : readPartial("logout/add"),
+            reverse: readPartial("logout/reverse"),
+            save   : readPartial("logout/save"),
+            saveas : readPartial("logout/saveas"),
+            remove : readPartial("logout/remove"),
+            select : readPartial("logout/select"),
+            auth   : readPartial("login/auth"),
+            strikes: readPartial("logout/strikes")
         });
 
     } else if (req.isAuthenticated() ) {
@@ -212,16 +213,16 @@ app.get('/', function(req, res) {
         // this is set when user logged in
         res.render('index', {
 
-            whatif : readPartial("login/whatif.ejs"),
-            neww   : readPartial("login/neww.ejs"),
-            add    : readPartial("login/add.ejs"),
-            reverse: readPartial("login/reverse.ejs"),
-            save   : readPartial("login/save.ejs"),
-            saveas : readPartial("login/saveas.ejs"),
-            remove : readPartial("login/remove.ejs"),
-            select : readPartial("login/select.ejs"),
-            auth   : readPartial("login/auth.ejs"),
-            strikes: readPartial("login/strikes.ejs")
+            whatif : readPartial("login/whatif"),
+            neww   : readPartial("login/neww"),
+            add    : readPartial("login/add"),
+            reverse: readPartial("login/reverse"),
+            save   : readPartial("login/save"),
+            saveas : readPartial("login/saveas"),
+            remove : readPartial("login/remove"),
+            select : readPartial("login/select"),
+            auth   : readPartial("login/auth"),
+            strikes: readPartial("login/strikes")
         });
 
     } else {
@@ -229,16 +230,16 @@ app.get('/', function(req, res) {
         // this is set when user is logged out
         res.render ( 'index', {
 
-            whatif : readPartial("logout/whatif.ejs"),
-            neww   : readPartial("logout/neww.ejs"),
-            add    : readPartial("logout/add.ejs"),
-            reverse: readPartial("logout/reverse.ejs"),
-            save   : readPartial("logout/save.ejs"),
-            saveas : readPartial("logout/saveas.ejs"),
-            remove : readPartial("logout/remove.ejs"),
-            select : readPartial("logout/select.ejs"),
-            auth   : readPartial("logout/auth.ejs"),
-            strikes: readPartial("logout/strikes.ejs")
+            whatif : readPartial("logout/whatif"),
+            neww   : readPartial("logout/neww"),
+            add    : readPartial("logout/add"),
+            reverse: readPartial("logout/reverse"),
+            save   : readPartial("logout/save"),
+            saveas : readPartial("logout/saveas"),
+            remove : readPartial("logout/remove"),
+            select : readPartial("logout/select"),
+            auth   : readPartial("logout/auth"),
+            strikes: readPartial("logout/strikes")
         });
     }
 });
@@ -540,7 +541,10 @@ app.post('/register', function(req,res,next) {
             if ( err ) {
                 res.status( rc.Server.INTERNAL_ERROR ).send ( err );
             } else {
-                sendConfirmationMail(newUser, req.headers.origin, function(err,info) {
+                sendConfirmationMail(newUser,
+                                     req.headers.origin,
+                                     req.body.ip,
+                                     function(err,info) {
                     if ( err ) {
                         res.status(rc.Server.INTERNAL_ERROR).send ( { code : err.code,
                                                                       message : err.message } );
@@ -562,7 +566,10 @@ app.post('/resend/:userid', function (req,res,next) {
         if (err) {
             res.status(rc.Server.INTERNAL_ERROR).send(err);
         } else if (user) {
-            sendConfirmationMail(user, req.headers.origin, function (err, info) {
+            sendConfirmationMail(user,
+                                 req.headers.origin,
+                                 req.body.ip,
+                                 function (err, info) {
                 if (err) {
                     res.status(rc.Server.INTERNAL_ERROR).send({
                         code: err.code,
@@ -576,6 +583,57 @@ app.post('/resend/:userid', function (req,res,next) {
             res.status(rc.Client.NOT_FOUND).send('The user <' + req.params.userid + '> doesn\'t exist.');
         }
     });
+});
+
+///////////////////////////////////////////////////////////////////////////////
+// send an email
+app.post('/mail', function (req, res) {
+
+    User.findOne({ email: req.body.mail.receiver }, (err, user) => {
+        if (err) {
+            res.status(rc.Client.NOT_FOUND).send(err);
+        } else {
+            switch (req.body.mail.type) {
+                case "recovery": {
+                    sendRecoveryMail(req.body.mail.receiver,
+                                     req.body.mail.token,
+                                     req.headers.origin,
+                                     req.body.mail.ip,
+                                     function (err, info) {
+                            if (err) {
+                                res.status(rc.Server.INTERNAL_ERROR).send(err);
+                            } else {
+                                res.status(rc.Success.OK).send("OK");
+                            }
+                        });
+                    break;
+                }
+            }
+        }
+    });
+
+    // mail.checkMail(req.body.mail.receiver, function (err, response) {
+    //     if (err || !response) {
+    //         res.status(rc.Client.REQUEST_FAILED).send(err || "invalid mail address");
+    //         return;
+    //     }
+    //     switch (req.body.mail.type) {
+    //         case "recovery": {
+    //             sendRecoveryMail(req.body.mail.receiver,
+    //                              req.body.mail.token,
+    //                              req.headers.origin,
+    //                              req.body.mail.ip,
+    //                 function (err, info) {
+    //                     if (err) {
+    //                         res.status(rc.Server.INTERNAL_ERROR).send(err);
+    //                     } else {
+    //                         res.status(rc.Success.OK).send("OK");
+    //                     }
+    //                 });
+    //             break;
+    //         }
+    //     }
+    // });
 });
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -772,7 +830,7 @@ app.delete('/account/:id', async function (req,res,next) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // simple route loging - prints all defined routes
-require('express-route-log' )(app);
+require('express-route-log')(app);
 
 ///////////////////////////////////////////////////////////////////////////////
 // set static page route
@@ -896,13 +954,21 @@ function normalizePort ( val ) {
     return false;
 }
 
-function sendConfirmationMail (user,host,callback) {
+function sendConfirmationMail (user,host,ip,callback) {
 
     mail.sendMail(mail.createConfirmationMail(user.email,
                                               user.username,
                                               user.secretToken,
-                                              host),
-                                              callback);
+                                              ip,
+                                              host),callback);
+}
+
+function sendRecoveryMail(receiver,token,host,ip,callback) {
+
+    mail.sendMail(mail.createRecoveryMail(receiver,
+                                          token,
+                                          host,
+                                          ip),callback);
 }
 
 function sleep (what,time) {
@@ -913,5 +979,5 @@ function sleep (what,time) {
 
 function readPartial (file) {
 
-    return fs.readFileSync(__dirname + "/partials/" + file, 'utf8');
+    return fs.readFileSync(__dirname + "/partials/" + file + ".ejs", 'utf8');
 }
