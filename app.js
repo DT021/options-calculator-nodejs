@@ -898,11 +898,11 @@ function normalizePort ( val ) {
 
 function sendConfirmationMail (user,host,callback) {
 
-    mail.sendMail(mail.createMail(user.email,
-                                  user.username,
-                                  user.secretToken,
-                                  host),
-                                  callback);
+    mail.sendMail(mail.createConfirmationMail(user.email,
+                                              user.username,
+                                              user.secretToken,
+                                              host),
+                                              callback);
 }
 
 function sleep (what,time) {

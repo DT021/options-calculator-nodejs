@@ -60,21 +60,56 @@ module.exports.sendMail = function sendMail(mail,callback) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// route to log out
-module.exports.createMail = function createMail(receiver,name,token,host) {
+// create account confirmation mail
+module.exports.createConfirmationMail = function createConfirmationMail(receiver,name,token,host) {
 
-    // var link = config.server.host + ":" + config.server.port + "/confirm/" + token;
     var link = host + "/confirm/" + token;
-
     return {
         from: '"IronCondorTrader" <info@ironcondortrader.com>',
         subject: 'Please verify your IronCondorTrader© account',
         to: receiver,
         html: '<div style="font-size:1.2em;">' +
-              '<p>Hello ' + name + ',</p>' +
+              '<p>Dear ' + name + ',</p>' +
               '<p>please click the link below in order to confirm your email address.' +
               ' In case you have not registered to IronCondorTrader© please ignore this email.</p>' +
               '<a href="' + link + '">' + link + '</a>' +
+              '<br><p>Your IronCondorTrader© Team</p>' +
+              '</div>'
+    };
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// create recovery  mail
+module.exports.createRecoveryMail = function createRecoveryMail(receiver,name,token,ip) {
+
+    var link = host + "/reset/" + token;
+    return {
+        from: '"IronCondorTrader" <info@ironcondortrader.com>',
+        subject: 'Resetting your password',
+        to: receiver,
+        html: '<div style="font-size:1.2em;">' +
+              '<p>Dear ' + name + ',</p>' +
+              '<p></p>' +
+              '<a href="' + link + '">' + link + '</a>' +
+              '<p>' + ip + '</p>' +
+              '<br><p>Your IronCondorTrader© Team</p>' +
+              '</div>'
+    };
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// create notification  mail
+module.exports.createNotificationMail = function createNotificationMail(receiver,name,message,ip) {
+
+    return {
+        from: '"IronCondorTrader" <info@ironcondortrader.com>',
+        subject: 'Notififcation about account changes',
+        to: receiver,
+        html: '<div style="font-size:1.2em;">' +
+              '<p>Dear ' + name + ',</p>' +
+              '<p>' + message + '</p>' +
+              '<p>' + ip + '</p>' +
+              '<br><p>Your IronCondorTrader© Team</p>' +
               '</div>'
     };
 }
