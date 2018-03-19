@@ -7,4 +7,5 @@
        class="btn"
        id="strike-selection"
        accept=".json"
+       ng-disabled="menuService.isDisabled('strikes','in',this)"
        ng-file-select="onFileSelect($files)"/>
