@@ -36,16 +36,25 @@ var mail = require('./oc-mail');
 var Strategy = require('./Strategy.model');
 var User = require('./User.model');
 
-
+///////////////////////////////////////////////////////////////////////////////
 // init log4js
 var log4js = require('log4js');
 log4js.configure ( {
     appenders: { server: { type: 'file', filename: 'server.log' } },
     categories: { default: { appenders: ['server'], level: 'all' } }
 });
-var logger = log4js.getLogger('server' );
+var logger = log4js.getLogger('server');
 logger.debug('started');
 mail.setLogger (logger);
+
+// create a write stream (in append mode)
+// var accessLogStream = fs.createWriteStream ( path.join(__dirname, 'access.log'), {flags: 'a'} );
+// accessLogStream.write('__dirname=' + __dirname);
+// var serverLogStream = fs.createWriteStream ( path.join(__dirname, 'server.log'), {flags: 'a'} );
+
+// setup the logger
+// app.use ( morgan('dev',{stream: accessLogStream}) );
+// app.use(morgan('common', { skip: function (req, res) { return res.statusCode < 400 }, stream: accessLogStream}));
 
 // TODO: should be populized from stripe
 const subscriptionsPlans = [
@@ -136,9 +145,11 @@ console.log ( "options=" + JSON.stringify(config.db[env].options) );
 var dbConnected = false;
 mongoose.Promise = global.Promise;
 mongoose.connect ( config.db[env].url, config.db[env].options ).then ( function(params) {
-    console.log('connection established');
+    logger.debug("database connection to %s established", config.db[env].url );
+    console.log ( "connection established" );
     dbConnected = true;
 }).catch ( function(err) {
+    logger.debug("database connection failed %s", JSON.stringify(err));
     console.log ( err );
 });
 
@@ -148,15 +159,6 @@ mongoose.connect ( config.db[env].url, config.db[env].options ).then ( function(
 // set body parser
 app.use ( bodyParser.json() );
 app.use ( bodyParser.urlencoded({ extended: false }) );
-
-// create a write stream (in append mode)
-var accessLogStream = fs.createWriteStream ( path.join(__dirname, 'access.log'), {flags: 'a'} );
-accessLogStream.write('__dirname=' + __dirname);
-// var serverLogStream = fs.createWriteStream ( path.join(__dirname, 'server.log'), {flags: 'a'} );
-
-// setup the logger
-app.use ( morgan('dev',{stream: accessLogStream}) );
-// app.use(morgan('common', { skip: function (req, res) { return res.statusCode < 400 }, stream: accessLogStream}));
 
 //
 passport.serializeUser(function(user, done) {
@@ -188,6 +190,18 @@ passport.use ( new BasicStrategy ( {usernameField: 'email'}, function(email, pas
     });
   }
 ));
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+// add latency for testing purpose
+///////////////////////////////////////////////////////////////////////////////
+// app.use('/', function (req,res,next) { setTimeout(next, 1000) });
+// app.use('/login', function (req,res,next) { setTimeout(next,500) });
+// app.use('/register', function (req,res,next) { setTimeout(next, 500) });
+// app.use('/strategies', function (req,res,next) { setTimeout(next, 500) });
+// app.use('/strategies/:id', function (req,res,next) { setTimeout(next, 500) });
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////////////////
 // main page when logged out
@@ -245,18 +259,6 @@ app.get('/', function(req, res) {
         });
     }
 });
-
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-// add latency for testing purpose
-///////////////////////////////////////////////////////////////////////////////
-// app.use('/', function (req,res,next) { setTimeout(next, 1000) });
-// app.use('/login', function (req,res,next) { setTimeout(next,500) });
-// app.use('/register', function (req,res,next) { setTimeout(next, 500) });
-// app.use('/strategies', function (req,res,next) { setTimeout(next, 500) });
-// app.use('/strategies/:id', function (req,res,next) { setTimeout(next, 500) });
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////////////////
 // route to test if the user is logged in or not
@@ -341,7 +343,7 @@ app.post('/verify', function(req,res,next) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // change password
-app.post('/changepass', function (req,res) {
+app.post('/chgpass', function (req,res) {
 
     var email = req.body.credentials.email;
     var newpassword = req.body.credentials.newpassword;
@@ -609,32 +611,42 @@ app.post('/resend/:userid', function (req,res,next) {
 // send an email
 app.post('/mail', function (req, res) {
 
-    logger.info("attempt to send %s mail to %s requested by [%s]", req.body.mail.type,
-                                                                   req.body.mail.receiver,
-                                                                   req.body.mail.ip );
-    User.findOne({ email: req.body.mail.receiver }, (err, user) => {
+    var mail = req.body.mail;
+    var host = req.headers.origin;
+    logger.info("attempt to send %s mail to %s requested by [%s]", mail.type,
+                                                                   mail.receiver,
+                                                                   mail.ip );
+    User.findOne({ email: mail.receiver }, (err, user) => {
         if (err) {
-            logger.error("sending failed: user %s doesn't exist in database", req.body.mail.receiver );
-            res.status(rc.Client.NOT_FOUND).send(err);
+            logger.error("sending %s mail failed: user %s doesn't exist in database", mail.type,
+                                                                                      mail.receiver );
+            // NOTE: even if the account doesn't exist we nevertheless response success to prevent misusage
+            res.status(rc.Success.OK).send("OK");
         } else {
-            switch (req.body.mail.type) {
+            switch (mail.type) {
                 case "recovery": {
-                    sendRecoveryMail(req.body.mail.receiver,
-                                     req.body.mail.token,
-                                     req.headers.origin,
-                                     req.body.mail.ip,
-                                     function (err, info) {
-                            if (err) {
-                                logger.error("sending %s mail to %s failed: %s", req.body.mail.type,
-                                                                                 req.body.mail.receiver,
-                                                                                 JSON.stringify(err));
-                                res.status(rc.Server.INTERNAL_ERROR).send(err);
-                            } else {
-                                logger.info("sending %s mail to %s succeeded",req.body.mail.type,
-                                                                              req.body.mail.receiver);
-                                res.status(rc.Success.OK).send("OK");
-                            }
-                        });
+                    var token = random.generate();
+                    user.secretToken = token;
+                    user.save(function (err) {
+                        if (err) {
+                            logger.error("registering for customer %s failed: %s", newUser.email, JSON.stringify(err));
+                            res.status(rc.Server.INTERNAL_ERROR).send(err);
+                        } else {
+                            logger.info("token of account %s updated in database", mail.receiver);
+                            sendRecoveryMail(mail.receiver,token,host,mail.ip,function (err,info) {
+                                if (err) {
+                                    logger.error("sending %s mail to %s failed: %s", mail.type,
+                                                                                     mail.receiver,
+                                                                                     JSON.stringify(err));
+                                    res.status(rc.Server.INTERNAL_ERROR).send(err);
+                                } else {
+                                    logger.info("sending %s mail to %s succeeded",mail.type,
+                                                                                  mail.receiver);
+                                    res.status(rc.Success.OK).send("OK");
+                                }
+                            });
+                        }
+                    });
                     break;
                 }
             }
@@ -646,11 +658,12 @@ app.post('/mail', function (req, res) {
 // confirm an account via email address
 app.get('/confirm/:token', function (req,res,next) {
 
-    logger.info("attempt to confirm acccount with token %s", req.params.token );
+    logger.info("attempt to confirm account with token %s", req.params.token );
     User.findOne ( { secretToken: req.params.token }, (err, user) => {
 
         if (err) {
-            logger.error("acccount confirmation with token %s failed: %s", req.params.token, JSON.stringify(err));
+            logger.error("account confirmation with token %s failed: %s", req.params.token, 
+                                                                           JSON.stringify(err));
             res.status ( rc.Server.INTERNAL_ERROR ).send(err);
         } else if ( user ) {
 
@@ -659,16 +672,20 @@ app.get('/confirm/:token', function (req,res,next) {
 
             user.save((err, user) => {
                 if (err) {
-                    logger.error("acccount confirmation for %s failed: %s", user.email, JSON.stringify(err));
+                    logger.error("account confirmation for %s failed: %s", user.email, 
+                                                                            JSON.stringify(err));
                     res.status ( rc.Server.INTERNAL_ERROR ).send(err);
                 } else {
-                    logger.info("acccount confirmation for %s succeeded", user.email);
-                    res.status ( rc.Success.OK ).send ( 'Thank you, your account is confirmed and you can now login.' );
+                    logger.info("account confirmation for %s succeeded", user.email);
+                    res.render("partials/confirm", { user: user.name });
                 }
             });
         } else {
-            logger.error("acccount confirmation with token %s failed: token doesn't exist or already expired", req.params.token);
-            res.status ( rc.Client.NOT_FOUND ).send ( 'Token doesn\'t exist or already expired.' );
+            logger.error("account confirmation with token %s failed:\
+                          token doesn't exist or expired", req.params.token);
+            res.render("partials/error", { error: "Token doesn\'t exist or expired",
+                                           advise: "Please register again and confirm\
+                                                   your account within 24h. Thanks" });
         }
     });
 });
