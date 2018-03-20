@@ -378,6 +378,43 @@ app.post('/chgpass', function (req,res) {
 });
 
 ///////////////////////////////////////////////////////////////////////////////
+// recover a password via token
+app.get('/recover/:token', function (req, res) {
+
+    // check if customer has send new password
+    if ( req.query.password ) {
+        logger.info("customer sent new password via token %s", req.params.token );
+        // TODO: update database here
+        var p = req.query.password;
+        logger.info("password sent via token %s updated successfully", req.params.token);
+        res.render("pages/confirm", { header: "IronCondorTrader© Password Recovery",
+                                      message: "Password changed successfully",
+                                      reminder: "You can now return and login to your account" });
+        return;
+    }
+
+    logger.info("attempt to change password via token %s", req.params.token);
+    User.findOne({ secretToken: req.params.token }, (err, user) => {
+
+        if (err) {
+            logger.error("attempt to change password via token %s failed: %s", req.params.token,
+                JSON.stringify(err));
+            res.status(rc.Server.INTERNAL_ERROR).send(err);
+        } else if (user) {
+            logger.info("sending password page for account %s", user.email);
+            // TODO: set proper link
+            res.render("pages/chgpass", { link: "https://ironcondortrader.com/recover/" + req.params.token });
+        } else {
+            logger.error("attempt to change password via token %s failed: token doesn't exist", req.params.token);
+            res.render("pages/error", {
+                error: "Token doesn\'t exist or expired",
+                advise: "Please try again. Thanks"
+            });
+        }
+    });
+});
+
+///////////////////////////////////////////////////////////////////////////////
 // route to log in
 app.post('/login', function(req,res,next) {
 
@@ -681,7 +718,9 @@ app.get('/confirm/:token', function (req,res) {
                     res.status ( rc.Server.INTERNAL_ERROR ).send(err);
                 } else {
                     logger.info("account confirmation for %s succeeded", user.email);
-                    res.render("pages/confirm", { user: user.name });
+                    res.render("pages/confirm", { header: "Welcome to IronCondorTrader©",
+                                                  message: "Thank you " + user.name + ", your account is now confirmed and you can login to IronCondorTrader©",
+                                                  reminder: "Please don't forget to SUBSCRIBE !" });
                 }
             });
         } else {
@@ -689,29 +728,6 @@ app.get('/confirm/:token', function (req,res) {
             res.render("pages/error", { error: "Token doesn\'t exist or expired",
                                         advise: "Please register again and confirm\
                                                    your account within 24h. Thanks" });
-        }
-    });
-});
-
-///////////////////////////////////////////////////////////////////////////////
-// recover a password via token
-app.get('/recover/:token', function (req,res) {
-
-    logger.info("attempt to change password via token %s", req.params.token);
-    User.findOne({ secretToken: req.params.token }, (err, user) => {
-
-        if (err) {
-            logger.error("attempt to change password via token %s failed: %s", req.params.token,
-                                                                               JSON.stringify(err));
-            res.status(rc.Server.INTERNAL_ERROR).send(err);
-        } else if (user) {
-            logger.info("sending password page for account %s", user.email);
-            // TODO: set proper link
-            res.render("pages/chgpass", { link: "https://ironcondortrader.com/setpass/"+req.params.token } );
-        } else {
-            logger.error("attempt to change password via token %s failed: token doesn't exist", req.params.token);
-            res.render("pages/error", { error: "Token doesn\'t exist or expired",
-                                        advise: "Please try again. Thanks" });
         }
     });
 });
