@@ -54,6 +54,14 @@ var awstest = ["success@simulator.amazonses.com",
 
 var transporter = mailer.createTransport ( mgconfig );
 
+var logger = null;
+
+///////////////////////////////////////////////////////////////////////////////
+// set logger
+module.exports.setLogger = function sendMail(log) {
+    logger = log;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // route to log out
 module.exports.sendMail = function sendMail(mail,callback) {
