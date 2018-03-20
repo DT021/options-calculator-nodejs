@@ -315,7 +315,7 @@ app.get('/plans', function (req,res) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // verify passed password
-app.post('/verify', function(req,res,next) {
+app.post('/verify', function(req,res) {
 
     var email = req.body.credentials.email;
     var password = req.body.credentials.password;
@@ -531,7 +531,7 @@ app.post('/checkout', function (req,res) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // add a user to the database and send an confirmation mail
-app.post('/register', function(req,res,next) {
+app.post('/register', function(req,res) {
 
     if ( dbConnected === false ) {
         // user does not exist
@@ -580,7 +580,7 @@ app.post('/register', function(req,res,next) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // re-send confirmation mail
-app.post('/resend/:userid', function (req,res,next) {
+app.post('/resend/:userid', function (req,res) {
 
     var userid = req.params.userid;
     logger.info("resend confirmation mail to %s requested", userid);
@@ -660,7 +660,7 @@ app.post('/mail', function (req, res) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // confirm an account via token
-app.get('/confirm/:token', function (req,res,next) {
+app.get('/confirm/:token', function (req,res) {
 
     logger.info("attempt to confirm account via token %s", req.params.token );
     User.findOne ( { secretToken: req.params.token }, (err, user) => {
@@ -695,7 +695,7 @@ app.get('/confirm/:token', function (req,res,next) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // recover a password via token
-app.get('/recover/:token', function (req, res, next) {
+app.get('/recover/:token', function (req,res) {
 
     logger.info("attempt to change password via token %s", req.params.token);
     User.findOne({ secretToken: req.params.token }, (err, user) => {
@@ -705,9 +705,9 @@ app.get('/recover/:token', function (req, res, next) {
                                                                                JSON.stringify(err));
             res.status(rc.Server.INTERNAL_ERROR).send(err);
         } else if (user) {
-            logger.info("resetting token for account %s succeeded", user.email);
+            logger.info("sending password page for account %s", user.email);
             // TODO: set proper link
-            res.render("pages/cngpass", { link: user.email } );
+            res.render("pages/chgpass", { link: "https://ironcondortrader.com/setpass/"+req.params.token } );
         } else {
             logger.error("attempt to change password via token %s failed: token doesn't exist", req.params.token);
             res.render("pages/error", { error: "Token doesn\'t exist or expired",
@@ -733,7 +733,7 @@ app.get('/strategies/:name', function(req,res) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // save as (new)
-app.post('/strategies', function(req,res,next) {
+app.post('/strategies', function(req,res) {
 
     if (!checkAuthenticaton(req, res)) { return; }
 
@@ -749,7 +749,7 @@ app.post('/strategies', function(req,res,next) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // save (update))
-app.post('/strategies/:name', function (req,res,next) {
+app.post('/strategies/:name', function (req,res) {
 
     if (!checkAuthenticaton(req, res)) { return; }
 
@@ -793,7 +793,7 @@ app.post('/strategies/:name', function (req,res,next) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // delete strategies
-app.delete('/strategies/:userid', function (req,res,next) {
+app.delete('/strategies/:userid', function (req,res) {
 
     if (!checkAuthenticaton(req, res)) { return; }
 
@@ -851,7 +851,7 @@ app.post('/account/:id', function (req,res) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // delete account
-app.delete('/account/:id', async function (req,res,next) {
+app.delete('/account/:id', async function (req,res) {
 
     if (!checkAuthenticaton(req, res)) { return; }
 
