@@ -345,7 +345,10 @@ app.post('/verify', function(req,res,next) {
 // change password
 app.post('/chgpass', function (req,res) {
 
+    if (!checkAuthenticaton(req, res)) { return; }
+
     var email = req.body.credentials.email;
+    var password = req.body.credentials.password;
     var newpassword = req.body.credentials.newpassword;
 
     logger.info( "password change for account %s requested", email) ;
@@ -353,12 +356,10 @@ app.post('/chgpass', function (req,res) {
         if (err) {
             logger.error("password change for user %s failed: %s", email,err);
             res.status(rc.Server.INTERNAL_ERROR).send(err);
-            return;
         } else if (!user) {
             logger.error("user %s doesn't exist", email);
-            res.status(rc.Client.UNAUTHORIZED).send("user doesn't exist");
-            return;
-        } else {
+            res.status(rc.Client.NOT_FOUND).send("user doesn't exist");
+        } else if ( user.validPassword(password)) {
             user.password = newpassword;
             user.save(function (err) {
                 if ( err ) {
@@ -369,6 +370,9 @@ app.post('/chgpass', function (req,res) {
                 logger.info("password change for account %s succeeded", email);
                 res.status ( rc.Success.OK ).send ( "OK" );
             });
+        } else {
+            logger.error("password change for account %s failed: unauthorized", email, err);
+            res.status(rc.Client.UNAUTHORIZED).send(err);
         }
     });
 });
@@ -655,37 +659,59 @@ app.post('/mail', function (req, res) {
 });
 
 ///////////////////////////////////////////////////////////////////////////////
-// confirm an account via email address
+// confirm an account via token
 app.get('/confirm/:token', function (req,res,next) {
 
-    logger.info("attempt to confirm account with token %s", req.params.token );
+    logger.info("attempt to confirm account via token %s", req.params.token );
     User.findOne ( { secretToken: req.params.token }, (err, user) => {
 
         if (err) {
-            logger.error("account confirmation with token %s failed: %s", req.params.token, 
-                                                                           JSON.stringify(err));
+            logger.error("account confirmation via token %s failed: %s", req.params.token, 
+                                                                         JSON.stringify(err));
             res.status ( rc.Server.INTERNAL_ERROR ).send(err);
         } else if ( user ) {
 
             user.active = true;
             user.secretToken = '';
 
-            user.save((err, user) => {
+            user.save((err,user) => {
                 if (err) {
-                    logger.error("account confirmation for %s failed: %s", user.email, 
-                                                                            JSON.stringify(err));
+                    logger.error("updating database of %s failed: %s", user.email, 
+                                                                       JSON.stringify(err));
                     res.status ( rc.Server.INTERNAL_ERROR ).send(err);
                 } else {
                     logger.info("account confirmation for %s succeeded", user.email);
-                    res.render("partials/confirm", { user: user.name });
+                    res.render("pages/confirm", { user: user.name });
                 }
             });
         } else {
-            logger.error("account confirmation with token %s failed:\
-                          token doesn't exist or expired", req.params.token);
-            res.render("partials/error", { error: "Token doesn\'t exist or expired",
-                                           advise: "Please register again and confirm\
+            logger.error("account confirmation via token %s failed: token doesn't exist", req.params.token);
+            res.render("pages/error", { error: "Token doesn\'t exist or expired",
+                                        advise: "Please register again and confirm\
                                                    your account within 24h. Thanks" });
+        }
+    });
+});
+
+///////////////////////////////////////////////////////////////////////////////
+// recover a password via token
+app.get('/recover/:token', function (req, res, next) {
+
+    logger.info("attempt to change password via token %s", req.params.token);
+    User.findOne({ secretToken: req.params.token }, (err, user) => {
+
+        if (err) {
+            logger.error("attempt to change password via token %s failed: %s", req.params.token,
+                                                                               JSON.stringify(err));
+            res.status(rc.Server.INTERNAL_ERROR).send(err);
+        } else if (user) {
+            logger.info("resetting token for account %s succeeded", user.email);
+            // TODO: set proper link
+            res.render("pages/cngpass", { link: user.email } );
+        } else {
+            logger.error("attempt to change password via token %s failed: token doesn't exist", req.params.token);
+            res.render("pages/error", { error: "Token doesn\'t exist or expired",
+                                        advise: "Please try again. Thanks" });
         }
     });
 });
