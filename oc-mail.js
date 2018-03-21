@@ -58,20 +58,20 @@ var logger = null;
 
 ///////////////////////////////////////////////////////////////////////////////
 // set logger
-module.exports.setLogger = function sendMail(log) {
+module.exports.setLogger = function(log) {
     logger = log;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 // route to log out
-module.exports.sendMail = function sendMail(mail,callback) {
+module.exports.sendMail = function(mail,callback) {
 
     transporter.sendMail ( mail, callback );
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 // create account confirmation mail
-module.exports.createConfirmationMail = function createConfirmationMail(receiver,name,token,host,ip) {
+module.exports.createConfirmationMail = function(receiver,name,token,host,ip) {
 
     var link = host + "/confirm/" + token;
     var html = readMailPartial ( 'confirmation', { link : link,
@@ -87,7 +87,7 @@ module.exports.createConfirmationMail = function createConfirmationMail(receiver
 
 ///////////////////////////////////////////////////////////////////////////////
 // create recovery  mail
-module.exports.createRecoveryMail = function createRecoveryMail(receiver,token,host,ip) {
+module.exports.createRecoveryMail = function(receiver,token,host,ip) {
 
     var link = host + "/recover/" + token;
     var html = readMailPartial ( 'recover', { link: link, ip: ip } );
@@ -101,24 +101,20 @@ module.exports.createRecoveryMail = function createRecoveryMail(receiver,token,h
 
 ///////////////////////////////////////////////////////////////////////////////
 // create notification  mail
-module.exports.createNotificationMail = function createNotificationMail(receiver,name,message,ip) {
+module.exports.createNotificationMail = function(receiver,name,message) {
 
+    var html = readMailPartial('notification', { name: name, message: message });
     return {
         from: '"IronCondorTrader" <info@ironcondortrader.com>',
         subject: 'Notififcation about account changes',
         to: receiver,
-        html: '<div style="font-size:1.2em;">' +
-              '<p>Dear ' + name + ',</p>' +
-              '<p>' + message + '</p>' +
-              '<p>' + ip + '</p>' +
-              '<br><p>Your IronCondorTrader© Team</p>' +
-              '</div>'
+        html: html
     };
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-module.exports.checkMail = function checkMail(email, callback, timeout, from_email) {
+module.exports.checkMail = function(email, callback, timeout, from_email) {
 
     // TODO: for test purpose only
     // if ( isDevelop() && ! awstest.includes(email) ) {

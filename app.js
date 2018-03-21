@@ -378,8 +378,56 @@ app.post('/chgpass', function (req,res) {
 });
 
 ///////////////////////////////////////////////////////////////////////////////
+// send an email
+app.post('/recover', function (req, res) {
+
+    var mail = req.body.mail;
+    var host = req.headers.origin;
+    logger.info("attempt to send %s mail to %s requested by [%s]", mail.type,
+        mail.receiver,
+        mail.ip);
+    User.findOne({ email: mail.receiver }, (err, user) => {
+        if (err) {
+            logger.error("sending %s mail failed: user %s doesn't exist in database", mail.type,
+                mail.receiver);
+            // NOTE: even if the account doesn't exist we nevertheless response success to prevent misusage
+            res.status(rc.Success.OK).send("OK");
+        } else {
+            switch (mail.type) {
+                case "recover": {
+                    var token = random.generate();
+                    user.secretToken = token;
+                    user.save(function (err) {
+                        if (err) {
+                            logger.error("registering for customer %s failed: %s", newUser.email, JSON.stringify(err));
+                            res.status(rc.Server.INTERNAL_ERROR).send(err);
+                        } else {
+                            logger.info("token of account %s updated in database", mail.receiver);
+                            sendRecoveryMail(mail.receiver, token, host, mail.ip, function (err, info) {
+                                if (err) {
+                                    logger.error("sending %s mail to %s failed: %s", mail.type,
+                                        mail.receiver,
+                                        JSON.stringify(err));
+                                    res.status(rc.Server.INTERNAL_ERROR).send(err);
+                                } else {
+                                    logger.info("sending %s mail to %s succeeded", mail.type,
+                                        mail.receiver);
+                                    res.status(rc.Success.OK).send("OK");
+                                }
+                            });
+                        }
+                    });
+                    break;
+                }
+            }
+        }
+    });
+});
+
+///////////////////////////////////////////////////////////////////////////////
 // recover a password via token
 app.get('/recover/:token', function (req, res) {
+
     logger.info("attempt to change password via token %s", req.params.token);
     User.findOne({ secretToken: req.params.token }, (err, user) => {
 
@@ -400,7 +448,19 @@ app.get('/recover/:token', function (req, res) {
                         res.status(rc.Server.INTERNAL_ERROR).send(err);
                     } else {
                         logger.info("database update of account %s successfully", user.email);
-                        res.status(rc.Success.OK).send("OK");
+                        var msg = "you have successfully changed your password.";
+                        sendNotificationMail(user,msg,function (err,info) {
+                            if (err) {
+                                logger.error("notification couldn't be sent to %s: %s", user.email,
+                                                                                        JSON.stringify(err));
+                                res.status(rc.Server.INTERNAL_ERROR).send({code: err.code,
+                                                                           message: err.message
+                                });
+                            } else {
+                                logger.info("notification successfully sent to %s", user.email);
+                                res.status(rc.Success.OK).send("OK");
+                            }
+                        });
                     }
                 });
                 return;
@@ -650,53 +710,6 @@ app.post('/resend/:userid', function (req,res) {
 });
 
 ///////////////////////////////////////////////////////////////////////////////
-// send an email
-app.post('/mail', function (req, res) {
-
-    var mail = req.body.mail;
-    var host = req.headers.origin;
-    logger.info("attempt to send %s mail to %s requested by [%s]", mail.type,
-                                                                   mail.receiver,
-                                                                   mail.ip );
-    User.findOne({ email: mail.receiver }, (err, user) => {
-        if (err) {
-            logger.error("sending %s mail failed: user %s doesn't exist in database", mail.type,
-                                                                                      mail.receiver );
-            // NOTE: even if the account doesn't exist we nevertheless response success to prevent misusage
-            res.status(rc.Success.OK).send("OK");
-        } else {
-            switch (mail.type) {
-                case "recovery": {
-                    var token = random.generate();
-                    user.secretToken = token;
-                    user.save(function (err) {
-                        if (err) {
-                            logger.error("registering for customer %s failed: %s", newUser.email, JSON.stringify(err));
-                            res.status(rc.Server.INTERNAL_ERROR).send(err);
-                        } else {
-                            logger.info("token of account %s updated in database", mail.receiver);
-                            sendRecoveryMail(mail.receiver,token,host,mail.ip,function (err,info) {
-                                if (err) {
-                                    logger.error("sending %s mail to %s failed: %s", mail.type,
-                                                                                     mail.receiver,
-                                                                                     JSON.stringify(err));
-                                    res.status(rc.Server.INTERNAL_ERROR).send(err);
-                                } else {
-                                    logger.info("sending %s mail to %s succeeded",mail.type,
-                                                                                  mail.receiver);
-                                    res.status(rc.Success.OK).send("OK");
-                                }
-                            });
-                        }
-                    });
-                    break;
-                }
-            }
-        }
-    });
-});
-
-///////////////////////////////////////////////////////////////////////////////
 // confirm an account via token
 app.get('/confirm/:token', function (req,res) {
 
@@ -704,7 +717,7 @@ app.get('/confirm/:token', function (req,res) {
     User.findOne ( { secretToken: req.params.token }, (err, user) => {
 
         if (err) {
-            logger.error("account confirmation via token %s failed: %s", req.params.token, 
+            logger.error("account confirmation via token %s failed: %s", req.params.token,
                                                                          JSON.stringify(err));
             res.status ( rc.Server.INTERNAL_ERROR ).send(err);
         } else if ( user ) {
@@ -714,7 +727,7 @@ app.get('/confirm/:token', function (req,res) {
 
             user.save((err,user) => {
                 if (err) {
-                    logger.error("updating database of %s failed: %s", user.email, 
+                    logger.error("updating database of %s failed: %s", user.email,
                                                                        JSON.stringify(err));
                     res.status ( rc.Server.INTERNAL_ERROR ).send(err);
                 } else {
@@ -1034,6 +1047,14 @@ function normalizePort ( val ) {
         return port;
     }
     return false;
+}
+
+function sendNotificationMail(user,message,callback) {
+
+    mail.sendMail(mail.createNotificationMail(user.email,
+                                              user.username,
+                                              message),
+                                              callback);
 }
 
 function sendConfirmationMail (user,host,ip,callback) {
