@@ -89,9 +89,8 @@ module.exports.createConfirmationMail = function createConfirmationMail(receiver
 // create recovery  mail
 module.exports.createRecoveryMail = function createRecoveryMail(receiver,token,host,ip) {
 
-    var link = host + "/recovery/" + token;
-    var html = readMailPartial ( 'recovery', { link : link,
-                                               ip : ip } );
+    var link = host + "/recover/" + token;
+    var html = readMailPartial ( 'recover', { link: link, ip: ip } );
     return {
         from: '"IronCondorTrader" <info@ironcondortrader.com>',
         subject: 'Changing your password',
