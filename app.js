@@ -368,6 +368,17 @@ app.post('/chgpass', function (req,res) {
                     return;
                 };
                 logger.info("password change for account %s succeeded", email);
+                var msg = "you have successfully changed your password.";
+                sendNotificationMail(user, msg, function (err, info) {
+                    // in case the email coundn't be sent we just log the error but
+                    // do not return it
+                    if (err) {
+                        logger.error("notification couldn't be sent to %s: %s", user.email,
+                                                                                JSON.stringify(err));
+                    } else {
+                        logger.info("notification successfully sent to %s", user.email);
+                    }
+                });
                 res.status ( rc.Success.OK ).send ( apiSuccess() );
             });
         } else {
@@ -379,7 +390,7 @@ app.post('/chgpass', function (req,res) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // send an email
-app.post('/recover', function (req, res) {
+app.post('/sendmail', function (req, res) {
 
     var mail = req.body.mail;
     var host = req.headers.origin;
@@ -399,19 +410,20 @@ app.post('/recover', function (req, res) {
                     user.secretToken = token;
                     user.save(function (err) {
                         if (err) {
-                            logger.error("registering for customer %s failed: %s", newUser.email, JSON.stringify(err));
+                            logger.error("registering for customer %s failed: %s", newUser.email,
+                                                                                   JSON.stringify(err));
                             res.status(rc.Server.INTERNAL_ERROR).send(apiError(err));
                         } else {
                             logger.info("token of account %s updated in database", mail.receiver);
                             sendRecoveryMail(mail.receiver, token, host, mail.ip, function (err, info) {
                                 if (err) {
                                     logger.error("sending %s mail to %s failed: %s", mail.type,
-                                        mail.receiver,
-                                        JSON.stringify(err));
+                                                                                     mail.receiver,
+                                                                                     JSON.stringify(err));
                                     res.status(rc.Server.INTERNAL_ERROR).send(apiError(err));
                                 } else {
                                     logger.info("sending %s mail to %s succeeded", mail.type,
-                                        mail.receiver);
+                                                                                   mail.receiver);
                                     res.status(rc.Success.OK).send(apiSuccess());
                                 }
                             });
@@ -450,22 +462,23 @@ app.get('/recover/:token', function (req, res) {
                         logger.info("database update of account %s successfully", user.email);
                         var msg = "you have successfully changed your password.";
                         sendNotificationMail(user,msg,function (err,info) {
+                            // in case the email coundn't be sent we just log the error but
+                            // do not return it
                             if (err) {
                                 logger.error("notification couldn't be sent to %s: %s", user.email,
                                                                                         JSON.stringify(err));
-                                res.status(rc.Server.INTERNAL_ERROR).send(apiError({code: err.code,
-                                                                                    message: err.message}));
                             } else {
                                 logger.info("notification successfully sent to %s", user.email);
-                                res.status(rc.Success.OK).send(apiSuccess());
                             }
                         });
+                        res.status(rc.Success.OK).send(apiSuccess());
                     }
+                    // return;
                 });
-                return;
+            } else {
+                logger.info("sending password page of account %s", user.email);
+                res.render("pages/chgpass", { token: req.params.token });
             }
-            logger.info("sending password page of account %s", user.email);
-            res.render("pages/chgpass", { token: req.params.token });
         } else {
             logger.error("attempt to change password failed: token %s doesn't exist", req.params.token);
             res.render("pages/error", { error: "Token doesn\'t exist or expired",
