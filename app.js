@@ -870,28 +870,48 @@ app.post('/updacc/:id', function (req,res) {
 
     logger.info("attempt to update account %s", req.params.id);
     User.findOne ( { email: req.params.id }, (err, user) => {
-
         if (err) {
             logger.error("update of of account %s failed: user doesn't exist", req.params.id);
             res.status(rc.Client.NOT_FOUND).send(apiError(err));
-        } else {
-            if (req.body.planid ) {
-                user.plan = parseInt(req.body.planid);
-            } else if ( req.body.email) {
-                user.email = req.body.email;
-            } else if ( req.body.name ) {
-                user.username = req.body.name;
+        } else if (user) {
+            // check password if passed for vefification
+            if ( req.body.password && !user.validPassword(req.body.password)) {
+                logger.error("verification for %s failed", req.params.id );
+                res.status(rc.Client.UNAUTHORIZED).send(apiError("incorrect password"));
+                return;
             }
-            user.save((err, user) => {
-                if (err) {
-                    logger.error("update of account %s failed: %s", req.params.id,
-                                                                    JSON.stringify(err));
-                    res.status(rc.Server.INTERNAL_ERROR).send(apiError(err));
-                } else {
-                    logger.info("update of account %s succeeded", req.params.id);
-                    res.status(rc.Success.OK).send(user);
-                }
-            });
+            let doUpdate = false;
+            // update subscription
+            if (req.body.planid && (req.body.planid != user.plan) ) {
+                user.plan = parseInt(req.body.planid);
+                doUpdate = true;
+            }
+            // update email
+            if ( req.body.newemail && (req.body.newemail != user.email) ) {
+                user.email = req.body.newemail;
+                doUpdate = true;
+            }
+            // update username
+            if ( req.body.name && (req.body.name != user.username) ) {
+                user.username = req.body.name;
+                doUpdate = true;
+            }
+            // update only if neccessary
+            if ( doUpdate ) {
+                user.save((err, user) => {
+                    if (err) {
+                        logger.error("update of account %s failed: %s", req.params.id,
+                                                                        JSON.stringify(err));
+                        res.status(rc.Server.INTERNAL_ERROR).send(apiError(err));
+                        return;
+                    }
+                });
+            }
+            logger.info("update of account %s succeeded", req.params.id);
+            res.status(rc.Success.OK).send(user);
+        } else {
+            logger.error("account update for %s failed: user doesn't exist", email, err);
+            res.status(rc.Client.REQUEST_FAILED).send(apiError("user doesn't exist"));
         }
     });
 });
