@@ -1,54 +1,54 @@
 'use strict';
 
-var express = require('express');
-var session = require('express-session');
-var path = require('path');
-var favicon = require('serve-favicon');
-var morgan = require('morgan');
-var fs = require('fs');
-var https = require('https');
-var bodyParser = require('body-parser');
-var cookieParser = require('cookie-parser');
-var passport = require('passport');
-var LocalStrategy = require('passport-local').Strategy;
-var BasicStrategy = require('passport-http').BasicStrategy;
-var auth = require('passport-local-authenticate');
-var mongoose = require('mongoose');
-var debug = require('debug')('optionscalculator:server');
-var http = require('http');
-var mailer = require('nodemailer');
-var random = require('randomstring');
-var compression = require('compression');
-var minifyHTML = require('express-minify-html');
-var ejs = require("ejs");
+const express = require('express');
+const session = require('express-session');
+const path = require('path');
+const favicon = require('serve-favicon');
+const morgan = require('morgan');
+const fs = require('fs');
+const https = require('https');
+const bodyParser = require('body-parser');
+const cookieParser = require('cookie-parser');
+const passport = require('passport');
+const LocalStrategy = require('passport-local').Strategy;
+const BasicStrategy = require('passport-http').BasicStrategy;
+const auth = require('passport-local-authenticate');
+const mongoose = require('mongoose');
+const debug = require('debug')('optionscalculator:server');
+const http = require('http');
+const mailer = require('nodemailer');
+const random = require('randomstring');
+const compression = require('compression');
+const minifyHTML = require('express-minify-html');
+const ejs = require("ejs");
 // TODO: put private key in env variable !!!!
-var stripe = require("stripe")("sk_test_Zq5hjqL7e3qJOCh3TaO2eFqR");
+const stripe = require("stripe")("sk_test_Zq5hjqL7e3qJOCh3TaO2eFqR");
 
-var jwt = require('jsonwebtoken');
-// var bcrypt = require('bcryptjs'); npm install bcryptjs --save
+const jwt = require('jsonwebtoken');
+// const bcrypt = require('bcryptjs'); npm install bcryptjs --save
 
 // own stuff
-var rc = require('./oc-return-codes');
-var config = require('./oc-config');
-var mail = require('./oc-mail');
+const rc = require('./oc-return-codes');
+const config = require('./oc-config');
+const mail = require('./oc-mail');
 
 // get models
-var Strategy = require('./Strategy.model');
-var User = require('./User.model');
+const Strategy = require('./Strategy.model');
+const User = require('./User.model');
 
 ///////////////////////////////////////////////////////////////////////////////
 // init log4js
-var log4js = require('log4js');
+const log4js = require('log4js');
 log4js.configure ( {
     appenders: { server: { type: 'file', filename: 'server.log' } },
     categories: { default: { appenders: ['server'], level: 'all' } }
 });
-var logger = log4js.getLogger('server');
+const logger = log4js.getLogger('server');
 logger.debug('started');
 mail.setLogger (logger);
 
 // create a write stream (in append mode)
-// var accessLogStream = fs.createWriteStream ( path.join(__dirname, 'access.log'), {flags: 'a'} );
+// const accessLogStream = fs.createWriteStream ( path.join(__dirname, 'access.log'), {flags: 'a'} );
 // accessLogStream.write('__dirname=' + __dirname);
 // var serverLogStream = fs.createWriteStream ( path.join(__dirname, 'server.log'), {flags: 'a'} );
 
@@ -88,7 +88,7 @@ const subscriptionsPlans = [
 const ENDPOINT_SECRETS = "whsec_daeR1paBWMn6r9MA1XXgYm3AMmHpr66o";
 
 // get access to express
-var app = express();
+const app = express();
 
 // set view engine to EJS
 app.set('view engine', 'ejs' );
@@ -320,22 +320,22 @@ app.post('/verify', function(req,res) {
     var email = req.body.credentials.email;
     var password = req.body.credentials.password;
 
-    logger.info ( "password verification for account %s requested", email );
+    logger.info ( "verification of account %s requested", email );
     User.findOne({ email: email }, function(err,user) {
         if ( err ) {
-            logger.error("password verification for %s failed: %s", email,err);
+            logger.error("verification for %s failed: %s", email,err);
             res.status ( rc.Server.INTERNAL_ERROR ).send ( apiError(err) );
             return;
         } else if ( ! user ) {
-            logger.error("password verification for %s failed: user doesn't exist", email, err);
+            logger.error("verification for %s failed: user doesn't exist", email, err);
             res.status(rc.Client.UNAUTHORIZED).send ( apiError("user doesn't exist") );
             return;
         } else if ( ! user.validPassword(password) ) {
-            logger.error("password verification for %s failed: incorrect password", email, err);
+            logger.error("verification for %s failed: incorrect password", email, err);
             res.status(rc.Client.UNAUTHORIZED).send ( apiError("incorrect password") );
             return;
         } else {
-            logger.info("password verification for account %s succeeded", email);
+            logger.info("verification of account %s succeeded", email);
             res.status ( rc.Success.OK ).send ( apiSuccess() );
         }
     });
@@ -368,17 +368,7 @@ app.post('/chgpass', function (req,res) {
                     return;
                 };
                 logger.info("password change for account %s succeeded", email);
-                var msg = "you have successfully changed your password.";
-                sendNotificationMail(user, msg, function (err, info) {
-                    // in case the email coundn't be sent we just log the error but
-                    // do not return it
-                    if (err) {
-                        logger.error("notification couldn't be sent to %s: %s", user.email,
-                                                                                JSON.stringify(err));
-                    } else {
-                        logger.info("notification successfully sent to %s", user.email);
-                    }
-                });
+                sendNotificationMail(user,"you have successfully changed your password.");
                 res.status ( rc.Success.OK ).send ( apiSuccess() );
             });
         } else {
@@ -537,18 +527,19 @@ app.post('/logout', function(req,res) {
 // subscribe to a plan
 app.post('/subscribe', async function (req,res) {
 
-    var token = req.body.token;
-    var subscription = req.body.subscription;
-    var customerID = null;
-    var subscriptionID = null;
-    var itemID = null;
+    let token = req.body.token;
+    let subscription = req.body.subscription;
+    let customerID = null;
+    let subscriptionID = null;
+    let itemID = null;
+    let newPlanName = subscriptionsPlans[subscription.planid].name;
 
-    logger.info("subscription of account %s to plan %d requested", subscription.email,
-                                                                   subscription.planid );
+    logger.info("subscription of account %s to plan %s requested", subscription.email,
+                                                                   newPlanName );
 
     // check if customer exists
     try {
-        var customers = await stripe.customers.list({ email: subscription.email } );
+        let customers = await stripe.customers.list({ email: subscription.email } );
         if ( customers && customers.data.length ) {
             customerID = customers.data[0].id;
             logger.info("%s has already a stripe account", subscription.email);
@@ -563,7 +554,7 @@ app.post('/subscribe', async function (req,res) {
     try {
         // get subscripton id if customer already exists
         if ( customerID ) {
-            var subscriptions = await stripe.subscriptions.list({ customer: customerID });
+            let subscriptions = await stripe.subscriptions.list({ customer: customerID });
             if (subscriptions && subscriptions.data.length) {
                 subscriptionID = subscriptions.data[0].id;
                 logger.info("%s already subscribed to %s", subscription.email,
@@ -571,7 +562,7 @@ app.post('/subscribe', async function (req,res) {
             }
         // create new customer
         } else {
-            var customer = await stripe.customers.create ( { email: token.email,
+            let customer = await stripe.customers.create ( { email: token.email,
                                                             source: token.id } );
             if ( customer ) {
                 customerID = customer.id;
@@ -589,27 +580,34 @@ app.post('/subscribe', async function (req,res) {
         if ( ! subscriptionID ) {
             stripe.subscriptions.create ( { customer: customerID,
                                             items: [{ plan: subscription.planid }] } ).then ( subscription => {
-                    // customer charged automatically
-                    logger.info("subscription of %s succeeded", subscription.email);
-                    res.redirect  ( "/" );
-                }).catch(err => {
-                    logger.error("subscription of %s failed: %s", subscription.email, err);
-                    res.status ( rc.Client.REQUEST_FAILED ).send ( stripeError(err) );
-                    return;
-                });
+                // customer charged automatically
+                logger.info("subscription of %s succeeded", subscription.email);
+                let user = { email : subscription.email, username : "customer" };
+                let msg = "you successfully subscribed to plan " + newPlanName;
+                sendNotificationMail(user,msg);
+                res.redirect  ( "/" );
+            }).catch(err => {
+                logger.error("subscription of %s failed: %s", subscription.email, err);
+                res.status ( rc.Client.REQUEST_FAILED ).send ( stripeError(err) );
+                return;
+            });
         // change exsisting subscription
         } else {
-            var items = await stripe.subscriptionItems.list ( { subscription: subscriptionID } );
+            let items = await stripe.subscriptionItems.list ( { subscription: subscriptionID } );
             if ( items && items.data.length ) {
                 itemID = items.data[0].id;
             }
 
             // update subscription plan
             stripe.subscriptionItems.update ( itemID, { plan: subscription.planid } ).then ( transfer => {
-                logger.info("subscription change of %s succeeded", subscription.email);
+                logger.info("subscription change to %s of %s succeeded", newPlanName, subscription.email);
+                let user = { email: subscription.email, username: "customer" };
+                let msg = "you successfully changed your plan to " + newPlanName;
+                sendNotificationMail(user,msg);
                 res.redirect ( "/" );
             }).catch ( err => {
-                logger.error("subscription change of %s failed: %s", subscription.email, err);
+                logger.error("subscription change to %s of %s failed: %s", newPlanName,
+                                                                           subscription.email, err);
                 res.status ( rc.Client.REQUEST_FAILED ).send ( stripeError(err) );
                 return;
             });
@@ -1068,12 +1066,22 @@ function normalizePort ( val ) {
     return false;
 }
 
-function sendNotificationMail(user,message,callback) {
+function sendNotificationMail(user,message) {
 
     mail.sendMail(mail.createNotificationMail(user.email,
                                               user.username,
                                               message),
-                                              callback);
+                                              (err, info) => {
+        // in case the email coundn't be sent we just log the error but
+        // do not return it
+        if (err) {
+            // TODO: log error into an error queue
+            logger.error("notification couldn't be sent to %s: %s", user.email,
+                                                                    JSON.stringify(err));
+        } else {
+            logger.info("notification successfully sent to %s", user.email);
+        }
+    });
 }
 
 function sendConfirmationMail (user,host,ip,callback) {
