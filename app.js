@@ -864,12 +864,12 @@ app.delete('/strategy/:name', function(req,res) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // update account
-app.post('/updacc/:id', function (req,res) {
+app.post('/updacc/:id', async function (req,res) {
 
     if (!checkAuthenticaton(req, res)) { return; }
 
     logger.info("attempt to update account %s", req.params.id);
-    User.findOne ( { email: req.params.id }, (err, user) => {
+    User.findOne({ email: req.params.id }, (err, user) => {
         if (err) {
             logger.error("update of of account %s failed: user doesn't exist", req.params.id);
             res.status(rc.Client.NOT_FOUND).send(apiError(err));
@@ -880,35 +880,42 @@ app.post('/updacc/:id', function (req,res) {
                 res.status(rc.Client.UNAUTHORIZED).send(apiError("incorrect password"));
                 return;
             }
-            let doUpdate = false;
+            let item = "";
             // update subscription
             if (req.body.planid && (req.body.planid != user.plan) ) {
                 user.plan = parseInt(req.body.planid);
-                doUpdate = true;
+                item ="subscription to " + subscriptionsPlans[user.plan].name;
             }
             // update email
             if ( req.body.newemail && (req.body.newemail != user.email) ) {
-                user.email = req.body.newemail;
-                doUpdate = true;
+
+                // TODO: update stripe
+                if ( false ) {
+                    logger.error("stripe update of %s failed", req.params.id);
+                    res.status(rc.Client.UNAUTHORIZED).send(apiError("update failed"));
+                    return;
+                } else {
+                    user.email = req.body.newemail;
+                    item = "email to " + user.email;
+                }
             }
             // update username
             if ( req.body.name && (req.body.name != user.username) ) {
                 user.username = req.body.name;
-                doUpdate = true;
+                item = "username to " + user.username;
             }
-            // update only if neccessary
-            if ( doUpdate ) {
-                user.save((err, user) => {
-                    if (err) {
-                        logger.error("update of account %s failed: %s", req.params.id,
-                                                                        JSON.stringify(err));
-                        res.status(rc.Server.INTERNAL_ERROR).send(apiError(err));
-                        return;
-                    }
-                });
-            }
-            logger.info("update of account %s succeeded", req.params.id);
-            res.status(rc.Success.OK).send(user);
+            user.save((err,user) => {
+                if (err) {
+                    logger.error("update of account %s failed: %s", req.params.id,
+                                                                    JSON.stringify(err));
+                    res.status(rc.Server.INTERNAL_ERROR).send(apiError(err));
+                } else {
+                    logger.info("update of account %s succeeded", req.params.id);
+                    let msg = "you successfully updated your " + item;
+                    sendNotificationMail(user, msg);
+                    res.status(rc.Success.OK).send(user);
+                }
+            });
         } else {
             logger.error("account update for %s failed: user doesn't exist", email, err);
             res.status(rc.Client.REQUEST_FAILED).send(apiError("user doesn't exist"));
@@ -1052,6 +1059,26 @@ server.on('listening', function() {
 
 ///////////////////////////////////////////////////////////////////////////////
 // local functions
+async function updateStripeEmail(customer,email) {
+    try {
+        let customers = await stripe.customers.list({ email: customer });
+        if ( customers.data.length ) {
+            await stripe.customers.update(customers.data[0].id, { email: email });
+        }
+    } catch(err){
+        throw err;
+    }
+}
+function asyncUpdateStripeEmail(customer, email) {
+    stripe.customers.list({ email: customer }).then( customers => {
+        if ( customers.data.length ) {
+            return stripe.customers.update(customers.data[0].id, { email: email });
+        }
+    }).catch(err => {
+        return new Promise().reject(err);
+    });
+}
+
 function checkAuthenticaton (req, res) {
 
     // parse login and password from headers
