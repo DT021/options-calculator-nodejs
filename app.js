@@ -880,6 +880,7 @@ app.post('/updacc/:id', async function (req,res) {
                 res.status(rc.Client.UNAUTHORIZED).send(apiError("incorrect password"));
                 return;
             }
+
             let item = "";
             // update subscription
             if (req.body.planid && (req.body.planid != user.plan) ) {
@@ -891,26 +892,15 @@ app.post('/updacc/:id', async function (req,res) {
                 user.stripe = req.body.stripeID;
                 item = "stripe customer id to " + user.stripe;
             }
-            // update email
-            if ( req.body.newemail && (req.body.newemail != user.email) ) {
-                if ( user.stripe ) {
-                    // TODO: check this
-                    stripe.customers.update(user.stripe, { email: req.body.newemail }).then( customer => {
-                        // user.email = req.body.newemail;
-                        // item = "email to " + user.email;
-                    }).catch ( err => {
-                        logger.error("stripe customer id update of %s failed", req.params.id);
-                        res.status(rc.Client.UNAUTHORIZED).send(apiError("update failed"));
-                        return;
-                    });
-                }
-                user.email = req.body.newemail;
-                item = "email to " + user.email;
-            }
             // update username
-            if ( req.body.name && (req.body.name != user.username) ) {
+            if (req.body.name && (req.body.name != user.username)) {
                 user.username = req.body.name;
                 item = "username to " + user.username;
+            }
+            // update email
+            if ( req.body.newemail && (req.body.newemail != user.email) ) {
+                user.email = req.body.newemail;
+                item = "email to " + user.email;
             }
             user.save((err,user) => {
                 if (err) {
@@ -918,6 +908,18 @@ app.post('/updacc/:id', async function (req,res) {
                                                                     JSON.stringify(err));
                     res.status(rc.Server.INTERNAL_ERROR).send(apiError(err));
                 } else {
+                    // TODO: test this
+                    if (user.stripe && req.body.newemail) {
+                        let data = { email: req.body.newemail };
+                        stripe.customers.update(user.stripe,data).then(customer => {
+                            //
+                        }).catch(err => {
+                            logger.error("stripe update of %s failed: %s", req.params.id,
+                                                                           JSON.stringify(err));
+                            res.status(rc.Server.INTERNAL_ERROR).send(apiError(err));
+                            return;
+                        });
+                    }
                     logger.info("update of account %s succeeded", req.params.id);
                     let msg = "you successfully updated your " + item;
                     sendNotificationMail(user, msg);
@@ -1020,6 +1022,13 @@ app.use ( function (req,res,next) {
 //     rejectUnauthorized: false
 // }
 
+// console.log("before");
+// updateStripe("dummy",{data:"ID"}).then( res => {
+//     console.log(res)
+// }).catch ( err => {
+//     console.log(err)
+// });
+
 ///////////////////////////////////////////////////////////////////////////////
 // setup server
 // var port = normalizePort ( process.env.PORT || config.server.port );
@@ -1067,25 +1076,40 @@ server.on('listening', function() {
 
 ///////////////////////////////////////////////////////////////////////////////
 // local functions
-async function updateStripeEmail(customer,email) {
+async function updateStripe(customer,data) {
+    let res = { success : false,
+                res: null }
     try {
-        let customers = await stripe.customers.list({ email: customer });
-        if ( customers.data.length ) {
-            await stripe.customers.update(customers.data[0].id, { email: email });
-        }
-    } catch(err){
-        throw err;
+        // let customers = await stripe.customers.list({ email: customer });
+        // if ( customers.data.length ) {
+        // res.res = await stripe.customers.update(customer, { email: data.email });
+        // }
+        res.res = await wait(5000);
+        res.success = true;
+    } catch ( err ) {
+        res.res = err;
     }
+    return res;
 }
-function asyncUpdateStripeEmail(customer, email) {
-    stripe.customers.list({ email: customer }).then( customers => {
-        if ( customers.data.length ) {
-            return stripe.customers.update(customers.data[0].id, { email: email });
-        }
-    }).catch(err => {
-        return new Promise().reject(err);
+
+function wait(time) {
+    let p = new Promise( (resolve,reject) => {
+        setTimeout ( function() {
+            resolve("OK");
+            // reject("ERROR");
+        }, time );
     });
+    return p;
 }
+// function asyncUpdateStripeEmail(customer, email) {
+//     stripe.customers.list({ email: customer }).then( customers => {
+//         if ( customers.data.length ) {
+//             return stripe.customers.update(customers.data[0].id, { email: email });
+//         }
+//     }).catch(err => {
+//         return new Promise().reject(err);
+//     });
+// }
 
 function checkAuthenticaton (req, res) {
 
