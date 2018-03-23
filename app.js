@@ -604,7 +604,7 @@ app.post('/subscribe', async function (req,res) {
                 let user = { email: subscription.email, username: "customer" };
                 let msg = "you successfully changed your plan to " + newPlanName;
                 sendNotificationMail(user,msg);
-                res.redirect ( "/" );
+                res.status(rc.Success.OK).send(apiSuccess({stripeID:customerID}));
             }).catch ( err => {
                 logger.error("subscription change to %s of %s failed: %s", newPlanName,
                                                                            subscription.email, err);
@@ -886,18 +886,26 @@ app.post('/updacc/:id', async function (req,res) {
                 user.plan = parseInt(req.body.planid);
                 item ="subscription to " + subscriptionsPlans[user.plan].name;
             }
+            // update strpe customer id
+            if (req.body.stripeID && (req.body.stripeID != user.stripe)) {
+                user.stripe = req.body.stripeID;
+                item = "stripe customer id to " + user.stripe;
+            }
             // update email
             if ( req.body.newemail && (req.body.newemail != user.email) ) {
-
-                // TODO: update stripe
-                if ( false ) {
-                    logger.error("stripe update of %s failed", req.params.id);
-                    res.status(rc.Client.UNAUTHORIZED).send(apiError("update failed"));
-                    return;
-                } else {
-                    user.email = req.body.newemail;
-                    item = "email to " + user.email;
+                if ( user.stripe ) {
+                    // TODO: check this
+                    stripe.customers.update(user.stripe, { email: req.body.newemail }).then( customer => {
+                        // user.email = req.body.newemail;
+                        // item = "email to " + user.email;
+                    }).catch ( err => {
+                        logger.error("stripe customer id update of %s failed", req.params.id);
+                        res.status(rc.Client.UNAUTHORIZED).send(apiError("update failed"));
+                        return;
+                    });
                 }
+                user.email = req.body.newemail;
+                item = "email to " + user.email;
             }
             // update username
             if ( req.body.name && (req.body.name != user.username) ) {
