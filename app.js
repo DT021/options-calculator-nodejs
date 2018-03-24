@@ -319,6 +319,7 @@ app.get('/plans', function(req,res,next) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // verify passed password
+// body { email, passowrd }
 // returns success true
 app.post('/verify', function(req,res,next) {
 
@@ -348,6 +349,7 @@ app.post('/verify', function(req,res,next) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // change password
+// body { email, passowrd, newpassword }
 // returns success true
 app.post('/chgpass', function(req,res,next) {
 
@@ -386,18 +388,20 @@ app.post('/chgpass', function(req,res,next) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // send an email
+// body { type[recover], receiver, ip }
 // returns success true
 app.post('/sendmail', function(req,res,next) {
 
     var mail = req.body.mail;
     var host = req.headers.origin;
-    logger.info("attempt to send %s mail to %s requested by [%s]", mail.type,
-        mail.receiver,
-        mail.ip);
+    logger.info("attempt to send %s mail to %s requested by [%s]",  mail.type,
+                                                                    mail.receiver,
+                                                                    mail.ip);
     User.findOne({ email: mail.receiver }, (err, user) => {
         if (err) {
-            logger.error("sending %s mail failed: user %s doesn't exist in database", mail.type,
-                                                                                    mail.receiver);
+            logger.error("sending %s mail failed: user %s doesn't exist in database",
+                                                                    mail.type,
+                                                                    mail.receiver);
             switch (mail.type) {
                 case "recover": {
                     // NOTE: even if the account doesn't exist we nevertheless response success to prevent misusage
@@ -415,20 +419,25 @@ app.post('/sendmail', function(req,res,next) {
                     user.secretToken = token;
                     user.save(function (err) {
                         if (err) {
-                            logger.error("registering for customer %s failed: %s", newUser.email,
-                                                                                   JSON.stringify(err));
+                            logger.error("registering for customer %s failed: %s",
+                                                                    newUser.email,
+                                                                    JSON.stringify(err));
                             res.status(rc.Server.INTERNAL_ERROR).send(apiError(err));
                         } else {
-                            logger.info("token of account %s updated in database", mail.receiver);
-                            sendRecoveryMail(mail.receiver, token, host, mail.ip, function (err, info) {
+                            logger.info("token of account %s updated in database",
+                                                                    mail.receiver);
+                            sendRecoveryMail(mail.receiver, token, host, mail.ip,
+                                                                    function (err, info) {
                                 if (err) {
-                                    logger.error("sending %s mail to %s failed: %s", mail.type,
-                                                                                     mail.receiver,
-                                                                                     JSON.stringify(err));
+                                    logger.error("sending %s mail to %s failed: %s",
+                                                                    mail.type,
+                                                                    mail.receiver,
+                                                                    JSON.stringify(err));
                                     res.status(rc.Server.INTERNAL_ERROR).send(apiError(err));
                                 } else {
-                                    logger.info("sending %s mail to %s succeeded", mail.type,
-                                                                                   mail.receiver);
+                                    logger.info("sending %s mail to %s succeeded",
+                                                                    mail.type,
+                                                                    mail.receiver);
                                     res.status(rc.Success.OK).send(apiSuccess());
                                 }
                             });
@@ -443,6 +452,8 @@ app.post('/sendmail', function(req,res,next) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // recover a password via token
+// params { token }
+// query { password }
 // returns success true
 app.get('/recover/:token', function(req,res,next) {
 
@@ -450,8 +461,9 @@ app.get('/recover/:token', function(req,res,next) {
     User.findOne({ secretToken: req.params.token }, (err, user) => {
 
         if (err) {
-            logger.error("attempt to change password via token %s failed: %s", req.params.token,
-                                                                               JSON.stringify(err));
+            logger.error("attempt to change password via token %s failed: %s",
+                                                                    req.params.token,
+                                                                    JSON.stringify(err));
             res.status(rc.Server.INTERNAL_ERROR).send(apiError(err));
         } else if (user) {
             // check if customer has send new password
@@ -461,20 +473,24 @@ app.get('/recover/:token', function(req,res,next) {
                 user.secretToken = "";
                 user.save((err,user) => {
                     if (err) {
-                        logger.error("database update of account %s failed: %s", user.email,
-                                                                                 JSON.stringify(err));
+                        logger.error("database update of account %s failed: %s",
+                                                                    user.email,
+                                                                    JSON.stringify(err));
                         res.status(rc.Server.INTERNAL_ERROR).send(apiError(err));
                     } else {
-                        logger.info("database update of account %s successfully", user.email);
+                        logger.info("database update of account %s successfully",
+                                                                    user.email);
                         var msg = "you have successfully changed your password.";
                         sendNotificationMail(user,msg,function (err,info) {
                             // in case the email coundn't be sent we just log the error but
                             // do not return it
                             if (err) {
-                                logger.error("notification couldn't be sent to %s: %s", user.email,
-                                                                                        JSON.stringify(err));
+                                logger.error("notification couldn't be sent to %s: %s",
+                                                                    user.email,
+                                                                    JSON.stringify(err));
                             } else {
-                                logger.info("notification successfully sent to %s", user.email);
+                                logger.info("notification successfully sent to %s",
+                                                                    user.email);
                             }
                         });
                         res.status(rc.Success.OK).send(apiSuccess());
@@ -495,6 +511,7 @@ app.get('/recover/:token', function(req,res,next) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // route to log in
+// params BASIC authentication
 // returns success true and an access token
 app.post('/login', function(req,res,next) {
 
@@ -543,6 +560,7 @@ app.post('/logout', function(req,res,next) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // subscribe to a plan
+// body { token, subscription }
 // returns stripe customer id
 app.post('/subscribe', async function(req,res,next) {
 
@@ -639,6 +657,7 @@ app.post('/subscribe', async function(req,res,next) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // checkout payment
+// body { token, checkout }
 // returns success true
 app.post('/checkout', function(req,res,next) {
 
@@ -662,6 +681,7 @@ app.post('/checkout', function(req,res,next) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // add a user to the database and send an confirmation mail
+// body { user-object }
 // return newly created user object and the associated subscription plan
 app.post('/register', function(req,res,next) {
 
@@ -712,6 +732,7 @@ app.post('/register', function(req,res,next) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // re-send confirmation mail
+// params { userid }
 // returns success true
 app.post('/resend/:userid', function(req,res,next) {
 
@@ -744,6 +765,7 @@ app.post('/resend/:userid', function(req,res,next) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // confirm an account via token
+// params { token }
 // returns a success page
 app.get('/confirm/:token', function(req,res,next) {
 
@@ -783,6 +805,7 @@ app.get('/confirm/:token', function(req,res,next) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // return all data associated to one user
+// params { name }
 // returns the strategy object identified by name
 app.get('/strategies/:name', function(req,res,next) {
 
@@ -799,6 +822,7 @@ app.get('/strategies/:name', function(req,res,next) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // save as (new)
+// body { strategy-object }
 // returns the saved strategy object
 app.post('/strategies', function(req,res,next) {
 
@@ -816,6 +840,8 @@ app.post('/strategies', function(req,res,next) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // save (update))
+// params { name }
+// body { strategy-object }
 // returns the updated strategy object
 app.post('/strategies/:name', function(req,res,next) {
 
@@ -861,6 +887,7 @@ app.post('/strategies/:name', function(req,res,next) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // delete strategies
+// params { userid }
 // returns success true
 app.delete('/strategies/:userid', function(req,res,next) {
 
@@ -877,6 +904,7 @@ app.delete('/strategies/:userid', function(req,res,next) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // delete a single strategy
+// params { name }
 // returns success true
 app.delete('/strategy/:name', function(req,res,next) {
 
@@ -891,9 +919,10 @@ app.delete('/strategy/:name', function(req,res,next) {
     });
 });
 
-
 ///////////////////////////////////////////////////////////////////////////////
 // update stripe
+// params { id }
+// body { newmail }
 // returns stripe customer id
 app.post('/updstrip/:id', async function(req,res,next) {
     User.findOne({ email: req.params.id }, (err, user) => {
@@ -920,6 +949,8 @@ app.post('/updstrip/:id', async function(req,res,next) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // update account
+// params { id }
+// body { password | planid | stripeID | name | newmail }
 // return user object
 app.post('/updacc/:id', async function(req,res,next) {
 
@@ -986,6 +1017,7 @@ app.post('/updacc/:id', async function(req,res,next) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // delete account
+// params { id }
 // returns success true
 app.delete('/delacc/:id', async function(req,res,next) {
 
