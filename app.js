@@ -205,6 +205,7 @@ passport.use ( new BasicStrategy ( {usernameField: 'email'}, function(email, pas
 
 ///////////////////////////////////////////////////////////////////////////////
 // main page when logged out
+// returns the main page
 app.get('/', function(req,res,next) {
 
     if ( req.isAuthenticated() && req.user.plan < 1 ) {
@@ -262,6 +263,7 @@ app.get('/', function(req,res,next) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // route to test if the user is logged in or not
+// returns the logged in user and his subscribed plan
 app.get('/auth', function(req,res,next) {
 
     if ( ! checkAuthenticaton(req,res) ) { return; }
@@ -290,6 +292,7 @@ app.get('/webhook', function(req,res,next) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // route return available subscription plans
+// return the subscriptions plans
 app.get('/plans', function(req,res,next) {
 
     // TODO: testing purpose only
@@ -316,6 +319,7 @@ app.get('/plans', function(req,res,next) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // verify passed password
+// returns success true
 app.post('/verify', function(req,res,next) {
 
     var email = req.body.credentials.email;
@@ -344,6 +348,7 @@ app.post('/verify', function(req,res,next) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // change password
+// returns success true
 app.post('/chgpass', function(req,res,next) {
 
     if (!checkAuthenticaton(req, res)) { return; }
@@ -381,6 +386,7 @@ app.post('/chgpass', function(req,res,next) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // send an email
+// returns success true
 app.post('/sendmail', function(req,res,next) {
 
     var mail = req.body.mail;
@@ -391,9 +397,17 @@ app.post('/sendmail', function(req,res,next) {
     User.findOne({ email: mail.receiver }, (err, user) => {
         if (err) {
             logger.error("sending %s mail failed: user %s doesn't exist in database", mail.type,
-                mail.receiver);
-            // NOTE: even if the account doesn't exist we nevertheless response success to prevent misusage
-            res.status(rc.Success.OK).send(apiSuccess());
+                                                                                    mail.receiver);
+            switch (mail.type) {
+                case "recover": {
+                    // NOTE: even if the account doesn't exist we nevertheless response success to prevent misusage
+                    res.status(rc.Success.OK).send(apiSuccess());
+                    break;
+                }
+                default: {
+                    res.status(rc.Server.INTERNAL_ERROR).send(apiError(err));
+                }
+            }
         } else {
             switch (mail.type) {
                 case "recover": {
@@ -429,6 +443,7 @@ app.post('/sendmail', function(req,res,next) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // recover a password via token
+// returns success true
 app.get('/recover/:token', function(req,res,next) {
 
     logger.info("attempt to change password via token %s", req.params.token);
@@ -480,6 +495,7 @@ app.get('/recover/:token', function(req,res,next) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // route to log in
+// returns success true and an access token
 app.post('/login', function(req,res,next) {
 
     if ( dbConnected === false ) {
@@ -516,6 +532,7 @@ app.post('/login', function(req,res,next) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // route to log out
+// returns redirect to root
 app.post('/logout', function(req,res,next) {
 
     if ( ! checkAuthenticaton(req,res) ) { return; }
@@ -526,6 +543,7 @@ app.post('/logout', function(req,res,next) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // subscribe to a plan
+// returns stripe customer id
 app.post('/subscribe', async function(req,res,next) {
 
     let token = req.body.token;
@@ -621,6 +639,7 @@ app.post('/subscribe', async function(req,res,next) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // checkout payment
+// returns success true
 app.post('/checkout', function(req,res,next) {
 
     var token = req.body.token;
@@ -643,6 +662,7 @@ app.post('/checkout', function(req,res,next) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // add a user to the database and send an confirmation mail
+// return newly created user object and the associated subscription plan
 app.post('/register', function(req,res,next) {
 
     if ( dbConnected === false ) {
@@ -692,6 +712,7 @@ app.post('/register', function(req,res,next) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // re-send confirmation mail
+// returns success true
 app.post('/resend/:userid', function(req,res,next) {
 
     var userid = req.params.userid;
@@ -711,7 +732,7 @@ app.post('/resend/:userid', function(req,res,next) {
                                                                         message: err.message}));
                 } else {
                     logger.info("resending confirmation mail to %s succeeded", userid);
-                    res.status(rc.Success.CREATED).send ( apiSuccess() );
+                    res.status(rc.Success.OK).send ( apiSuccess() );
                 }
             });
         } else {
@@ -723,6 +744,7 @@ app.post('/resend/:userid', function(req,res,next) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // confirm an account via token
+// returns a success page
 app.get('/confirm/:token', function(req,res,next) {
 
     logger.info("attempt to confirm account via token %s", req.params.token );
@@ -745,7 +767,8 @@ app.get('/confirm/:token', function(req,res,next) {
                 } else {
                     logger.info("account confirmation for %s succeeded", user.email);
                     res.render("pages/confirm", { header: "Welcome to IronCondorTrader©",
-                                                  message: "Thank you " + user.name + ", your account is now confirmed and you can login to IronCondorTrader©",
+                                                  message: "Thank you " + user.name +
+                    ", your account is now confirmed and you can login to IronCondorTrader©",
                                                   reminder: "Please don't forget to SUBSCRIBE !" });
                 }
             });
@@ -760,6 +783,7 @@ app.get('/confirm/:token', function(req,res,next) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // return all data associated to one user
+// returns the strategy object identified by name
 app.get('/strategies/:name', function(req,res,next) {
 
     if (!checkAuthenticaton(req, res)) { return; }
@@ -775,6 +799,7 @@ app.get('/strategies/:name', function(req,res,next) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // save as (new)
+// returns the saved strategy object
 app.post('/strategies', function(req,res,next) {
 
     if (!checkAuthenticaton(req, res)) { return; }
@@ -791,6 +816,7 @@ app.post('/strategies', function(req,res,next) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // save (update))
+// returns the updated strategy object
 app.post('/strategies/:name', function(req,res,next) {
 
     if (!checkAuthenticaton(req, res)) { return; }
@@ -835,6 +861,7 @@ app.post('/strategies/:name', function(req,res,next) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // delete strategies
+// returns success true
 app.delete('/strategies/:userid', function(req,res,next) {
 
     if (!checkAuthenticaton(req, res)) { return; }
@@ -843,13 +870,14 @@ app.delete('/strategies/:userid', function(req,res,next) {
         if (err) {
             res.status(rc.Server.INTERNAL_ERROR).send(apiError(err));
         } else {
-            res.status(rc.Success.OK).send ( { success : true } );
+            res.status(rc.Success.OK).send(apiSuccess());
         }
     });
 });
 
 ///////////////////////////////////////////////////////////////////////////////
 // delete a single strategy
+// returns success true
 app.delete('/strategy/:name', function(req,res,next) {
 
     if (!checkAuthenticaton(req, res)) { return; }
@@ -863,8 +891,36 @@ app.delete('/strategy/:name', function(req,res,next) {
     });
 });
 
+
+///////////////////////////////////////////////////////////////////////////////
+// update stripe
+// returns stripe customer id
+app.post('/updstrip/:id', async function(req,res,next) {
+    User.findOne({ email: req.params.id }, (err, user) => {
+        if (err) {
+            logger.error("stripe update failed: %s doesn't exist in database",
+                                                                req.params.id);
+            res.status(rc.Client.NOT_FOUND).send(apiError(err));
+        } else if (user && user.stripe ) {
+            // update email in stripe account
+            if ( req.body.newemail ) {
+                let data = { email: req.body.newemail };
+                stripe.customers.update(user.stripe,data).then(customer => {
+                    logger.info("stripe update of %s succeeded", req.params.id);
+                    res.status(rc.Success.OK).send(customer.id);
+                }).catch(err => {
+                    logger.error("stripe update failed. Please " +
+                                 "contact support@ironcondortrader.com" );
+                    res.status(rc.Server.INTERNAL_ERROR).send(stripeError(err));
+                });
+            }
+        }
+    });
+});
+
 ///////////////////////////////////////////////////////////////////////////////
 // update account
+// return user object
 app.post('/updacc/:id', async function(req,res,next) {
 
     if (!checkAuthenticaton(req, res)) { return; }
@@ -877,7 +933,7 @@ app.post('/updacc/:id', async function(req,res,next) {
         } else if (user) {
             // check password if passed for vefification
             if ( req.body.password && !user.validPassword(req.body.password)) {
-                logger.error("verification for %s failed", req.params.id );
+                logger.error("verification of %s failed", req.params.id );
                 res.status(rc.Client.UNAUTHORIZED).send(apiError("incorrect password"));
                 return;
             }
@@ -888,11 +944,10 @@ app.post('/updacc/:id', async function(req,res,next) {
                 item = "subscription from " + subscriptionsPlans[user.plan].name +
                 " to " + subscriptionsPlans[parseInt(req.body.planid)].name;
                 user.plan = parseInt(req.body.planid);
-            }
-            // update stripe customer id
-            if (req.body.stripeID && (req.body.stripeID != user.stripe)) {
-                item = "stripe customer id to " + user.stripe;
-                user.stripe = req.body.stripeID;
+                // first time a subscription plan gets updated a stripe id is provided as well
+                if (req.body.stripeID ) {
+                    user.stripe = req.body.stripeID;
+                }
             }
             // update username
             if (req.body.name && (req.body.name != user.username)) {
@@ -908,34 +963,22 @@ app.post('/updacc/:id', async function(req,res,next) {
             // update database
             user.save((err,user) => {
                 if (err) {
-                    logger.error("database update of %s of account %s failed: %s", item, req.params.id,
-                                                                                JSON.stringify(err));
+                    logger.error("database update account %s failed: %s",
+                                                                        item, req.params.id,
+                                                                        JSON.stringify(err));
                     res.status(rc.Server.INTERNAL_ERROR).send(apiError(err));
                 } else {
-                    // update stripe account as well
-                    if (user.stripe && req.body.newemail) {
-                        let data = { email: req.body.newemail };
-                        stripe.customers.update(user.stripe,data).then(customer => {
-                            logger.info("database and stripe update of %s of %s succeeded", item,
-                                                                                    req.params.id);
-                            let msg = "you successfully updated your " + item;
-                            sendNotificationMail(user, msg);
-                            res.status(rc.Success.OK).send(user);
-                        }).catch(err => {
-                            logger.error("database update of %s of %s succeeded " +
-                                          "but stripe update failed: %s\nPlease " +
-                                          "contact support@ironcondortrader.com", item, req.params.id,
-                                                                          JSON.stringify(err));
-                            res.status(rc.Server.INTERNAL_ERROR).send(stripeError(err));
-                        });
-                    } else {
-                        logger.error("stripe update of %s failed: stripe id or email missing", req.params.id);
-                        res.status(rc.Server.INTERNAL_ERROR).send(apiError(err));
-                    }
+                    logger.info("database update of %s succeeded [%s]", item,
+                                                                        req.params.id);
+                    // send notification mail to customer
+                    let msg = "you've successfully changed your " + item;
+                    sendNotificationMail(user, msg);
+                    res.status(rc.Success.OK).send(user);
                 }
             });
         } else {
-            logger.error("account update for %s failed: user doesn't exist", req.body.newemail, err);
+            logger.error("account update of %s failed: user doesn't exist",
+                                                                        req.params.id);
             res.status(rc.Client.REQUEST_FAILED).send(apiError("user doesn't exist"));
         }
     });
@@ -943,6 +986,7 @@ app.post('/updacc/:id', async function(req,res,next) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // delete account
+// returns success true
 app.delete('/delacc/:id', async function(req,res,next) {
 
     if (!checkAuthenticaton(req, res)) { return; }
@@ -1211,5 +1255,5 @@ function apiSuccess(res) {
     if ( res ) {
         return res;
     }
-    return { apiSuccess: true };
+    return { success: true };
 }
