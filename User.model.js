@@ -27,8 +27,8 @@ var UserSchema = new Schema ({
     secretToken: String,                // secret token for email verification
     active: false,                      // true when the email was verified
     plan: Number,                       // the subscription plan
-    stripe: String                      // stripe customer id
-    // status: String,                     // not yet defined
+    stripe: String,                     // stripe customer id
+    backup: String                      // backup of old email
     // country: String,                    // users country
     // reserve: String                     // reserved
 

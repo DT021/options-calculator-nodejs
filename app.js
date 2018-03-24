@@ -205,7 +205,7 @@ passport.use ( new BasicStrategy ( {usernameField: 'email'}, function(email, pas
 
 ///////////////////////////////////////////////////////////////////////////////
 // main page when logged out
-app.get('/', function(req, res) {
+app.get('/', function(req,res,next) {
 
     if ( req.isAuthenticated() && req.user.plan < 1 ) {
 
@@ -262,7 +262,7 @@ app.get('/', function(req, res) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // route to test if the user is logged in or not
-app.get('/auth', function(req,res) {
+app.get('/auth', function(req,res,next) {
 
     if ( ! checkAuthenticaton(req,res) ) { return; }
 
@@ -272,24 +272,25 @@ app.get('/auth', function(req,res) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // stripe webhook
-app.get('/webhook', function (req,res) {
+app.get('/webhook', function(req,res,next) {
 
     var sig = req.headers["stripe-signature"];
 
     try {
         var event = stripe.webhooks.constructEvent ( req.body, sig, ENDPOINT_SECRETS );
         console.log  ( "webhook received: " + event );
+        res.status ( rc.Success.OK ).send ( apiSuccess() );
     }
     catch ( err ) {
-        res.status ( rc.Client.BAD_REQUEST ).send ( stripeError(err) );
+        err.statusCode = rc.Client.BAD_REQUEST;
+        next ( err );
+        // res.status ( rc.Client.BAD_REQUEST ).send ( stripeError(err) );
     }
-
-    res.status ( rc.Success.OK ).send ( apiSuccess() );
 });
 
 ///////////////////////////////////////////////////////////////////////////////
 // route return available subscription plans
-app.get('/plans', function (req,res) {
+app.get('/plans', function(req,res,next) {
 
     // TODO: testing purpose only
     // stripe.plans.list().then ( plans => {
@@ -315,7 +316,7 @@ app.get('/plans', function (req,res) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // verify passed password
-app.post('/verify', function(req,res) {
+app.post('/verify', function(req,res,next) {
 
     var email = req.body.credentials.email;
     var password = req.body.credentials.password;
@@ -343,7 +344,7 @@ app.post('/verify', function(req,res) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // change password
-app.post('/chgpass', function (req,res) {
+app.post('/chgpass', function(req,res,next) {
 
     if (!checkAuthenticaton(req, res)) { return; }
 
@@ -380,7 +381,7 @@ app.post('/chgpass', function (req,res) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // send an email
-app.post('/sendmail', function (req, res) {
+app.post('/sendmail', function(req,res,next) {
 
     var mail = req.body.mail;
     var host = req.headers.origin;
@@ -428,7 +429,7 @@ app.post('/sendmail', function (req, res) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // recover a password via token
-app.get('/recover/:token', function (req, res) {
+app.get('/recover/:token', function(req,res,next) {
 
     logger.info("attempt to change password via token %s", req.params.token);
     User.findOne({ secretToken: req.params.token }, (err, user) => {
@@ -515,7 +516,7 @@ app.post('/login', function(req,res,next) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // route to log out
-app.post('/logout', function(req,res) {
+app.post('/logout', function(req,res,next) {
 
     if ( ! checkAuthenticaton(req,res) ) { return; }
 
@@ -525,7 +526,7 @@ app.post('/logout', function(req,res) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // subscribe to a plan
-app.post('/subscribe', async function (req,res) {
+app.post('/subscribe', async function(req,res,next) {
 
     let token = req.body.token;
     let subscription = req.body.subscription;
@@ -620,7 +621,7 @@ app.post('/subscribe', async function (req,res) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // checkout payment
-app.post('/checkout', function (req,res) {
+app.post('/checkout', function(req,res,next) {
 
     var token = req.body.token;
     var checkout = req.body.checkout;
@@ -642,7 +643,7 @@ app.post('/checkout', function (req,res) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // add a user to the database and send an confirmation mail
-app.post('/register', function(req,res) {
+app.post('/register', function(req,res,next) {
 
     if ( dbConnected === false ) {
         // user does not exist
@@ -691,7 +692,7 @@ app.post('/register', function(req,res) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // re-send confirmation mail
-app.post('/resend/:userid', function (req,res) {
+app.post('/resend/:userid', function(req,res,next) {
 
     var userid = req.params.userid;
     logger.info("resend confirmation mail to %s requested", userid);
@@ -722,7 +723,7 @@ app.post('/resend/:userid', function (req,res) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // confirm an account via token
-app.get('/confirm/:token', function (req,res) {
+app.get('/confirm/:token', function(req,res,next) {
 
     logger.info("attempt to confirm account via token %s", req.params.token );
     User.findOne ( { secretToken: req.params.token }, (err, user) => {
@@ -759,7 +760,7 @@ app.get('/confirm/:token', function (req,res) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // return all data associated to one user
-app.get('/strategies/:name', function(req,res) {
+app.get('/strategies/:name', function(req,res,next) {
 
     if (!checkAuthenticaton(req, res)) { return; }
 
@@ -774,7 +775,7 @@ app.get('/strategies/:name', function(req,res) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // save as (new)
-app.post('/strategies', function(req,res) {
+app.post('/strategies', function(req,res,next) {
 
     if (!checkAuthenticaton(req, res)) { return; }
 
@@ -790,7 +791,7 @@ app.post('/strategies', function(req,res) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // save (update))
-app.post('/strategies/:name', function (req,res) {
+app.post('/strategies/:name', function(req,res,next) {
 
     if (!checkAuthenticaton(req, res)) { return; }
 
@@ -834,7 +835,7 @@ app.post('/strategies/:name', function (req,res) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // delete strategies
-app.delete('/strategies/:userid', function (req,res) {
+app.delete('/strategies/:userid', function(req,res,next) {
 
     if (!checkAuthenticaton(req, res)) { return; }
 
@@ -849,7 +850,7 @@ app.delete('/strategies/:userid', function (req,res) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // delete a single strategy
-app.delete('/strategy/:name', function(req,res) {
+app.delete('/strategy/:name', function(req,res,next) {
 
     if (!checkAuthenticaton(req, res)) { return; }
 
@@ -864,7 +865,7 @@ app.delete('/strategy/:name', function(req,res) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // update account
-app.post('/updacc/:id', async function (req,res) {
+app.post('/updacc/:id', async function(req,res,next) {
 
     if (!checkAuthenticaton(req, res)) { return; }
 
@@ -884,50 +885,57 @@ app.post('/updacc/:id', async function (req,res) {
             let item = "";
             // update subscription
             if (req.body.planid && (req.body.planid != user.plan) ) {
+                item = "subscription from " + subscriptionsPlans[user.plan].name +
+                " to " + subscriptionsPlans[parseInt(req.body.planid)].name;
                 user.plan = parseInt(req.body.planid);
-                item ="subscription to " + subscriptionsPlans[user.plan].name;
             }
-            // update strpe customer id
+            // update stripe customer id
             if (req.body.stripeID && (req.body.stripeID != user.stripe)) {
-                user.stripe = req.body.stripeID;
                 item = "stripe customer id to " + user.stripe;
+                user.stripe = req.body.stripeID;
             }
             // update username
             if (req.body.name && (req.body.name != user.username)) {
+                item = "username from " + user.username + " to " + req.body.name;
                 user.username = req.body.name;
-                item = "username to " + user.username;
             }
             // update email
             if ( req.body.newemail && (req.body.newemail != user.email) ) {
+                user.backup = user.email;
                 user.email = req.body.newemail;
-                item = "email to " + user.email;
+                item = "email from " + user.backup + " to " + user.email;
             }
+            // update database
             user.save((err,user) => {
                 if (err) {
-                    logger.error("update of account %s failed: %s", req.params.id,
-                                                                    JSON.stringify(err));
+                    logger.error("database update of %s of account %s failed: %s", item, req.params.id,
+                                                                                JSON.stringify(err));
                     res.status(rc.Server.INTERNAL_ERROR).send(apiError(err));
                 } else {
-                    // TODO: test this
+                    // update stripe account as well
                     if (user.stripe && req.body.newemail) {
                         let data = { email: req.body.newemail };
                         stripe.customers.update(user.stripe,data).then(customer => {
-                            //
+                            logger.info("database and stripe update of %s of %s succeeded", item,
+                                                                                    req.params.id);
+                            let msg = "you successfully updated your " + item;
+                            sendNotificationMail(user, msg);
+                            res.status(rc.Success.OK).send(user);
                         }).catch(err => {
-                            logger.error("stripe update of %s failed: %s", req.params.id,
-                                                                           JSON.stringify(err));
-                            res.status(rc.Server.INTERNAL_ERROR).send(apiError(err));
-                            return;
+                            logger.error("database update of %s of %s succeeded " +
+                                          "but stripe update failed: %s\nPlease " +
+                                          "contact support@ironcondortrader.com", item, req.params.id,
+                                                                          JSON.stringify(err));
+                            res.status(rc.Server.INTERNAL_ERROR).send(stripeError(err));
                         });
+                    } else {
+                        logger.error("stripe update of %s failed: stripe id or email missing", req.params.id);
+                        res.status(rc.Server.INTERNAL_ERROR).send(apiError(err));
                     }
-                    logger.info("update of account %s succeeded", req.params.id);
-                    let msg = "you successfully updated your " + item;
-                    sendNotificationMail(user, msg);
-                    res.status(rc.Success.OK).send(user);
                 }
             });
         } else {
-            logger.error("account update for %s failed: user doesn't exist", email, err);
+            logger.error("account update for %s failed: user doesn't exist", req.body.newemail, err);
             res.status(rc.Client.REQUEST_FAILED).send(apiError("user doesn't exist"));
         }
     });
@@ -935,7 +943,7 @@ app.post('/updacc/:id', async function (req,res) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // delete account
-app.delete('/delacc/:id', async function (req,res) {
+app.delete('/delacc/:id', async function(req,res,next) {
 
     if (!checkAuthenticaton(req, res)) { return; }
 
