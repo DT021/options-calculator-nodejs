@@ -714,7 +714,7 @@ app.post('/register', function(req,res,next) {
         {
             logger.error("registering of customer %s failed: %s",newUser.email,
                                                                  JSON.stringify(err) );
-            res.status(rc.Client.REQUEST_FAILED).send(apiError("invalid mail address"));
+            res.status(rc.Client.REQUEST_FAILED).send(apiError(err));
             return;
         }
 
