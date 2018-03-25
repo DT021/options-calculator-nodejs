@@ -14,6 +14,7 @@ const LocalStrategy = require('passport-local').Strategy;
 const BasicStrategy = require('passport-http').BasicStrategy;
 const auth = require('passport-local-authenticate');
 const mongoose = require('mongoose');
+// const MongoStore = require('mongo-connect')(express);
 const debug = require('debug')('optionscalculator:server');
 const http = require('http');
 const mailer = require('nodemailer');
@@ -85,10 +86,14 @@ const subscriptionsPlans = [
     }
 ];
 
+// used by stripe webhook
 const ENDPOINT_SECRETS = "whsec_daeR1paBWMn6r9MA1XXgYm3AMmHpr66o";
 
 // get access to express
 const app = express();
+
+// get the current enviroment
+var env = app.settings.env;
 
 // set view engine to EJS
 app.set('view engine', 'ejs' );
@@ -96,9 +101,7 @@ app.set('views', config.server.docroot );
 
 // set constants used by session
 const COOKIE_SECRET = 'asdf33g4w4hghjkuil8saef345';
-const COOKIE_EXPIRETION_DATE = new Date();
-const COOKIE_EXPIRETION_DAY = 365;
-COOKIE_EXPIRETION_DATE.setDate ( COOKIE_EXPIRETION_DATE.getDate() + COOKIE_EXPIRETION_DAY );
+const COOKIE_EXPIRETION = 24 * 60 * 60 * 1000; // 24 hours
 
 // set cookie parser middleware
 app.use ( cookieParser(COOKIE_SECRET) );
@@ -109,9 +112,10 @@ app.use ( session({
     saveUninitialized: true,
     cookie: {
         httpOnly: true,
-        expires: COOKIE_EXPIRETION_DATE // use expires instead of maxAge
-        // store: new MongoStore( { url: config.urlMongo, collection: 'sessions' } )
-    }
+        // secure: true, // FIXME: must ne set in production
+        expires: new Date(Date.now() + COOKIE_EXPIRETION)
+    },
+    // store: new MongoStore( { url: config.db[env].url, collection: 'sessions' } )
  }));
 
  // set intialized passport
@@ -134,7 +138,6 @@ app.use ( minifyHTML({
 // compress all requests
 app.use ( compression() );
 
-var env = app.settings.env;
 console.log ( "dir=" + __dirname );
 console.log ( "rootdoc=" + config.server.docroot );
 console.log ( "env=" + env );
@@ -672,7 +675,7 @@ app.post('/checkout', function(req,res,next) {
                                     description: checkout.description,
                                     currency: checkout.currency,
                                     customer: customer.id })
-        }).then ( charge => {
+        }) .then ( charge => {
             res.status ( rc.Success.ACCEPTED ).send ( apiSuccess() );
         }).catch ( err => {
             res.status ( rc.Client.REQUEST_FAILED ).send ( stripeError(err) );
@@ -918,24 +921,25 @@ app.delete('/strategy/:name', function(req,res,next) {
 // @body { newmail }
 // @return stripe customer id
 app.post('/updstrip/:id', async function(req,res,next) {
-    User.findOne({ email: req.params.id }, (err, user) => {
+
+    if (!checkAuthenticaton(req, res)) { return; }
+
+    User.findOne({ stripe: req.params.id }, (err, user) => {
         if (err) {
             logger.error("stripe update failed: %s doesn't exist in database",
                                                                 req.params.id);
             res.status(rc.Client.NOT_FOUND).send(apiError(err));
         } else if (user && user.stripe ) {
             // update email in stripe account
-            if ( req.body.newemail ) {
-                let data = { email: req.body.newemail };
-                stripe.customers.update(user.stripe,data).then(customer => {
-                    logger.info("stripe update of %s succeeded", req.params.id);
-                    res.status(rc.Success.OK).send(customer.id);
-                }).catch(err => {
-                    logger.error("stripe update failed. Please " +
-                                 "contact support@ironcondortrader.com" );
-                    res.status(rc.Server.INTERNAL_ERROR).send(stripeError(err));
-                });
-            }
+            let data = { email: user.email };
+            stripe.customers.update(user.stripe,data).then(customer => {
+                logger.info("stripe update of %s succeeded", req.params.id);
+                res.status(rc.Success.OK).send(customer.id);
+            }).catch(err => {
+                logger.error("stripe update failed. Please " +
+                                "contact support@ironcondortrader.com" );
+                res.status(rc.Server.INTERNAL_ERROR).send(stripeError(err));
+            });
         }
     });
 });
@@ -1191,10 +1195,10 @@ function wait(time) {
 function checkAuthenticaton (req, res) {
 
     // parse login and password from headers
-    const b64auth = ( req.headers.authorization || '' ).split(' ')[1] || '';
-    const [login, password] = new Buffer ( b64auth, 'base64' ).toString().split(':');
+    // const b64auth = ( req.headers.authorization || '' ).split(' ')[1] || '';
+    // const [login, password] = new Buffer ( b64auth, 'base64' ).toString().split(':');
 
-    // var token = req.headers['x-access-token'];
+    // var token = req.headers['Bearer'];
     // if  ( ! token ) {
     //     return false;
     // }
