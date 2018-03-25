@@ -49,13 +49,18 @@ logger.debug('started');
 mail.setLogger (logger);
 
 // create a write stream (in append mode)
-// const accessLogStream = fs.createWriteStream ( path.join(__dirname, 'access.log'), {flags: 'a'} );
+// const accessLogStream = fs.createWriteStream ( path.join(__dirname,
+//                                                'access.log'), {flags: 'a'} );
 // accessLogStream.write('__dirname=' + __dirname);
-// var serverLogStream = fs.createWriteStream ( path.join(__dirname, 'server.log'), {flags: 'a'} );
+// var serverLogStream = fs.createWriteStream ( path.join(__dirname,
+//                                                'server.log'), {flags: 'a'} );
 
 // setup the logger
 // app.use ( morgan('dev',{stream: accessLogStream}) );
-// app.use(morgan('common', { skip: function (req, res) { return res.statusCode < 400 }, stream: accessLogStream}));
+// app.use(morgan('common', { skip: function (req, res)
+//    {
+//        return res.statusCode < 400 }, stream: accessLogStream
+//    }));
 
 // TODO: should be populized from stripe
 const subscriptionsPlans = [
@@ -147,7 +152,8 @@ console.log ( "options=" + JSON.stringify(config.db[env].options) );
 // connect database
 var dbConnected = false;
 mongoose.Promise = global.Promise;
-mongoose.connect ( config.db[env].url, config.db[env].options ).then ( function(params) {
+mongoose.connect ( config.db[env].url,
+                   config.db[env].options ).then ( function(params) {
     logger.debug("database connection to %s established", config.db[env].url );
     console.log ( "connection established" );
     dbConnected = true;
@@ -155,9 +161,6 @@ mongoose.connect ( config.db[env].url, config.db[env].options ).then ( function(
     logger.debug("database connection failed %s", JSON.stringify(err));
     console.log ( err );
 });
-
-//Bind connection to error event (to get notification of connection errors)
-// mongoose.connection.on('error', console.error.bind(console, 'MongoDB connection error:') );
 
 // set body parser
 app.use ( bodyParser.json() );
@@ -176,8 +179,8 @@ passport.deserializeUser(function(id, done) {
 });
 
 //
-// passport.use ( new LocalStrategy ( {usernameField: 'email'}, function(email, password, done) {
-passport.use ( new BasicStrategy ( {usernameField: 'email'}, function(email, password, done) {
+// passport.use ( new LocalStrategy...
+passport.use(new BasicStrategy({usernameField:'email'},function(email,password,done) {
 
     User.findOne ( { email: email }, function(err, user) {
         if ( err ) {
@@ -272,8 +275,10 @@ app.get('/auth', function(req,res,next) {
 
     if ( ! checkAuthenticaton(req,res) ) { return; }
 
-    res.status ( rc.Success.OK ).send( { 'user': req.user,
-                                         'plan': subscriptionsPlans[req.user.plan] } );
+    res.status(rc.Success.OK).send({
+        'user': req.user,
+        'plan': subscriptionsPlans[req.user.plan]
+    });
 });
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -283,7 +288,9 @@ app.get('/webhook', function(req,res,next) {
     var sig = req.headers["stripe-signature"];
 
     try {
-        var event = stripe.webhooks.constructEvent ( req.body, sig, ENDPOINT_SECRETS );
+        var event = stripe.webhooks.constructEvent(req.body,
+                                                   sig,
+                                                   ENDPOINT_SECRETS);
         console.log  ( "webhook received: " + event );
         res.status ( rc.Success.OK ).send ( apiSuccess() );
     }
@@ -332,21 +339,23 @@ app.post('/verify', function(req,res,next) {
 
     logger.info ( "verification of account %s requested", email );
     User.findOne({ email: email }, function(err,user) {
-        if ( err ) {
-            logger.error("verification for %s failed: %s", email,err);
-            res.status ( rc.Server.INTERNAL_ERROR ).send ( apiError(err) );
+        if (err) {
+            logger.error("verification of %s failed: %s", email, err);
+            res.status(rc.Server.INTERNAL_ERROR).send(apiError(err));
             return;
-        } else if ( ! user ) {
-            logger.error("verification for %s failed: user doesn't exist", email, err);
-            res.status(rc.Client.UNAUTHORIZED).send ( apiError("user doesn't exist") );
+        } else if (!user) {
+            logger.error("verification of %s failed: user doesn't exist", email,
+                                                                          err);
+            res.status(rc.Client.UNAUTHORIZED).send(apiError("user doesn't exist"));
             return;
-        } else if ( ! user.validPassword(password) ) {
-            logger.error("verification for %s failed: incorrect password", email, err);
-            res.status(rc.Client.UNAUTHORIZED).send ( apiError("incorrect password") );
+        } else if (!user.validPassword(password)) {
+            logger.error("verification of %s failed: incorrect password", email,
+                                                                          err);
+            res.status(rc.Client.UNAUTHORIZED).send(apiError("incorrect password"));
             return;
         } else {
             logger.info("verification of account %s succeeded", email);
-            res.status ( rc.Success.OK ).send ( apiSuccess() );
+            res.status(rc.Success.OK).send(apiSuccess());
         }
     });
 });
@@ -366,26 +375,28 @@ app.post('/chgpass', function(req,res,next) {
     logger.info( "password change for account %s requested", email) ;
     User.findOne({ email: email }, function(err,user) {
         if (err) {
-            logger.error("password change for user %s failed: %s", email,err);
-            res.status(rc.Server.INTERNAL_ERROR).send ( apiError(err) );
+            logger.error("password change of user %s failed: %s", email, err);
+            res.status(rc.Server.INTERNAL_ERROR).send(apiError(err));
         } else if (!user) {
             logger.error("user %s doesn't exist", email);
-            res.status(rc.Client.NOT_FOUND).send ( apiError("user doesn't exist") );
-        } else if ( user.validPassword(password)) {
+            res.status(rc.Client.NOT_FOUND).send(apiError("user doesn't exist"));
+        } else if (user.validPassword(password)) {
             user.password = newpassword;
             user.save(function (err) {
-                if ( err ) {
-                    logger.error("password change for account %s failed: %s" , email, err );
-                    res.status ( rc.Server.INTERNAL_ERROR ).send ( apiError(err) );
+                if (err) {
+                    logger.error("password change of account %s failed: %s",
+                                                                    email, err);
+                    res.status(rc.Server.INTERNAL_ERROR).send(apiError(err));
                     return;
                 };
-                logger.info("password change for account %s succeeded", email);
-                sendNotificationMail(user,"you have successfully changed your password.");
-                res.status ( rc.Success.OK ).send ( apiSuccess() );
+                logger.info("password change of account %s succeeded", email);
+                sendNotificationMail(user, "you have successfully changed your password.");
+                res.status(rc.Success.OK).send(apiSuccess());
             });
         } else {
-            logger.error("password change for account %s failed: unauthorized", email, err);
-            res.status(rc.Client.UNAUTHORIZED).send ( apiError(err) );
+            logger.error("password change of account %s failed: unauthorized",
+                                                                    email, err);
+            res.status(rc.Client.UNAUTHORIZED).send(apiError(err));
         }
     });
 });
@@ -408,7 +419,8 @@ app.post('/sendmail', function(req,res,next) {
                                                                     mail.receiver);
             switch (mail.type) {
                 case "recover": {
-                    // NOTE: even if the account doesn't exist we nevertheless response success to prevent misusage
+                    // NOTE: even if the account doesn't exist we nevertheless
+                    // response success to prevent misusage
                     res.status(rc.Success.OK).send(apiSuccess());
                     break;
                 }
@@ -423,7 +435,7 @@ app.post('/sendmail', function(req,res,next) {
                     user.secretToken = token;
                     user.save(function (err) {
                         if (err) {
-                            logger.error("registering for customer %s failed: %s",
+                            logger.error("registering of customer %s failed: %s",
                                                                     newUser.email,
                                                                     JSON.stringify(err));
                             res.status(rc.Server.INTERNAL_ERROR).send(apiError(err));
@@ -506,7 +518,8 @@ app.get('/recover/:token', function(req,res,next) {
                 res.render("pages/chgpass", { token: req.params.token });
             }
         } else {
-            logger.error("attempt to change password failed: token %s doesn't exist", req.params.token);
+            logger.error("attempt to change password failed: token %s doesn't exist",
+                                                                req.params.token);
             res.render("pages/error", { error: "Token doesn\'t exist or expired",
                                         advise: "Please try again. Thanks" });
         }
@@ -597,7 +610,7 @@ app.post('/subscribe', async function(req,res,next) {
             if (subscriptions && subscriptions.data.length) {
                 subscriptionID = subscriptions.data[0].id;
                 logger.info("%s already subscribed to %s", subscription.email,
-                                                           subscriptions.data[0].plan.nickname );
+                                            subscriptions.data[0].plan.nickname);
             }
         // create new customer
         } else {
@@ -617,8 +630,9 @@ app.post('/subscribe', async function(req,res,next) {
     try {
         // create new subscription
         if ( ! subscriptionID ) {
-            stripe.subscriptions.create ( { customer: customerID,
-                                            items: [{ plan: subscription.planid }] } ).then ( subscription => {
+            stripe.subscriptions.create({customer: customerID,
+                                         items:[{plan:subscription.planid}]
+            }).then ( subscription => {
                 // customer charged automatically
                 logger.info("subscription of %s succeeded", subscription.email);
                 let user = { email : subscription.email, username : "customer" };
@@ -626,20 +640,24 @@ app.post('/subscribe', async function(req,res,next) {
                 sendNotificationMail(user,msg);
                 res.redirect  ( "/" );
             }).catch(err => {
-                logger.error("subscription of %s failed: %s", subscription.email, err);
+                logger.error("subscription of %s failed: %s", subscription.email,
+                                                              err);
                 res.status ( rc.Client.REQUEST_FAILED ).send ( stripeError(err) );
                 return;
             });
         // change exsisting subscription
         } else {
-            let items = await stripe.subscriptionItems.list ( { subscription: subscriptionID } );
+            let items = await stripe.subscriptionItems.list ( { subscription:
+                                                                subscriptionID } );
             if ( items && items.data.length ) {
                 itemID = items.data[0].id;
             }
 
             // update subscription plan
-            stripe.subscriptionItems.update ( itemID, { plan: subscription.planid } ).then ( transfer => {
-                logger.info("subscription change to %s of %s succeeded", newPlanName, subscription.email);
+            stripe.subscriptionItems.update ( itemID, { plan: subscription.planid
+            }).then ( transfer => {
+                logger.info("subscription change to %s of %s succeeded",newPlanName,
+                                                                        subscription.email);
                 let user = { email: subscription.email, username: "customer" };
                 let msg = "you successfully changed your plan to " + newPlanName;
                 sendNotificationMail(user,msg);
@@ -694,8 +712,9 @@ app.post('/register', function(req,res,next) {
     mail.checkMail ( newUser.email, function (err,response) {
         if ( err || ! response )
         {
-            logger.error("registering for customer %s failed: %s", newUser.email,JSON.stringify(err) );
-            res.status ( rc.Client.REQUEST_FAILED ).send ( apiError("invalid mail address") );
+            logger.error("registering of customer %s failed: %s",newUser.email,
+                                                                 JSON.stringify(err) );
+            res.status(rc.Client.REQUEST_FAILED).send(apiError("invalid mail address"));
             return;
         }
 
@@ -703,22 +722,29 @@ app.post('/register', function(req,res,next) {
         newUser.active = false;
         newUser.save(function (err) {
             if ( err ) {
-                logger.error("registering for customer %s failed: %s", newUser.email, JSON.stringify(err));
+                logger.error("registering of customer %s failed: %s",newUser.email,
+                                                                     JSON.stringify(err));
                 res.status( rc.Server.INTERNAL_ERROR ).send ( apiError(err) );
             } else {
-                logger.info("registering for customer %s succeeded", newUser.email);
+                logger.info("registering of customer %s succeeded", newUser.email);
                 sendConfirmationMail(newUser,
                                      req.headers.origin,
                                      req.body.ip,
                                      function(err,info) {
                     if ( err ) {
-                        logger.error("confirmation mail couldn't be sent to %s: %s", newUser.email, JSON.stringify(err));
-                        res.status(rc.Server.INTERNAL_ERROR).send ( apiError({ code : err.code,
-                                                                               message : err.message } ) );
+                        logger.error("confirmation mail couldn't be sent to %s: %s",
+                                             newUser.email, JSON.stringify(err));
+                        res.status(rc.Server.INTERNAL_ERROR).send(apiError({
+                            code: err.code,
+                            message: err.message
+                        }));
                     } else {
-                        logger.info("confirmation mail successfully sent to %s", newUser.email);
-                        res.status(rc.Success.CREATED).send ( { user: newUser,
-                                                                plan : subscriptionsPlans[newUser.plan] } );
+                        logger.info("confirmation mail successfully sent to %s",
+                                                                newUser.email);
+                        res.status(rc.Success.CREATED).send({
+                            user: newUser,
+                            plan: subscriptionsPlans[newUser.plan]
+                        });
                     }
                 });
             }
@@ -744,17 +770,24 @@ app.post('/resend/:userid', function(req,res,next) {
                                  req.body.ip,
                                  function (err, info) {
                 if (err) {
-                    logger.error("resending confirmation mail to %s failed", userid, JSON.stringify(err) );
-                    res.status(rc.Server.INTERNAL_ERROR).send(apiError({code: err.code,
-                                                                        message: err.message}));
+                    logger.error("resending confirmation mail to %s failed",
+                                                          userid,
+                                                          JSON.stringify(err) );
+                    res.status(rc.Server.INTERNAL_ERROR).send(apiError({
+                        code: err.code,
+                        message: err.message
+                    }));
                 } else {
-                    logger.info("resending confirmation mail to %s succeeded", userid);
+                    logger.info("resending confirmation mail to %s succeeded",
+                                                                        userid);
                     res.status(rc.Success.OK).send ( apiSuccess() );
                 }
             });
         } else {
-            logger.error("resend confirmation mail to %s failed: user doesn't exist", userid );
-            res.status(rc.Client.NOT_FOUND).send( apiError("Account "+userid+" doesn\'t exist.") );
+            logger.error("resend confirmation mail to %s failed: user doesn't exist",
+                                                                        userid );
+            res.status(rc.Client.NOT_FOUND).send( apiError("Account " + userid +
+                                                           " doesn\'t exist.") );
         }
     });
 });
@@ -769,8 +802,9 @@ app.get('/confirm/:token', function(req,res,next) {
     User.findOne ( { secretToken: req.params.token }, (err, user) => {
 
         if (err) {
-            logger.error("account confirmation via token %s failed: %s", req.params.token,
-                                                                         JSON.stringify(err));
+            logger.error("account confirmation via token %s failed: %s",
+                                                                req.params.token,
+                                                                JSON.stringify(err));
             res.status ( rc.Server.INTERNAL_ERROR ).send(apiError(err));
         } else if ( user ) {
 
@@ -779,22 +813,27 @@ app.get('/confirm/:token', function(req,res,next) {
 
             user.save((err,user) => {
                 if (err) {
-                    logger.error("updating database of %s failed: %s", user.email,
-                                                                       JSON.stringify(err));
+                    logger.error("updating database of %s failed: %s",
+                                                                user.email,
+                                                                JSON.stringify(err));
                     res.status ( rc.Server.INTERNAL_ERROR ).send(apiError(err));
                 } else {
                     logger.info("account confirmation for %s succeeded", user.email);
-                    res.render("pages/confirm", { header: "Welcome to IronCondorTrader©",
-                                                  message: "Thank you " + user.name +
-                    ", your account is now confirmed and you can login to IronCondorTrader©",
-                                                  reminder: "Please don't forget to SUBSCRIBE !" });
+                    res.render("pages/confirm", {
+                        header: "Welcome to IronCondorTrader©",
+                        message: "Thank you " + user.name +
+                                 ", your account is now confirmed and you can " +
+                                 " login to IronCondorTrader©",
+                        reminder: "Please don't forget to SUBSCRIBE !"
+                    });
                 }
             });
         } else {
-            logger.error("account confirmation via token %s failed: token doesn't exist", req.params.token);
+            logger.error("account confirmation via token %s failed: token " +
+                         "doesn't exist", req.params.token);
             res.render("pages/error", { error: "Token doesn\'t exist or expired",
-                                        advise: "Please register again and confirm\
-                                                   your account within 24h. Thanks" });
+                                        advise: "Please register again and confirm"+
+                                                "your account within 24h. Thanks" });
         }
     });
 });
@@ -807,7 +846,7 @@ app.get('/strategies/:name', function(req,res,next) {
 
     if (!checkAuthenticaton(req, res)) { return; }
 
-    Strategy.find ( { userid: req.params.name }).sort('name').exec( function(err,strategy) {
+    Strategy.find({ userid: req.params.name }).sort('name').exec(function (err,strategy) {
         if ( err ) {
             res.status ( rc.Server.INTERNAL_ERROR ).send ( apiError(err) );
         } else {
@@ -867,12 +906,13 @@ app.post('/strategies/:name', function(req,res,next) {
                 strikes: []
             }
             for (var i = 0; i < req.body.optionDescription.strikes.length; i++) {
-                strategy.optionDescription.strikes[i] = req.body.optionDescription.strikes[i];
+                strategy.optionDescription.strikes[i] =
+                                            req.body.optionDescription.strikes[i];
             }
 
             strategy.save((err,strategy) => {
                 if ( err ) {
-                    res.status ( rc.Server.INTERNAL_ERROR ).send ( apiError(err) );
+                    res.status(rc.Server.INTERNAL_ERROR).send(apiError(err));
                 } else {
                     res.status ( rc.Success.OK ).send ( strategy );
                 }
@@ -917,27 +957,25 @@ app.delete('/strategy/:name', function(req,res,next) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // update stripe
-// @params { id }
-// @body { newmail }
-// @return stripe customer id
+// @params { user-object }
+// @return success true
 app.post('/updstrip/:id', async function(req,res,next) {
 
     if (!checkAuthenticaton(req, res)) { return; }
 
     User.findOne({ stripe: req.params.id }, (err, user) => {
         if (err) {
-            logger.error("stripe update failed: %s doesn't exist in database",
+            logger.error("update of stripe account failed: %s doesn't exist",
                                                                 req.params.id);
             res.status(rc.Client.NOT_FOUND).send(apiError(err));
         } else if (user && user.stripe ) {
             // update email in stripe account
             let data = { email: user.email };
             stripe.customers.update(user.stripe,data).then(customer => {
-                logger.info("stripe update of %s succeeded", req.params.id);
-                res.status(rc.Success.OK).send(customer.id);
+                logger.info("update of stripe account %s succeeded", req.params.id);
+                res.status(rc.Success.OK).send(apiSuccess());
             }).catch(err => {
-                logger.error("stripe update failed. Please " +
-                                "contact support@ironcondortrader.com" );
+                logger.error("update of stripe account %s failed.", req.params.id );
                 res.status(rc.Server.INTERNAL_ERROR).send(stripeError(err));
             });
         }
@@ -954,9 +992,11 @@ app.post('/updacc/:id', async function(req,res,next) {
     if (!checkAuthenticaton(req, res)) { return; }
 
     logger.info("attempt to update account %s", req.params.id);
+
     User.findOne({ email: req.params.id }, (err, user) => {
         if (err) {
-            logger.error("update of of account %s failed: user doesn't exist", req.params.id);
+            logger.error("update of local account %s failed: user doesn't exist",
+                                                                req.params.id);
             res.status(rc.Client.NOT_FOUND).send(apiError(err));
         } else if (user) {
             // check password if passed for vefification
@@ -972,7 +1012,8 @@ app.post('/updacc/:id', async function(req,res,next) {
                 item = "subscription from " + subscriptionsPlans[user.plan].name +
                 " to " + subscriptionsPlans[parseInt(req.body.planid)].name;
                 user.plan = parseInt(req.body.planid);
-                // first time a subscription plan gets updated a stripe id is provided as well
+                // first time a subscription plan gets updated a stripe
+                // id is provided as well
                 if (req.body.stripeID ) {
                     user.stripe = req.body.stripeID;
                 }
@@ -991,13 +1032,13 @@ app.post('/updacc/:id', async function(req,res,next) {
             // update database
             user.save((err,user) => {
                 if (err) {
-                    logger.error("database update account %s failed: %s",
-                                                                        item, req.params.id,
-                                                                        JSON.stringify(err));
+                    logger.error("update of local account %s failed: %s",item,
+                                                                req.params.id,
+                                                                JSON.stringify(err));
                     res.status(rc.Server.INTERNAL_ERROR).send(apiError(err));
                 } else {
-                    logger.info("database update of %s succeeded [%s]", item,
-                                                                        req.params.id);
+                    logger.info("update of local account %s succeeded [%s]",item,
+                                                                req.params.id);
                     // send notification mail to customer
                     let msg = "you've successfully changed your " + item;
                     sendNotificationMail(user, msg);
@@ -1006,7 +1047,7 @@ app.post('/updacc/:id', async function(req,res,next) {
             });
         } else {
             logger.error("account update of %s failed: user doesn't exist",
-                                                                        req.params.id);
+                                                                req.params.id);
             res.status(rc.Client.REQUEST_FAILED).send(apiError("user doesn't exist"));
         }
     });
@@ -1014,45 +1055,51 @@ app.post('/updacc/:id', async function(req,res,next) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // delete account
-// @params { id }
+// @params { stripe-id }
 // @return success true
 app.delete('/delacc/:id', async function(req,res,next) {
 
     if (!checkAuthenticaton(req, res)) { return; }
 
-    var customerID = null;
+    var customerID = req.params.id;
 
     logger.info("attempt to delete account %s", req.params.id);
 
     // find customer
-    try {
-        var customers = await stripe.customers.list({ email: req.params.id });
-        if (customers && customers.data.length) {
-            customerID = customers.data[0].id;
-        }
-    } catch (err) {
-        logger.error("attempt to delete account %s failed: %s", req.params.id, JSON.stringify(err));
-        res.status(rc.Client.REQUEST_FAILED).send(stripeError(err));
-        return;
-    }
+    // try {
+    //     var customers = await stripe.customers.list({ email: req.params.id });
+    //     if (customers && customers.data.length) {
+    //         customerID = customers.data[0].id;
+    //     }
+    // } catch (err) {
+    //     logger.error("attempt to delete account %s failed: %s", req.params.id,
+    //                                                             JSON.stringify(err));
+    //     res.status(rc.Client.REQUEST_FAILED).send(stripeError(err));
+    //     return;
+    // }
 
     // delete customer
     try {
         await stripe.customers.del ( customerID );
-        logger.info("deletion of account %s in stripe succeeded", req.params.id);
+        logger.info("deletion of stripe account %s in stripe succeeded",
+                                                                req.params.id);
     } catch (err) {
-        logger.error("deletion of account %s in stripe failed: %s", req.params.id, JSON.stringify(err));
+        logger.error("deletion of stripe account %s in stripe failed: %s",
+                                                                req.params.id,
+                                                                JSON.stringify(err));
         res.status(rc.Client.REQUEST_FAILED).send(stripeError(err));
         return;
     }
 
     // delete user
-    User.remove ( { email: req.params.id }, (err) => {
+    User.remove ( { stripe: req.params.id }, (err) => {
         if (err) {
-            logger.error("deletion of account %s failed: %s", req.params.id, JSON.stringify(err));
+            logger.error("deletion of local account %s failed: %s",
+                                                                req.params.id,
+                                                                JSON.stringify(err));
             res.status(rc.Client.NOT_FOUND).send(apiError(err));
         } else {
-            logger.info("deletion of account %s succeeded", req.params.id);
+            logger.info("deletion of local account %s succeeded", req.params.id);
             res.status(rc.Success.OK).send(apiSuccess());
         }
     });
