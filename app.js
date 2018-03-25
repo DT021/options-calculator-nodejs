@@ -205,7 +205,8 @@ passport.use ( new BasicStrategy ( {usernameField: 'email'}, function(email, pas
 
 ///////////////////////////////////////////////////////////////////////////////
 // main page when logged out
-// @return the main page
+// @return the main page - content depends on wheather the user is logged in and
+// on his subsription
 app.get('/', function(req,res,next) {
 
     if ( req.isAuthenticated() && req.user.plan < 1 ) {
@@ -515,23 +516,20 @@ app.get('/recover/:token', function(req,res,next) {
 // @return success true and an access token
 app.post('/login', function(req,res,next) {
 
-    if ( dbConnected === false ) {
-        // user does not exist
-        return res.status ( rc.Server.INTERNAL_ERROR ).send ( apiError({ success: false,
-                                                                         message : "failed !",
-                                                                         error: "no database connection" }) );
+    if ( ! dbConnected ) {
+        return next("no database connection");
     }
 
-    passport.authenticate('basic', function(err,user,info) {
-
+    passport.authenticate('basic',(err,user,info)=> {
         if ( err ) {
-            return next ( "invalid username and password combination" ); // will generate a 500 error
-        } else if ( user.active === false) {
+            // will generate a 500 error
+            return next ( "invalid username and password combination" );
+        } else if ( ! user.active ) {
             // user is registered but has not yet confirmed his account
             return next ( "account not yet confirmed" );
         }
 
-        req.login ( user, function(err) {
+        req.login ( user, err => {
             if ( err ) {
                 return next ( err );
             }
@@ -542,7 +540,8 @@ app.post('/login', function(req,res,next) {
         var token = jwt.sign ( { id: user.id }, config.webtoken.secret, {
             expiresIn: 86400 // expires in 24 hours
         });
-        res.status ( rc.Success.CREATED ).send ( apiError({ success: true, token: token }) );
+        res.status ( rc.Success.OK ).send ( apiSuccess({ success: true,
+                                                         token: token }) );
 
     })(req,res,next);
 });
@@ -665,16 +664,17 @@ app.post('/checkout', function(req,res,next) {
     var checkout = req.body.checkout;
 
     // create customer
-    stripe.customers.create ( { email: token.email,
-                                source: token.id }).then ( customer =>
-        // charge customer
-        stripe.charges.create ( { amount: checkout.price,
-                                  description: checkout.description,
-                                  currency: checkout.currency,
-                                  customer: customer.id
+    stripe.customers.create({ email: token.email,
+                              source: token.id
+        }).then ( customer => {
+            // charge customer
+            stripe.charges.create({ amount: checkout.price,
+                                    description: checkout.description,
+                                    currency: checkout.currency,
+                                    customer: customer.id })
         }).then ( charge => {
             res.status ( rc.Success.ACCEPTED ).send ( apiSuccess() );
-        })).catch(err => {
+        }).catch ( err => {
             res.status ( rc.Client.REQUEST_FAILED ).send ( stripeError(err) );
         });
 });
@@ -684,13 +684,6 @@ app.post('/checkout', function(req,res,next) {
 // @body { user-object }
 // return newly created user object and the associated subscription plan
 app.post('/register', function(req,res,next) {
-
-    if ( dbConnected === false ) {
-        // user does not exist
-        return res.status ( rc.Server.INTERNAL_ERROR ).send ( apiError({ success: false,
-                                                                         message: "failed !",
-                                                                         error: "no database connection" }) );
-    }
 
     logger.info("registering for account %s requested", req.body.email);
 
