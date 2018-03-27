@@ -1059,45 +1059,60 @@ app.delete('/delacc/:id', async function(req,res,next) {
 
     if (!checkAuthenticaton(req, res)) { return; }
 
-    var customerID = req.params.id;
+    let customerID = null;
+    let email = req.params.id;
+    let username = req.query.name;
 
-    logger.info("attempt to delete account %s", req.params.id);
+    logger.info("attempt to delete account %s", email);
 
     // find customer
-    // try {
-    //     var customers = await stripe.customers.list({ email: req.params.id });
-    //     if (customers && customers.data.length) {
-    //         customerID = customers.data[0].id;
-    //     }
-    // } catch (err) {
-    //     logger.error("attempt to delete account %s failed: %s", req.params.id,
-    //                                                             JSON.stringify(err));
-    //     res.status(rc.Client.REQUEST_FAILED).send(stripeError(err));
-    //     return;
-    // }
-
-    // delete customer
     try {
-        await stripe.customers.del ( customerID );
-        logger.info("deletion of stripe account %s in stripe succeeded",
-                                                                req.params.id);
+        var customers = await stripe.customers.list({ email: email });
+        if (customers && customers.data.length) {
+            customerID = customers.data[0].id;
+        }
     } catch (err) {
-        logger.error("deletion of stripe account %s in stripe failed: %s",
-                                                                req.params.id,
+        logger.error("attempt to delete account %s failed: %s", email,
                                                                 JSON.stringify(err));
         res.status(rc.Client.REQUEST_FAILED).send(stripeError(err));
         return;
     }
 
-    // delete user
-    User.remove ( { stripe: req.params.id }, (err) => {
+    // delete stripe customer if exist
+    if ( customerID ) {
+        try {
+            await stripe.customers.del ( customerID );
+            logger.info("deletion of stripe account %s in stripe succeeded",
+                                                                    email);
+        } catch (err) {
+            logger.error("deletion of stripe account %s in stripe failed: %s",
+                                                                    email,
+                                                                    JSON.stringify(err));
+            res.status(rc.Client.REQUEST_FAILED).send(stripeError(err));
+            return;
+        }
+    }
+
+    // delete local user
+    User.remove ( { email: email }, (err) => {
         if (err) {
             logger.error("deletion of local account %s failed: %s",
-                                                                req.params.id,
+                                                                email,
                                                                 JSON.stringify(err));
             res.status(rc.Client.NOT_FOUND).send(apiError(err));
         } else {
-            logger.info("deletion of local account %s succeeded", req.params.id);
+            logger.info("deletion of local account %s succeeded", email);
+            // send notification mail to customer
+            let msg = "we just saw that you have deleted your account. " +
+                      "We hope you've been satisfied with " +
+                      "our service. Please feel free to contact " +
+                      "us anytime in case there's something we should improve. " +
+                      "We're looking forward to hear from you.";
+            let user = {
+                email: email,
+                username: username
+            };
+            sendNotificationMail(user, msg);
             res.status(rc.Success.OK).send(apiSuccess());
         }
     });
