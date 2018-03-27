@@ -633,9 +633,9 @@ app.post('/subscribe', async function(req,res,next) {
             }).then ( subscription => {
                 // customer charged automatically
                 logger.info("subscription of %s succeeded", subscription.email);
-                let user = { email : subscription.email, username : "customer" };
-                let msg = "you successfully subscribed to plan " + newPlanName;
-                sendNotificationMail(user,msg);
+                // let user = { email : subscription.email, username : "customer" };
+                // let msg = "you successfully subscribed to plan " + newPlanName;
+                // sendNotificationMail(user,msg);
                 res.redirect  ( "/" );
             }).catch(err => {
                 logger.error("subscription of %s failed: %s", subscription.email,
@@ -656,9 +656,9 @@ app.post('/subscribe', async function(req,res,next) {
             }).then ( transfer => {
                 logger.info("subscription change to %s of %s succeeded",newPlanName,
                                                                         subscription.email);
-                let user = { email: subscription.email, username: "customer" };
-                let msg = "you successfully changed your plan to " + newPlanName;
-                sendNotificationMail(user,msg);
+                // let user = { email: subscription.email, username: "customer" };
+                // let msg = "you successfully changed your plan to " + newPlanName;
+                // sendNotificationMail(user,msg);
                 res.status(rc.Success.OK).send(apiSuccess({stripeID:customerID}));
             }).catch ( err => {
                 logger.error("subscription change to %s of %s failed: %s", newPlanName,
