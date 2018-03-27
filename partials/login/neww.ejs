@@ -1,5 +1,12 @@
-<button class="btn btn-sm oc-wide-button" 
-        ng-disabled="menuService.isDisabled('neww','in',this)" 
-        ng-click="doNew()">
+<label for="strike-selection"
+       class="btn btn-sm oc-wide-button"
+       ng-disabled="menuService.isDisabled('neww','in',this)">
     new strategy
-</button>
+</label>
+<input type="file"
+       class="btn"
+       id="strike-selection"
+       accept=".json"
+       ng-disabled="menuService.isDisabled('neww','in',this)"
+       ng-file-select="onFileSelect($files)">
+</input>
