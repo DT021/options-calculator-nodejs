@@ -13,7 +13,6 @@ const passport = require('passport');
 const LocalStrategy = require('passport-local').Strategy;
 const BasicStrategy = require('passport-http').BasicStrategy;
 const auth = require('passport-local-authenticate');
-const mongoose = require('mongoose');
 // const MongoStore = require('mongo-connect')(express);
 const debug = require('debug')('optionscalculator:server');
 const http = require('http');
@@ -151,13 +150,12 @@ console.log ( "options=" + JSON.stringify(config.db[env].options) );
 
 // connect database
 var dbConnected = false;
-mongoose.Promise = global.Promise;
-mongoose.connect ( config.db[env].url,
-                   config.db[env].options ).then ( function(params) {
+const mongoose = require('./mongo');
+mongoose.init(env,logger).then( params=> {
     logger.debug("database connection to %s established", config.db[env].url );
     console.log ( "connection established" );
     dbConnected = true;
-}).catch ( function(err) {
+}).catch ( err=> {
     logger.debug("database connection failed %s", JSON.stringify(err));
     console.log ( err );
 });
@@ -167,12 +165,12 @@ app.use ( bodyParser.json() );
 app.use ( bodyParser.urlencoded({ extended: false }) );
 
 //
-passport.serializeUser(function(user, done) {
+passport.serializeUser((user,done)=> {
     done ( null, user.id );
 });
 
 //
-passport.deserializeUser(function(id, done) {
+passport.deserializeUser((id,done)=> {
     User.findById ( id, function(err,user) {
         done ( err, user );
     });
@@ -180,7 +178,7 @@ passport.deserializeUser(function(id, done) {
 
 //
 // passport.use ( new LocalStrategy...
-passport.use(new BasicStrategy({usernameField:'email'},function(email,password,done) {
+passport.use(new BasicStrategy({usernameField:'email'},(email,password,done)=> {
 
     User.findOne ( { email: email }, function(err, user) {
         if ( err ) {
@@ -846,11 +844,11 @@ app.get('/strategies/:name', function(req,res,next) {
 
     if (!checkAuthenticaton(req, res)) { return; }
 
-    Strategy.find({ userid: req.params.name }).sort('name').exec(function (err,strategy) {
+    Strategy.find({userid:req.params.name}).sort('name').exec((err,strategies)=> {
         if ( err ) {
             res.status ( rc.Server.INTERNAL_ERROR ).send ( apiError(err) );
         } else {
-            res.status ( rc.Success.OK ).send ( strategy );
+            res.status(rc.Success.OK).send(strategies);
         }
     });
 });
