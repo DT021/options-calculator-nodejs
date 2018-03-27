@@ -73,7 +73,7 @@ module.exports.sendMail = function(mail,callback) {
 // create account confirmation mail
 module.exports.createConfirmationMail = function(receiver,name,token,host,ip) {
 
-    var link = host + "/confirm/" + token;
+    var link = "https://ironcondortrader.com/confirm/" + token;
     var html = readMailPartial ( 'confirmation', { link : link,
                                                    name : name,
                                                    ip : ip } );
