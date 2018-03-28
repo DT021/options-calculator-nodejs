@@ -826,7 +826,7 @@ app.get('/confirm/:token', function(req,res,next) {
                     logger.info("account confirmation for %s succeeded", user.email);
                     res.render("pages/confirm", {
                         header: "Welcome to IronCondorTrader©",
-                        message: "Thank you " + user.name +
+                        message: "Thank you " + user.username +
                                  ", your account is now confirmed and you can " +
                                  " login to IronCondorTrader©",
                         reminder: "Please don't forget to SUBSCRIBE !"
