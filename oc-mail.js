@@ -71,7 +71,7 @@ module.exports.sendMail = function(mail,callback) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // create account confirmation mail
-module.exports.createConfirmationMail = function(receiver,name,token,host,ip) {
+module.exports.createConfirmationMail = function(receiver,name,token,ip) {
 
     var link = "https://ironcondortrader.com/confirm/" + token;
     var html = readMailPartial ( 'confirmation', { link : link,
@@ -87,7 +87,7 @@ module.exports.createConfirmationMail = function(receiver,name,token,host,ip) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // create recovery  mail
-module.exports.createRecoveryMail = function(receiver,token,host,ip) {
+module.exports.createRecoveryMail = function(receiver,token,ip) {
 
     var link = "https://ironcondortrader.com/recover/" + token;
     var html = readMailPartial ( 'recover', { link: link, ip: ip } );

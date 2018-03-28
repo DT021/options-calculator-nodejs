@@ -442,8 +442,10 @@ app.post('/sendmail', function(req,res,next) {
                         } else {
                             logger.info("token of account %s updated in database",
                                                                 mail.receiver);
-                            sendRecoveryMail(mail.receiver, token, host, mail.ip,
-                            function (err, info) {
+                            sendRecoveryMail(mail.receiver,
+                                             token,
+                                             mail.ip,
+                                             function (err, info) {
                                 if (err) {
                                     logger.error("sending %s mail to %s failed: %s",
                                                                 mail.type,
@@ -464,16 +466,17 @@ app.post('/sendmail', function(req,res,next) {
                 }
                 // send/resend account confirmation mail
                 case "confirm": {
-                    sendConfirmationMail(user,req.headers.origin,req.body.ip,
-                    function (err, info) {
+                    sendConfirmationMail(user,
+                                         mail.ip,
+                                         function (err, info) {
                         if (err) {
                             logger.error("resending confirmation mail to %s failed",
-                                                        userid,
-                                                        JSON.stringify(err));
+                                                                userid,
+                                                                JSON.stringify(err));
                             res.status(rc.Server.INTERNAL_ERROR).send(apiError(ec.Mail.SENDING_FAILURE));
                         } else {
                             logger.info("resending confirmation mail to %s succeeded",
-                                userid);
+                                                                mail.receiver);
                             res.status(rc.Success.OK).send(apiSuccess());
                         }
                     });
@@ -759,7 +762,6 @@ app.post('/register', function(req,res,next) {
             } else {
                 logger.info("registering of customer %s succeeded", newUser.email);
                 sendConfirmationMail(newUser,
-                                     req.headers.origin,
                                      req.body.ip,
                                      function(err,info) {
                     if ( err ) {
@@ -817,7 +819,6 @@ app.post('/resend/:userid', function(req,res,next) {
             dbError(res,err);
         } else if (user) {
             sendConfirmationMail(user,
-                                 req.headers.origin,
                                  req.body.ip,
                                  function (err, info) {
                 if (err) {
@@ -1358,20 +1359,18 @@ function sendNotificationMail(user,message) {
     });
 }
 
-function sendConfirmationMail (user,host,ip,callback) {
+function sendConfirmationMail (user,ip,callback) {
 
     mail.sendMail(mail.createConfirmationMail(user.email,
                                               user.username,
                                               user.secretToken,
-                                              ip,
-                                              host),callback);
+                                              ip),callback);
 }
 
-function sendRecoveryMail(receiver,token,host,ip,callback) {
+function sendRecoveryMail(receiver,token,ip,callback) {
 
     mail.sendMail(mail.createRecoveryMail(receiver,
                                           token,
-                                          host,
                                           ip),callback);
 }
 
