@@ -89,7 +89,7 @@ module.exports.createConfirmationMail = function(receiver,name,token,host,ip) {
 // create recovery  mail
 module.exports.createRecoveryMail = function(receiver,token,host,ip) {
 
-    var link = host + "/recover/" + token;
+    var link = "https://ironcondortrader.com/recover/" + token;
     var html = readMailPartial ( 'recover', { link: link, ip: ip } );
     return {
         from: '"IronCondorTrader" <info@ironcondortrader.com>',
