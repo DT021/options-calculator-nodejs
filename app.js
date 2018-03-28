@@ -417,8 +417,8 @@ app.post('/sendmail', function(req,res,next) {
                                                                     mail.receiver);
             switch (mail.type) {
                 case "recover": {
-                    // NOTE: even if the account doesn't exist we nevertheless
-                    // response success to prevent misusage
+                    // NOTE: even if the account doesn't exist we do
+                    // respond success in order to prevent potential data abuse
                     res.status(rc.Success.OK).send(apiSuccess());
                     break;
                 }
@@ -426,7 +426,7 @@ app.post('/sendmail', function(req,res,next) {
                     res.status(rc.Server.INTERNAL_ERROR).send(apiError(err));
                 }
             }
-        } else {
+        } else if ( user  ) {
             switch (mail.type) {
                 case "recover": {
                     var token = random.generate();
@@ -460,6 +460,13 @@ app.post('/sendmail', function(req,res,next) {
                     break;
                 }
             }
+        } else {
+            logger.info("sending %s mail to %s failed: address doesn't exist",
+                                                                    mail.type,
+                                                                    mail.receiver);
+            // NOTE: even if the email address doesn't exist we do
+            // respond success in order to prevent potential data abuse
+            res.status(rc.Success.OK).send(apiSuccess());
         }
     });
 });
