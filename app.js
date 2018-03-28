@@ -420,14 +420,16 @@ app.post('/sendmail', function(req,res,next) {
                     // NOTE: even if the account doesn't exist we do
                     // respond success in order to prevent potential data abuse
                     res.status(rc.Success.OK).send(apiSuccess());
-                    break;
+                    return;
                 }
                 default: {
                     dbError(res,err);
+                    return;
                 }
             }
-        } else if ( user  ) {
+        } else if ( user ) {
             switch (mail.type) {
+                // send password reset mail
                 case "recover": {
                     var token = random.generate();
                     user.secretToken = token;
@@ -441,7 +443,7 @@ app.post('/sendmail', function(req,res,next) {
                             logger.info("token of account %s updated in database",
                                                                 mail.receiver);
                             sendRecoveryMail(mail.receiver, token, host, mail.ip,
-                                                                function (err, info) {
+                            function (err, info) {
                                 if (err) {
                                     logger.error("sending %s mail to %s failed: %s",
                                                                 mail.type,
@@ -459,6 +461,22 @@ app.post('/sendmail', function(req,res,next) {
                         }
                     });
                     break;
+                }
+                // send/resend account confirmation mail
+                case "confirm": {
+                    sendConfirmationMail(user,req.headers.origin,req.body.ip,
+                    function (err, info) {
+                        if (err) {
+                            logger.error("resending confirmation mail to %s failed",
+                                                        userid,
+                                                        JSON.stringify(err));
+                            res.status(rc.Server.INTERNAL_ERROR).send(apiError(ec.Mail.SENDING_FAILURE));
+                        } else {
+                            logger.info("resending confirmation mail to %s succeeded",
+                                userid);
+                            res.status(rc.Success.OK).send(apiSuccess());
+                        }
+                    });
                 }
             }
         } else {
