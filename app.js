@@ -41,7 +41,10 @@ const User = require('./User.model');
 // init log4js
 const log4js = require('log4js');
 log4js.configure ( {
-    appenders: { server: { type: 'file', filename: 'server.log' } },
+    appenders: { server: { type: 'file',
+                           filename: 'logs/server.log',
+                           maxLogSize: 100000,
+                           compress: true } },
     categories: { default: { appenders: ['server'], level: 'all' } }
 });
 const logger = log4js.getLogger('server');
@@ -494,66 +497,6 @@ app.post('/sendmail', function(req,res,next) {
 });
 
 ///////////////////////////////////////////////////////////////////////////////
-// recover a password via token
-// @params { token }
-// query { password }
-// @return success true
-app.get('/recover/:token', function(req,res,next) {
-
-    logger.info("attempt to change password via token %s", req.params.token);
-    User.findOne({ secretToken: req.params.token }, (err, user) => {
-
-        if (err) {
-            logger.error("attempt to change password via token %s failed: %s",
-                                                                    req.params.token,
-                                                                    JSON.stringify(err));
-            dbError(res,err);
-        } else if (user) {
-            // check if customer has send new password
-            if (req.query.password) {
-                logger.info("customer sent new password via token %s", req.params.token);
-                user.password = req.query.password;
-                user.secretToken = "";
-                user.save((err,user) => {
-                    if (err) {
-                        logger.error("database update of account %s failed: %s",
-                                                                    user.email,
-                                                                    JSON.stringify(err));
-                        dbError(res,err);
-                    } else {
-                        logger.info("database update of account %s successfully",
-                                                                    user.email);
-                        var msg = "you have successfully changed your password.";
-                        sendNotificationMail(user,msg,function (err,info) {
-                            // in case the email coundn't be sent we just log the error but
-                            // do not return it
-                            if (err) {
-                                logger.error("notification couldn't be sent to %s: %s",
-                                                                    user.email,
-                                                                    JSON.stringify(err));
-                            } else {
-                                logger.info("notification successfully sent to %s",
-                                                                    user.email);
-                            }
-                        });
-                        res.status(rc.Success.OK).send(apiSuccess());
-                    }
-                    // return;
-                });
-            } else {
-                logger.info("sending password page of account %s", user.email);
-                res.render("pages/chgpass", { token: req.params.token });
-            }
-        } else {
-            logger.error("attempt to change password failed: token %s doesn't exist",
-                                                                req.params.token);
-            res.render("pages/error", { error: "Token doesn\'t exist or expired",
-                                        advise: "Please try again. Thanks" });
-        }
-    });
-});
-
-///////////////////////////////////////////////////////////////////////////////
 // route to log in
 // @params BASIC authentication
 // @return success true and an access token
@@ -809,33 +752,95 @@ app.post('/register', function(req,res,next) {
 // re-send confirmation mail
 // @params { userid }
 // @return success true
-app.post('/resend/:userid', function(req,res,next) {
+// app.post('/resend/:userid', function(req,res,next) {
+//
+//     var userid = req.params.userid;
+//     logger.info("resend confirmation mail to %s requested", userid);
+//     User.findOne({ email: req.params.userid }, (err, user) => {
+//         if (err) {
+//             logger.info("resend confirmation mail to %s failed: %s", userid,err);
+//             dbError(res,err);
+//         } else if (user) {
+//             sendConfirmationMail(user,
+//                                  req.body.ip,
+//                                  function (err, info) {
+//                 if (err) {
+//                     logger.error("resending confirmation mail to %s failed",
+//                                                           userid,
+//                                                           JSON.stringify(err) );
+//                     res.status(rc.Server.INTERNAL_ERROR).send(apiError(ec.Mail.SENDING_FAILURE));
+//                 } else {
+//                     logger.info("resending confirmation mail to %s succeeded",
+//                                                                         userid);
+//                     res.status(rc.Success.OK).send ( apiSuccess() );
+//                 }
+//             });
+//         } else {
+//             logger.error("resend confirmation mail to %s failed: user doesn't exist",
+//                                                                         userid );
+//             res.status(rc.Client.NOT_FOUND).send( apiError(ec.Account.USER_NOT_FOUND) );
+//         }
+//     });
+// });
 
-    var userid = req.params.userid;
-    logger.info("resend confirmation mail to %s requested", userid);
-    User.findOne({ email: req.params.userid }, (err, user) => {
+///////////////////////////////////////////////////////////////////////////////
+// recover a password via token
+// @params { token }
+// query { password }
+// @return success true
+app.get('/recover/:token', function (req, res, next) {
+
+    logger.info("attempt to change password via token %s", req.params.token);
+    User.findOne({ secretToken: req.params.token }, (err, user) => {
+
         if (err) {
-            logger.info("resend confirmation mail to %s failed: %s", userid,err);
-            dbError(res,err);
+            logger.error("attempt to change password via token %s failed: %s",
+                req.params.token,
+                JSON.stringify(err));
+            dbError(res, err);
         } else if (user) {
-            sendConfirmationMail(user,
-                                 req.body.ip,
-                                 function (err, info) {
-                if (err) {
-                    logger.error("resending confirmation mail to %s failed",
-                                                          userid,
-                                                          JSON.stringify(err) );
-                    res.status(rc.Server.INTERNAL_ERROR).send(apiError(ec.Mail.SENDING_FAILURE));
-                } else {
-                    logger.info("resending confirmation mail to %s succeeded",
-                                                                        userid);
-                    res.status(rc.Success.OK).send ( apiSuccess() );
-                }
-            });
+            // check if customer has send new password
+            if (req.query.password) {
+                logger.info("customer sent new password via token %s", req.params.token);
+                user.password = req.query.password;
+                user.secretToken = "";
+                user.save((err, user) => {
+                    if (err) {
+                        logger.error("database update of account %s failed: %s",
+                            user.email,
+                            JSON.stringify(err));
+                        dbError(res, err);
+                    } else {
+                        logger.info("database update of account %s successfully",
+                            user.email);
+                        var msg = "you have successfully changed your password.";
+                        sendNotificationMail(user, msg, function (err, info) {
+                            // in case the email coundn't be sent we just log the error but
+                            // do not return it
+                            if (err) {
+                                logger.error("notification couldn't be sent to %s: %s",
+                                    user.email,
+                                    JSON.stringify(err));
+                            } else {
+                                logger.info("notification successfully sent to %s",
+                                    user.email);
+                            }
+                        });
+                        res.status(rc.Success.OK).send(apiSuccess());
+                    }
+                    // return;
+                });
+            } else {
+                logger.info("sending password page of account %s", user.email);
+                res.render("pages/chgpass", { token: req.params.token });
+            }
         } else {
-            logger.error("resend confirmation mail to %s failed: user doesn't exist",
-                                                                        userid );
-            res.status(rc.Client.NOT_FOUND).send( apiError(ec.Account.USER_NOT_FOUND) );
+            logger.error("attempt to change password failed: token %s doesn't exist",
+                req.params.token);
+            res.render("pages/error", {
+                error: "Token doesn\'t exist or expired",
+                advise: "Please try again. Thanks"
+            });
         }
     });
 });
