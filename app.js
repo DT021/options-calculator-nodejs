@@ -166,7 +166,8 @@ mongoose.init(env,logger).then( params=> {
 
 // set body parser
 app.use ( bodyParser.json() );
-app.use ( bodyParser.urlencoded({ extended: false }) );
+// app.use ( bodyParser.urlencoded({ extended: false }) );
+app.use ( bodyParser.raw({ type: "*/*" }) );
 
 //
 passport.serializeUser((user,done)=> {
@@ -292,14 +293,13 @@ app.get('/webhook', function(req,res,next) {
         var event = stripe.webhooks.constructEvent(req.body,
                                                    sig,
                                                    ENDPOINT_SECRETS);
-        console.log  ( "webhook received: " + event );
-        res.status ( rc.Success.OK ).send ( apiSuccess() );
+        console.log ( "webhook received: " + event );
     }
     catch ( err ) {
-        // err.statusCode = rc.Client.BAD_REQUEST;
-        // next ( err );
-        res.status ( rc.Client.BAD_REQUEST ).send ( apiError(ec.Hook.FAILED) );
+        console.log("webhook error: " + err );
+        // res.status ( rc.Client.BAD_REQUEST ).send ( apiError(ec.Hook.FAILED) );
     }
+    res.status(rc.Success.OK).send(apiSuccess());
 });
 
 ///////////////////////////////////////////////////////////////////////////////

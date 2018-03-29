@@ -1,10 +1,12 @@
 "use strict";
 
-var AWS = require("aws-sdk");
+var aws = require("aws-sdk");
+var dynamodb = require('dynamodb-model');
+var dynamoose = require('dynamoose');
 
-AWS.config.update({
+aws.config.update({
     region: "us-west-2",
     endpoint: "http://localhost:8000"
 });
 
-var dynamodb = new AWS.DynamoDB();
+var dynamodb = new aws.DynamoDB();
