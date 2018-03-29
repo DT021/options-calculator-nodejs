@@ -1087,6 +1087,13 @@ app.post('/updacc/:id', async function(req,res,next) {
             // update database
             user.save((err,user) => {
                 if (err) {
+                    if ( err.code == 11000 ){
+                        logger.error("update account %s failed: email already exists",
+                                                                req.params.id);
+                        res.status(rc.Client.REQUEST_FAILED).send(
+                                        apiError(ec.Account.USER_ALREADY_EXISTS));
+                        return;
+                    }
                     logger.error("update of local account %s failed: %s",item,
                                                                 req.params.id,
                                                                 JSON.stringify(err));
@@ -1097,6 +1104,10 @@ app.post('/updacc/:id', async function(req,res,next) {
                     // send notification mail to customer
                     let msg = "you've successfully changed your " + item;
                     sendNotificationMail(user, msg);
+                    // if mail has change also send a notification to the old one
+                    if ( req.body.newemail ) {
+                        sendNotificationMail(user, msg, user.backup);
+                    }
                     res.status(rc.Success.OK).send(user);
                 }
             });
@@ -1311,9 +1322,9 @@ function normalizePort ( val ) {
     return false;
 }
 
-function sendNotificationMail(user,message) {
+function sendNotificationMail(user,message,oldemail) {
 
-    mail.sendMail(mail.createNotificationMail(user.email,
+    mail.sendMail(mail.createNotificationMail(oldemail || user.email,
                                               user.username,
                                               message),
                                               (err, info) => {
