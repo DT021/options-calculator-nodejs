@@ -559,7 +559,7 @@ app.post('/subscribe', async function(req,res,next) {
 
     let token = req.body.token;
     let subscription = req.body.subscription;
-    let customerID = null;
+    let customerID = subscription.stripeID;
     let subscriptionID = null;
     let itemID = null;
     let newPlanName = subscriptionsPlans[subscription.planid].name;
@@ -568,17 +568,19 @@ app.post('/subscribe', async function(req,res,next) {
                                                                    newPlanName );
 
     // check if customer exists
-    try {
-        let customers = await stripe.customers.list({ email: subscription.email } );
-        if ( customers && customers.data.length ) {
-            customerID = customers.data[0].id;
-            logger.info("%s has already a stripe account", subscription.email);
+    if ( ! customerID ) {
+        try {
+            let customers = await stripe.customers.list({ email: subscription.email } );
+            if ( customers && customers.data.length ) {
+                customerID = customers.data[0].id;
+                logger.info("%s has already a stripe account", subscription.email);
+            }
+        } catch ( err ) {
+            logger.error("access to stripe failed for %s: %s", subscription.email,
+                                                            JSON.stringify(err) );
+            res.status ( rc.Client.REQUEST_FAILED ).send ( apiError(ec.Stripe.ACCESS_ERROR) );
+            return;
         }
-    } catch ( err ) {
-        logger.error("access to stripe failed for %s: %s", subscription.email,
-                                                           JSON.stringify(err) );
-        res.status ( rc.Client.REQUEST_FAILED ).send ( apiError(ec.Stripe.ACCESS_ERROR) );
-        return;
     }
 
     try {
@@ -605,52 +607,44 @@ app.post('/subscribe', async function(req,res,next) {
         return;
     }
 
-    // try {
-        // create new subscription
-        if ( ! subscriptionID ) {
-            stripe.subscriptions.create({customer: customerID,
-                                         items:[{plan:subscription.planid}]
-            }).then ( subscription => {
-                // customer charged automatically
-                logger.info("subscription of %s succeeded", subscription.email);
-                // let user = { email : subscription.email, username : "customer" };
-                // let msg = "you successfully subscribed to plan " + newPlanName;
-                // sendNotificationMail(user,msg);
-                res.redirect  ( "/" );
-            }).catch(err => {
-                logger.error("subscription of %s failed: %s", subscription.email,
-                                                              err);
-                res.status(rc.Client.REQUEST_FAILED).send(apiError(ec.Stripe.ACCESS_ERROR));
-                return;
-            });
-        // change exsisting subscription
-        } else {
-            let items = await stripe.subscriptionItems.list ( { subscription:
-                                                                subscriptionID } );
-            if ( items && items.data.length ) {
-                itemID = items.data[0].id;
-            }
-
-            // update subscription plan
-            stripe.subscriptionItems.update ( itemID, { plan: subscription.planid
-            }).then ( transfer => {
-                logger.info("subscription change to %s of %s succeeded",newPlanName,
-                                                                        subscription.email);
-                // let user = { email: subscription.email, username: "customer" };
-                // let msg = "you successfully changed your plan to " + newPlanName;
-                // sendNotificationMail(user,msg);
-                res.status(rc.Success.OK).send(apiSuccess({stripeID:customerID}));
-            }).catch ( err => {
-                logger.error("subscription change to %s of %s failed: %s", newPlanName,
-                                                                           subscription.email, err);
-                res.status(rc.Client.REQUEST_FAILED).send(apiError(ec.Stripe.ACCESS_ERROR));
-                return;
-            });
+    // create new subscription
+    if ( ! subscriptionID ) {
+        stripe.subscriptions.create({customer: customerID,
+                                     tems:[{plan:subscription.planid}]
+        }).then ( subscription => {
+            // customer charged automatically
+            logger.info("subscription of %s succeeded", subscription.email);
+            res.status(rc.Success.OK).send(apiSuccess({ stripeID: customerID }));
+            // res.redirect  ( "/" );
+        }).catch(err => {
+            logger.error("subscription of %s failed: %s", subscription.email,
+                                                            err);
+            res.status(rc.Client.REQUEST_FAILED).send(apiError(ec.Stripe.ACCESS_ERROR));
+            return;
+        });
+    // change exsisting subscription
+    } else {
+        let items = await stripe.subscriptionItems.list ( { subscription:
+                                                            subscriptionID } );
+        if ( items && items.data.length ) {
+            itemID = items.data[0].id;
         }
-    // } catch ( err ) {
-    //     logger.error("subscription of %s failed: %s", subscription.email, err);
-    //     res.status ( rc.Client.REQUEST_FAILED ).send ( apiError(ec.) );
-    // }
+
+        // update subscription plan
+        stripe.subscriptionItems.update(itemID,{plan:subscription.planid
+        }).then ( transfer => {
+            logger.info("subscription change to %s of %s succeeded",
+                                                            newPlanName,
+                                                            subscription.email);
+            res.status(rc.Success.OK).send(apiSuccess());
+        }).catch ( err => {
+            logger.error("subscription change to %s of %s failed: %s",
+                                                            newPlanName,
+                                                            subscription.email, err);
+            res.status(rc.Client.REQUEST_FAILED).send(apiError(ec.Stripe.ACCESS_ERROR));
+            return;
+        });
+    }
 });
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1226,13 +1220,6 @@ app.use ( function (req,res,next) {
 //     rejectUnauthorized: false
 // }
 
-// console.log("before");
-// updateStripe("dummy",{data:"ID"}).then( res => {
-//     console.log(res)
-// }).catch ( err => {
-//     console.log(err)
-// });
-
 ///////////////////////////////////////////////////////////////////////////////
 // setup server
 // var port = normalizePort ( process.env.PORT || config.server.port );
@@ -1280,22 +1267,6 @@ server.on('listening', function() {
 
 ///////////////////////////////////////////////////////////////////////////////
 // local functions
-async function updateStripe(customer,data) {
-    let res = { success : false,
-                res: null }
-    try {
-        // let customers = await stripe.customers.list({ email: customer });
-        // if ( customers.data.length ) {
-        // res.res = await stripe.customers.update(customer, { email: data.email });
-        // }
-        res.res = await wait(5000);
-        res.success = true;
-    } catch ( err ) {
-        res.res = err;
-    }
-    return res;
-}
-
 function wait(time) {
     let p = new Promise( (resolve,reject) => {
         setTimeout ( function() {
@@ -1305,15 +1276,6 @@ function wait(time) {
     });
     return p;
 }
-// function asyncUpdateStripeEmail(customer, email) {
-//     stripe.customers.list({ email: customer }).then( customers => {
-//         if ( customers.data.length ) {
-//             return stripe.customers.update(customers.data[0].id, { email: email });
-//         }
-//     }).catch(err => {
-//         return new Promise().reject(err);
-//     });
-// }
 
 function checkAuthenticaton (req, res) {
 

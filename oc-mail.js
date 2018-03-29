@@ -79,7 +79,7 @@ module.exports.createConfirmationMail = function(receiver,name,token,ip) {
                                                    ip : ip } );
     return {
         from: '"IronCondorTrader©" <info@ironcondortrader.com>',
-        subject: 'Account Vefification Request',
+        subject: 'Account Verification Request',
         to: receiver,
         html: html
     };
@@ -106,7 +106,7 @@ module.exports.createNotificationMail = function(receiver,name,message) {
     var html = readMailPartial('notification', { name: name, message: message });
     return {
         from: '"IronCondorTrader©" <info@ironcondortrader.com>',
-        subject: 'Account Update Notififcation',
+        subject: 'Account Update Notification',
         to: receiver,
         html: html
     };
