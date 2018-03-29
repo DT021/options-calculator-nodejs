@@ -216,7 +216,7 @@ passport.use(new BasicStrategy({usernameField:'email'},(email,password,done)=> {
 // main page when logged out
 // @return the main page - content depends on wheather the user is logged in and
 // on his subsription
-app.get('/', function(req,res,next) {
+app.get('/', (req,res,next) => {
 
     if ( req.isAuthenticated() && req.user.plan < 1 ) {
 
@@ -274,7 +274,7 @@ app.get('/', function(req,res,next) {
 ///////////////////////////////////////////////////////////////////////////////
 // route to test if the user is logged in or not
 // @return the logged in user and his subscribed plan
-app.get('/auth', function(req,res,next) {
+app.get('/auth', (req,res,next) => {
 
     if ( ! checkAuthenticaton(req,res) ) { return; }
 
@@ -285,19 +285,17 @@ app.get('/auth', function(req,res,next) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // stripe webhook
-app.get('/webhook', function(req,res,next) {
+app.get('/webhook', (req,res,next) => {
 
     var sig = req.headers["stripe-signature"];
-
     try {
         var event = stripe.webhooks.constructEvent(req.body,
                                                    sig,
                                                    ENDPOINT_SECRETS);
-        console.log ( "webhook received: " + event );
+        logger.info ( "webhook received %s", event );
     }
     catch ( err ) {
-        console.log("webhook error: " + err );
-        // res.status ( rc.Client.BAD_REQUEST ).send ( apiError(ec.Hook.FAILED) );
+        logger.error ("webhook error: %s", err );
     }
     res.status(rc.Success.OK).send(apiSuccess());
 });
@@ -305,7 +303,7 @@ app.get('/webhook', function(req,res,next) {
 ///////////////////////////////////////////////////////////////////////////////
 // route return available subscription plans
 // @return the subscriptions plans
-app.get('/plans', function(req,res,next) {
+app.get('/plans', (req,res,next) => {
 
     // TODO: testing purpose only
     // stripe.plans.list().then ( plans => {
@@ -333,7 +331,7 @@ app.get('/plans', function(req,res,next) {
 // verify passed password
 // @body { email, passowrd }
 // @return success true
-app.post('/verify', function(req,res,next) {
+app.post('/verify', (req,res,next) => {
 
     var email = req.body.credentials.email;
     var password = req.body.credentials.password;
@@ -365,7 +363,7 @@ app.post('/verify', function(req,res,next) {
 // change password
 // @body { email, passowrd, newpassword }
 // @return success true
-app.post('/chgpass', function(req,res,next) {
+app.post('/chgpass', (req,res,next) => {
 
     if (!checkAuthenticaton(req, res)) { return; }
 
@@ -406,7 +404,7 @@ app.post('/chgpass', function(req,res,next) {
 // send an email
 // @body { type[recover], receiver, ip }
 // @return success true
-app.post('/sendmail', function(req,res,next) {
+app.post('/sendmail', (req,res,next) => {
 
     var mail = req.body.mail;
     var host = req.headers.origin;
@@ -502,7 +500,7 @@ app.post('/sendmail', function(req,res,next) {
 // route to log in
 // @params BASIC authentication
 // @return success true and an access token
-app.post('/login', function(req,res,next) {
+app.post('/login', (req,res,next) => {
 
     if ( ! dbConnected ) {
         // return next("no database connection");
@@ -543,7 +541,7 @@ app.post('/login', function(req,res,next) {
 ///////////////////////////////////////////////////////////////////////////////
 // route to log out
 // @return redirect to root
-app.post('/logout', function(req,res,next) {
+app.post('/logout', (req,res,next) => {
 
     if ( ! checkAuthenticaton(req,res) ) { return; }
 
@@ -555,7 +553,7 @@ app.post('/logout', function(req,res,next) {
 // subscribe to a plan
 // @body { token, subscription }
 // @return stripe customer id
-app.post('/subscribe', async function(req,res,next) {
+app.post('/subscribe', async (req,res,next) => {
 
     let token = req.body.token;
     let subscription = req.body.subscription;
@@ -651,7 +649,7 @@ app.post('/subscribe', async function(req,res,next) {
 // checkout payment
 // @body { token, checkout }
 // @return success true
-app.post('/checkout', function(req,res,next) {
+app.post('/checkout', (req,res,next) => {
 
     var token = req.body.token;
     var checkout = req.body.checkout;
@@ -677,7 +675,7 @@ app.post('/checkout', function(req,res,next) {
 // add a user to the database and send an confirmation mail
 // @body { user-object }
 // return newly created user object and the associated subscription plan
-app.post('/register', function(req,res,next) {
+app.post('/register', (req,res,next) => {
 
     logger.info("registering for account %s requested", req.body.email);
 
@@ -745,46 +743,11 @@ app.post('/register', function(req,res,next) {
 });
 
 ///////////////////////////////////////////////////////////////////////////////
-// re-send confirmation mail
-// @params { userid }
-// @return success true
-// app.post('/resend/:userid', function(req,res,next) {
-//
-//     var userid = req.params.userid;
-//     logger.info("resend confirmation mail to %s requested", userid);
-//     User.findOne({ email: req.params.userid }, (err, user) => {
-//         if (err) {
-//             logger.info("resend confirmation mail to %s failed: %s", userid,err);
-//             dbError(res,err);
-//         } else if (user) {
-//             sendConfirmationMail(user,
-//                                  req.body.ip,
-//                                  function (err, info) {
-//                 if (err) {
-//                     logger.error("resending confirmation mail to %s failed",
-//                                                           userid,
-//                                                           JSON.stringify(err) );
-//                     res.status(rc.Server.INTERNAL_ERROR).send(apiError(ec.Mail.SENDING_FAILURE));
-//                 } else {
-//                     logger.info("resending confirmation mail to %s succeeded",
-//                                                                         userid);
-//                     res.status(rc.Success.OK).send ( apiSuccess() );
-//                 }
-//             });
-//         } else {
-//             logger.error("resend confirmation mail to %s failed: user doesn't exist",
-//                                                                         userid );
-//             res.status(rc.Client.NOT_FOUND).send( apiError(ec.Account.USER_NOT_FOUND) );
-//         }
-//     });
-// });
-
-///////////////////////////////////////////////////////////////////////////////
 // recover a password via token
 // @params { token }
 // query { password }
 // @return success true
-app.get('/recover/:token', function (req, res, next) {
+app.get('/recover/:token', (req,res,next) => {
 
     logger.info("attempt to change password via token %s", req.params.token);
     User.findOne({ secretToken: req.params.token }, (err, user) => {
@@ -845,7 +808,7 @@ app.get('/recover/:token', function (req, res, next) {
 // confirm an account via token
 // @params { token }
 // @return a success page
-app.get('/confirm/:token', function(req,res,next) {
+app.get('/confirm/:token', (req,res,next) => {
 
     logger.info("attempt to confirm account via token %s", req.params.token );
     User.findOne ( { secretToken: req.params.token }, (err, user) => {
@@ -892,7 +855,7 @@ app.get('/confirm/:token', function(req,res,next) {
 // return all data associated to one user
 // @params { name }
 // @return the strategy object identified by name
-app.get('/strategies/:name', function(req,res,next) {
+app.get('/strategies/:name', (req,res,next) => {
 
     if (!checkAuthenticaton(req, res)) { return; }
 
@@ -910,7 +873,7 @@ app.get('/strategies/:name', function(req,res,next) {
 // save as (new)
 // @body { strategy-object }
 // @return the saved strategy object
-app.post('/strategies', function(req,res,next) {
+app.post('/strategies', (req,res,next) => {
 
     if (!checkAuthenticaton(req, res)) { return; }
 
@@ -930,7 +893,7 @@ app.post('/strategies', function(req,res,next) {
 // @params { name }
 // @body { strategy-object }
 // @return the updated strategy object
-app.post('/strategies/:name', function(req,res,next) {
+app.post('/strategies/:name', (req,res,next) => {
 
     if (!checkAuthenticaton(req, res)) { return; }
 
@@ -979,7 +942,7 @@ app.post('/strategies/:name', function(req,res,next) {
 // delete strategies
 // @params { userid }
 // @return success true
-app.delete('/strategies/:userid', function(req,res,next) {
+app.delete('/strategies/:userid', (req,res,next) => {
 
     if (!checkAuthenticaton(req, res)) { return; }
 
@@ -997,7 +960,7 @@ app.delete('/strategies/:userid', function(req,res,next) {
 // delete a single strategy
 // @params { name }
 // @return success true
-app.delete('/strategy/:name', function(req,res,next) {
+app.delete('/strategy/:name', (req,res,next) => {
 
     if (!checkAuthenticaton(req, res)) { return; }
 
@@ -1015,7 +978,7 @@ app.delete('/strategy/:name', function(req,res,next) {
 // update stripe
 // @params { user-object }
 // @return success true
-app.post('/updstrip/:id', async function(req,res,next) {
+app.post('/updstrip/:id', async (req,res,next) => {
 
     if (!checkAuthenticaton(req, res)) { return; }
 
@@ -1043,7 +1006,7 @@ app.post('/updstrip/:id', async function(req,res,next) {
 // @params { id }
 // @body { password | planid | stripeID | name | newmail }
 // return user object
-app.post('/updacc/:id', async function(req,res,next) {
+app.post('/updacc/:id', async (req,res,next) => {
 
     if (!checkAuthenticaton(req, res)) { return; }
 
@@ -1123,7 +1086,7 @@ app.post('/updacc/:id', async function(req,res,next) {
 // delete account
 // @params { stripe-id }
 // @return success true
-app.delete('/delacc/:id', async function(req,res,next) {
+app.delete('/delacc/:id', async (req,res,next) => {
 
     if (!checkAuthenticaton(req, res)) { return; }
 
