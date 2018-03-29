@@ -871,13 +871,14 @@ app.get('/confirm/:token', function(req,res,next) {
                                                                 JSON.stringify(err));
                     dbError(res,err);
                 } else {
-                    logger.info("account confirmation for %s succeeded", user.email);
+                    logger.info("account confirmation for %s succeeded",
+                                                                user.email);
                     res.render("pages/confirm", {
                         header: "Welcome to IronCondorTrader©",
                         message: "Thank you " + user.username +
-                                 ", your account is now confirmed and you can " +
+                                 ", your account is now active and you can " +
                                  " login to IronCondorTrader©",
-                        reminder: "Please don't forget to SUBSCRIBE !"
+                        reminder: "Don't forget to SUBSCRIBE !"
                     });
                 }
             });
