@@ -413,6 +413,8 @@ app.post('/sendmail', function(req,res,next) {
     logger.info("attempt to send %s mail to %s requested by [%s]",  mail.type,
                                                                     mail.receiver,
                                                                     mail.ip);
+
+    // find user in oder to save token
     User.findOne({ email: mail.receiver }, (err, user) => {
         if (err) {
             logger.error("sending %s mail failed: user %s doesn't exist in database",
@@ -438,7 +440,7 @@ app.post('/sendmail', function(req,res,next) {
                     user.secretToken = token;
                     user.save(function (err) {
                         if (err) {
-                            logger.error("registering of customer %s failed: %s",
+                            logger.error("saving token of customer %s failed: %s",
                                                                 newUser.email,
                                                                 JSON.stringify(err));
                             dbError(res,err);
@@ -486,7 +488,7 @@ app.post('/sendmail', function(req,res,next) {
                 }
             }
         } else {
-            logger.info("sending %s mail to %s failed: address doesn't exist",
+            logger.info("sending %s mail to %s failed: user doesn't exist",
                                                                     mail.type,
                                                                     mail.receiver);
             // NOTE: even if the email address doesn't exist we do

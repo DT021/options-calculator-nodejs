@@ -78,8 +78,8 @@ module.exports.createConfirmationMail = function(receiver,name,token,ip) {
                                                    name : name,
                                                    ip : ip } );
     return {
-        from: '"IronCondorTrader" <info@ironcondortrader.com>',
-        subject: 'Please verify your IronCondorTrader© account',
+        from: '"IronCondorTrader©" <info@ironcondortrader.com>',
+        subject: 'Account Vefification Request',
         to: receiver,
         html: html
     };
@@ -92,8 +92,8 @@ module.exports.createRecoveryMail = function(receiver,token,ip) {
     var link = "https://ironcondortrader.com/recover/" + token;
     var html = readMailPartial ( 'recover', { link: link, ip: ip } );
     return {
-        from: '"IronCondorTrader" <info@ironcondortrader.com>',
-        subject: 'Changing your password',
+        from: '"IronCondorTrader©" <info@ironcondortrader.com>',
+        subject: 'Password Reset Request',
         to: receiver,
         html: html
     };
@@ -105,8 +105,8 @@ module.exports.createNotificationMail = function(receiver,name,message) {
 
     var html = readMailPartial('notification', { name: name, message: message });
     return {
-        from: '"IronCondorTrader" <info@ironcondortrader.com>',
-        subject: 'Notififcation about account changes',
+        from: '"IronCondorTrader©" <info@ironcondortrader.com>',
+        subject: 'Account Update Notififcation',
         to: receiver,
         html: html
     };
