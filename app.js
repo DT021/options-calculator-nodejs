@@ -204,11 +204,12 @@ passport.use(new BasicStrategy({usernameField:'email'},(email,password,done)=> {
 ///////////////////////////////////////////////////////////////////////////////
 // add latency for testing purpose
 ///////////////////////////////////////////////////////////////////////////////
-// app.use('/', function (req,res,next) { setTimeout(next, 1000) });
-// app.use('/login', function (req,res,next) { setTimeout(next,500) });
-// app.use('/register', function (req,res,next) { setTimeout(next, 500) });
-// app.use('/strategies', function (req,res,next) { setTimeout(next, 500) });
-// app.use('/strategies/:id', function (req,res,next) { setTimeout(next, 500) });
+// app.use('/', (req,res,next)=> { setTimeout(next, 1000) });
+// app.use('/login', (req,res,next)=> { setTimeout(next,500) });
+// app.use('/logout', (req,res,next)=> { setTimeout(next,500) });
+// app.use('/register', (req,res,next)=> { setTimeout(next, 500) });
+// app.use('/strategies', (req,res,next)=> { setTimeout(next, 1000) });
+// app.use('/strategies/:id', (req,res,next)=> { setTimeout(next, 1000) });
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
