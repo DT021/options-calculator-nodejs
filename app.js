@@ -232,8 +232,7 @@ app.get('/', (req,res,next) => {
             saveas : readPartial("logout/saveas"),
             remove : readPartial("logout/remove"),
             select : readPartial("logout/select"),
-            auth   : readPartial("login/auth"),
-            strikes: readPartial("logout/strikes")
+            auth   : readPartial("login/auth")
         });
 
     } else if (req.isAuthenticated() ) {
@@ -249,8 +248,7 @@ app.get('/', (req,res,next) => {
             saveas : readPartial("login/saveas"),
             remove : readPartial("login/remove"),
             select : readPartial("login/select"),
-            auth   : readPartial("login/auth"),
-            strikes: readPartial("login/strikes")
+            auth   : readPartial("login/auth")
         });
 
     } else {
@@ -266,8 +264,7 @@ app.get('/', (req,res,next) => {
             saveas : readPartial("logout/saveas"),
             remove : readPartial("logout/remove"),
             select : readPartial("logout/select"),
-            auth   : readPartial("logout/auth"),
-            strikes: readPartial("logout/strikes")
+            auth   : readPartial("logout/auth")
         });
     }
 });
