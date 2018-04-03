@@ -150,12 +150,12 @@ console.log ( "options=" + JSON.stringify(config.db[env].options) );
 
 // connect database
 var dbConnected = false;
-// const Strategy = require('./mongo/Strategy.model');
-// const User = require('./mongo/User.model');
-// const dbgoose = require('./mongo/mongo');
-const Strategy = require('./dynamo/Strategy.model');
-const User = require('./dynamo/User.model');
-const dbgoose = require('./dynamo/dynamo');
+const Strategy = require('./mongo/Strategy.model');
+const User = require('./mongo/User.model');
+const dbgoose = require('./mongo/mongo');
+// const Strategy = require('./dynamo/Strategy.model');
+// const User = require('./dynamo/User.model');
+// const dbgoose = require('./dynamo/dynamo');
 dbgoose.init(env,logger).then( params=> {
     logger.debug("database connection to %s established", config.db[env].url );
     console.log( "database connection established" );
@@ -913,16 +913,16 @@ app.post('/strategies/:name', (req,res,next) => {
                     expiry: req.body.positions[i].expiry
                 }
             }
-            strategy.optionDescription = {
-                symbol: req.body.optionDescription.symbol,
-                name: req.body.optionDescription.name,
-                multiplier: req.body.optionDescription.multiplier,
-                price: req.body.optionDescription.price,
+            strategy.optionsContract = {
+                symbol: req.body.optionsContract.symbol,
+                name: req.body.optionsContract.name,
+                multiplier: req.body.optionsContract.multiplier,
+                price: req.body.optionsContract.price,
                 strikes: []
             }
-            for (var i = 0; i < req.body.optionDescription.strikes.length; i++) {
-                strategy.optionDescription.strikes[i] =
-                                            req.body.optionDescription.strikes[i];
+            for (var i = 0; i < req.body.optionsContract.strikes.length; i++) {
+                strategy.optionsContract.strikes[i] =
+                                            req.body.optionsContract.strikes[i];
             }
 
             strategy.save((err,strategy) => {

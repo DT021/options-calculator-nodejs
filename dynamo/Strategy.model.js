@@ -34,7 +34,7 @@ var StrategySchema = new Schema ({
     price: Number,         // price of the underlying
     vola: Number,          // volatility used for stragegy
 
-    optionDescription: {
+    optionsContract: {
 
         symbol: String,     // the option symbol, like ES
         name: String,       // the full name of the options

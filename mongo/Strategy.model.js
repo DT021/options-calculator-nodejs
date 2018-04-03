@@ -1,7 +1,7 @@
 
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
-// var OptionDescriptionSchema = require('./OptionDescription.model').schema;
+// var OptionsContractSchema = require('./OptionDescription.model').schema;
 
 //
 //
@@ -17,7 +17,7 @@ var PositionSchema = new Schema ({
 //
 //
 //
-var OptionDescriptionSchema = new Schema({
+var OptionsContractSchema = new Schema({
 
     symbol: String,         // the option symbol, like ES
     name: String,           // the full name of the options
@@ -37,7 +37,7 @@ var StrategySchema = new Schema ({
     vola : Number,          // volatility used for stragegy
 
     positions : [PositionSchema],
-    optionDescription: OptionDescriptionSchema
+    optionsContract: OptionsContractSchema
 
 }, {
     timestamps: true
