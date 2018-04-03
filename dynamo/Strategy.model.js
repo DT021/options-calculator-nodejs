@@ -18,10 +18,21 @@ var PositionSchema = new Schema ({
 //
 var StrategySchema = new Schema ({
 
-    userid : String,        // owner of strategy
-    name : String,          // name of strategy
-    price : Number,         // price of the underlying
-    vola : Number,          // volatility used for stragegy
+    userid: { type: String,
+              rangeKey: true,
+              index: true
+             },             // owner of strategy
+    name: { type: String,
+            index: {
+                global: true,
+                rangeKey: 'userid',
+                name: 'StrategyIndex',
+                project: true, // ProjectionType: ALL
+                throughput: 5 // read and write are both 5
+            }
+          },               // name of strategy
+    price: Number,         // price of the underlying
+    vola: Number,          // volatility used for stragegy
 
     optionDescription: {
 
@@ -38,6 +49,6 @@ var StrategySchema = new Schema ({
     timestamps: true
 });
 
-StrategySchema.index ( { userid : 1, name : -1 }, { unique: true } );
+// StrategySchema.index ( { userid : 1, name : -1 }, { unique: true } );
 
 module.exports = dynamoose.model ( 'Strategy', StrategySchema );

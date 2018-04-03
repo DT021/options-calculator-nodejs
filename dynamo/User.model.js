@@ -10,36 +10,34 @@ var SALT_WORK_FACTOR = 10;
 //
 var UserSchema = new Schema ({
 
-    email : { type : String,			// email address
-              unique : true,
-              required : true,
-              validate: {
-                validator: function(v) {
+    email: { type : String,			    // email address
+            //   unique : true,
+             rangeKey: true,
+             index: true,
+             required : true,
+             validate:  function(v) {
                     return /^([\w-\.]+@([\w-]+\.)+[\w-]{2,3})?$/.test(v);
-                },
-                message: 'not a valid email address !' 
-              }
-            },
-    username : { type : String,
-                 required : true },     // username
-    password : { type : String,
-                 required : true },		// password
+             }
+           },
+    username: { type: String,
+                required: true },       // username
+    password: { type: String,
+                required: true },		// password
     secretToken: String,                // secret token for email verification
-    active: false,                      // true when the email was verified
+    active: { type: Boolean,
+              default: false },         // true when the email was verified
     plan: Number,                       // the subscription plan
     stripe: String,                     // stripe customer id
     backup: String                      // backup of old email
-    // country: String,                    // users country
-    // reserve: String                     // reserved
-
 }, {
-    timestamps: true
+    timestamps: true,
+    useNativeBooleans: true
 });
 
 //
 //
 //
-UserSchema.pre ('save', function(next) {
+const presave = function(next) {
 
     var user = this;
 
@@ -65,7 +63,7 @@ UserSchema.pre ('save', function(next) {
             next();
         });
     });
-});
+}
 
 //
 //

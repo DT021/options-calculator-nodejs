@@ -33,10 +33,6 @@ const ec = require('./oc-error-codes');
 const config = require('./oc-config');
 const mail = require('./mail/oc-mail');
 
-// get models
-const Strategy = require('./mongo/Strategy.model');
-const User = require('./mongo/User.model');
-
 ///////////////////////////////////////////////////////////////////////////////
 // init log4js
 const log4js = require('log4js');
@@ -154,10 +150,15 @@ console.log ( "options=" + JSON.stringify(config.db[env].options) );
 
 // connect database
 var dbConnected = false;
-const mongoose = require('./mongo/mongo');
-mongoose.init(env,logger).then( params=> {
+// const Strategy = require('./mongo/Strategy.model');
+// const User = require('./mongo/User.model');
+// const dbgoose = require('./mongo/mongo');
+const Strategy = require('./dynamo/Strategy.model');
+const User = require('./dynamo/User.model');
+const dbgoose = require('./dynamo/dynamo');
+dbgoose.init(env,logger).then( params=> {
     logger.debug("database connection to %s established", config.db[env].url );
-    console.log ( "connection established" );
+    console.log( "database connection established" );
     dbConnected = true;
 }).catch ( err=> {
     logger.debug("database connection failed %s", JSON.stringify(err));

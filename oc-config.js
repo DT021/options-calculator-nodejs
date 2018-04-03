@@ -11,7 +11,8 @@ var dbconfig = {
     pass: "ig1Eeng3vu",
     host: "localhost",
     port: 21302,
-    name: "oc"
+    name: "oc",
+    endp: "mongodb://"
 };
 
 module.exports = {
@@ -23,38 +24,36 @@ module.exports = {
         docroot: "./public"
     },
 
-    // mongodb settings
+    // db url
     db: {
 
         production: {
-            url: "mongodb://" + dbconfig.user + ":" +
-                                dbconfig.pass + "@" +
-                                dbconfig.host + ":" +
-                                dbconfig.port + "/" +
-                                dbconfig.name,
+            url: dbconfig.endp + dbconfig.user + ":" +
+                                 dbconfig.pass + "@" +
+                                 dbconfig.host + ":" +
+                                 dbconfig.port + "/" +
+                                 dbconfig.name,
             options: {
-                auth: { authdb: "admin" },
+                auth: { authdb: "admin" }
             }
         },
 
         development: {
-            url: "mongodb://" + dbconfig.host + "/" +
-                                dbconfig.name,
+            url: dbconfig.endp + dbconfig.host + "/" +
+                                 dbconfig.name,
             options: {
                 useMongoClient: true
             }
         },
 
         test: {
-            url: "mongodb://" + dbconfig.user + ":" +
-                                dbconfig.pass + "@" +
-                                dbconfig.host + ":" +
-                                dbconfig.port + "/" +
-                                dbconfig.name,
+            url: dbconfig.endp + dbconfig.user + ":" +
+                                 dbconfig.pass + "@" +
+                                 dbconfig.host + ":" +
+                                 dbconfig.port + "/" +
+                                 dbconfig.name,
             options: {
-                auth: {
-                    authdb: "admin"
-                },
+                auth: { authdb: "admin" }
             }
         }
     },

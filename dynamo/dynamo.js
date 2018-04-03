@@ -1,12 +1,21 @@
 "use strict";
 
-var aws = require("aws-sdk");
-var dynamodb = require('dynamodb-model');
+// var aws = require("aws-sdk");
+// var dynamodb = require('dynamodb-model');
 var dynamoose = require('dynamoose');
 
-aws.config.update({
-    region: "us-west-2",
-    endpoint: "http://localhost:8000"
-});
+module.exports.init = function (env, logger) {
 
-var dynamodb = new aws.DynamoDB();
+    let p = new Promise((resolve, reject) => {
+        dynamoose.AWS.config.update({
+            accessKeyId: 'AKID',
+            secretAccessKey: 'SECRET',
+            region: 'us-east-1'
+        });
+        // var dynamodb = new aws.DynamoDB();
+        dynamoose.local(); // http://localhost:8000
+        // var dynamodb = dynamoose.ddb();
+        resolve(dynamoose);
+    });
+    return p;
+}
