@@ -8,7 +8,7 @@ var net = require('net');
 var os = require('os');
 var async = require('async');
 
-var config = require('./oc-config');
+var config = require('../oc-config');
 
 ///////////////////////////////////////////////////////////////////////////////
 // route to log out

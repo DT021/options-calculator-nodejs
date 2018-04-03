@@ -1,6 +1,6 @@
 "use strict";
 
-const config = require('./oc-config');
+const config = require('../oc-config');
 const mongoose = require('mongoose');
 
 //module.exports mongoose;

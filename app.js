@@ -31,11 +31,11 @@ const jwt = require('jsonwebtoken');
 const rc = require('./oc-return-codes');
 const ec = require('./oc-error-codes');
 const config = require('./oc-config');
-const mail = require('./oc-mail');
+const mail = require('./mail/oc-mail');
 
 // get models
-const Strategy = require('./Strategy.model');
-const User = require('./User.model');
+const Strategy = require('./mongo/Strategy.model');
+const User = require('./mongo/User.model');
 
 ///////////////////////////////////////////////////////////////////////////////
 // init log4js
@@ -154,7 +154,7 @@ console.log ( "options=" + JSON.stringify(config.db[env].options) );
 
 // connect database
 var dbConnected = false;
-const mongoose = require('./mongo');
+const mongoose = require('./mongo/mongo');
 mongoose.init(env,logger).then( params=> {
     logger.debug("database connection to %s established", config.db[env].url );
     console.log ( "connection established" );
