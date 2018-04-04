@@ -150,13 +150,15 @@ console.log ( "options=" + JSON.stringify(config.db[env].options) );
 
 // connect database
 var dbConnected = false;
-const Strategy = require('./mongo/Strategy.model');
-const User = require('./mongo/User.model');
-const dbgoose = require('./mongo/mongo');
-// const Strategy = require('./dynamo/Strategy.model');
-// const User = require('./dynamo/User.model');
-// const dbgoose = require('./dynamo/dynamo');
+// const Strategy = require('./mongo/Strategy.model');
+// const User = require('./mongo/User.model');
+// const dbgoose = require('./mongo/mongo');
+var Strategy = null;
+var User = null;
+const dbgoose = require('./dynamo/dynamo');
 dbgoose.init(env,logger).then( params=> {
+    Strategy = require('./dynamo/Strategy.model');
+    User = require('./dynamo/User.model');
     logger.debug("database connection to %s established", config.db[env].url );
     console.log( "database connection established" );
     dbConnected = true;
@@ -186,8 +188,10 @@ passport.deserializeUser((id,done)=> {
 // passport.use ( new LocalStrategy...
 passport.use(new BasicStrategy({usernameField:'email'},(email,password,done)=> {
 
-    User.findOne ( { email: email }, function(err, user) {
+    User.query ( { email: email }, function(err, user) {
         if ( err ) {
+            logger.error("passport validation failed for %s: %s",email,
+                                                                 JSON.stringify(err));
             return done ( err );
         }
         if ( ! user ) {
@@ -214,10 +218,11 @@ passport.use(new BasicStrategy({usernameField:'email'},(email,password,done)=> {
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-///////////////////////////////////////////////////////////////////////////////
-// main page when logged out
-// @return the main page - content depends on wheather the user is logged in and
-// on his subsription
+/**
+ * main page when logged out
+ * @return the main page - content depends on wheather the user is logged in and
+ * on his subsription
+ */
 app.get('/', (req,res,next) => {
 
     if ( req.isAuthenticated() && req.user.plan < 1 ) {
@@ -270,9 +275,10 @@ app.get('/', (req,res,next) => {
     }
 });
 
-///////////////////////////////////////////////////////////////////////////////
-// route to test if the user is logged in or not
-// @return the logged in user and his subscribed plan
+/**
+ * route to test if the user is logged in or not
+ * @return the logged in user and his subscribed plan
+ */
 app.get('/auth', (req,res,next) => {
 
     if ( ! checkAuthenticaton(req,res) ) { return; }
@@ -282,8 +288,9 @@ app.get('/auth', (req,res,next) => {
                                     plan: subscriptionsPlans[req.user.plan]});
 });
 
-///////////////////////////////////////////////////////////////////////////////
-// stripe webhook
+/**
+ * stripe webhook
+ */
 app.get('/webhook', (req,res,next) => {
 
     var sig = req.headers["stripe-signature"];
@@ -299,9 +306,10 @@ app.get('/webhook', (req,res,next) => {
     res.status(rc.Success.OK).send(apiSuccess());
 });
 
-///////////////////////////////////////////////////////////////////////////////
-// route return available subscription plans
-// @return the subscriptions plans
+/**
+ * route return available subscription plans
+ * @return the subscriptions plans
+ */
 app.get('/plans', (req,res,next) => {
 
     // TODO: testing purpose only
@@ -326,10 +334,11 @@ app.get('/plans', (req,res,next) => {
     // });
 });
 
-///////////////////////////////////////////////////////////////////////////////
-// verify passed password
-// @body { email, passowrd }
-// @return success true
+/**
+ * verify passed password
+ * @param { email, password }
+ * @return { success: true }
+ */
 app.post('/verify', (req,res,next) => {
 
     var email = req.body.credentials.email;
@@ -358,10 +367,11 @@ app.post('/verify', (req,res,next) => {
     });
 });
 
-///////////////////////////////////////////////////////////////////////////////
-// change password
-// @body { email, passowrd, newpassword }
-// @return success true
+/**
+ * change password
+ * @param { email, passowrd, newpassword }
+ * @return { success: true }
+ */
 app.post('/chgpass', (req,res,next) => {
 
     if (!checkAuthenticaton(req, res)) { return; }
@@ -399,10 +409,11 @@ app.post('/chgpass', (req,res,next) => {
     });
 });
 
-///////////////////////////////////////////////////////////////////////////////
-// send an email
-// @body { type[recover], receiver, ip }
-// @return success true
+/**
+ * send an email
+ * @param { type[recover], receiver, ip }
+ * @return { success: true }
+ */
 app.post('/sendmail', (req,res,next) => {
 
     var mail = req.body.mail;
@@ -495,10 +506,11 @@ app.post('/sendmail', (req,res,next) => {
     });
 });
 
-///////////////////////////////////////////////////////////////////////////////
-// route to log in
-// @params BASIC authentication
-// @return success true and an access token
+/**
+ * route to log in
+ * @param BASIC authentication
+ * @return { success: true } and an access token
+ */
 app.post('/login', (req,res,next) => {
 
     if ( ! dbConnected ) {
@@ -537,9 +549,10 @@ app.post('/login', (req,res,next) => {
     })(req,res,next);
 });
 
-///////////////////////////////////////////////////////////////////////////////
-// route to log out
-// @return redirect to root
+/**
+ * route to log out
+ * @return redirect to root
+ */
 app.post('/logout', (req,res,next) => {
 
     if ( ! checkAuthenticaton(req,res) ) { return; }
@@ -548,10 +561,11 @@ app.post('/logout', (req,res,next) => {
     res.redirect ('/' );
 });
 
-///////////////////////////////////////////////////////////////////////////////
-// subscribe to a plan
-// @body { token, subscription }
-// @return stripe customer id
+/**
+ * subscribe to a plan
+ * @param { token, subscription }
+ * @return { stripeID: customerID }
+ */
 app.post('/subscribe', async (req,res,next) => {
 
     let token = req.body.token;
@@ -633,7 +647,7 @@ app.post('/subscribe', async (req,res,next) => {
             logger.info("subscription change to %s of %s succeeded",
                                                             newPlanName,
                                                             subscription.email);
-            res.status(rc.Success.OK).send(apiSuccess());
+            res.status(rc.Success.OK).send(apiSuccess({ stripeID: customerID }));
         }).catch ( err => {
             logger.error("subscription change to %s of %s failed: %s",
                                                             newPlanName,
@@ -644,10 +658,11 @@ app.post('/subscribe', async (req,res,next) => {
     }
 });
 
-///////////////////////////////////////////////////////////////////////////////
-// checkout payment
-// @body { token, checkout }
-// @return success true
+/**
+ * checkout payment
+ * @param { token, checkout }
+ * @return { success: true }
+ */
 app.post('/checkout', (req,res,next) => {
 
     var token = req.body.token;
@@ -670,10 +685,11 @@ app.post('/checkout', (req,res,next) => {
         });
 });
 
-///////////////////////////////////////////////////////////////////////////////
-// add a user to the database and send an confirmation mail
-// @body { user-object }
-// return newly created user object and the associated subscription plan
+/**
+ * add a user to the database and send an confirmation mail
+ * @param { user-object }
+ * return newly created user object and the associated subscription plan
+ */
 app.post('/register', (req,res,next) => {
 
     logger.info("registering for account %s requested", req.body.email);
@@ -741,11 +757,12 @@ app.post('/register', (req,res,next) => {
     });
 });
 
-///////////////////////////////////////////////////////////////////////////////
-// recover a password via token
-// @params { token }
-// query { password }
-// @return success true
+/**
+ * recover a password via token
+ * @param { token }
+ * query { password }
+ * @return { success: true }
+ */
 app.get('/recover/:token', (req,res,next) => {
 
     logger.info("attempt to change password via token %s", req.params.token);
@@ -803,10 +820,11 @@ app.get('/recover/:token', (req,res,next) => {
     });
 });
 
-///////////////////////////////////////////////////////////////////////////////
-// confirm an account via token
-// @params { token }
-// @return a success page
+/**
+ * confirm an account via token
+ * @param { token }
+ * @return a success page
+ */
 app.get('/confirm/:token', (req,res,next) => {
 
     logger.info("attempt to confirm account via token %s", req.params.token );
@@ -850,10 +868,11 @@ app.get('/confirm/:token', (req,res,next) => {
     });
 });
 
-///////////////////////////////////////////////////////////////////////////////
-// return all data associated to one user
-// @params { name }
-// @return the strategy object identified by name
+/**
+ * return all data associated to one user
+ * @param { name }
+ * @return the strategy object identified by name
+ */
 app.get('/strategies/:name', (req,res,next) => {
 
     if (!checkAuthenticaton(req, res)) { return; }
@@ -868,10 +887,11 @@ app.get('/strategies/:name', (req,res,next) => {
     });
 });
 
-///////////////////////////////////////////////////////////////////////////////
-// save as (new)
-// @body { strategy-object }
-// @return the saved strategy object
+/**
+ * save as (new)
+ * @param { strategy-object }
+ * @return the saved strategy object
+ */
 app.post('/strategies', (req,res,next) => {
 
     if (!checkAuthenticaton(req, res)) { return; }
@@ -887,11 +907,12 @@ app.post('/strategies', (req,res,next) => {
     });
 });
 
-///////////////////////////////////////////////////////////////////////////////
-// save (update))
-// @params { name }
-// @body { strategy-object }
-// @return the updated strategy object
+/**
+ * save (update))
+ * @param { name }
+ * @param { strategy-object }
+ * @return the updated strategy object
+ */
 app.post('/strategies/:name', (req,res,next) => {
 
     if (!checkAuthenticaton(req, res)) { return; }
@@ -937,10 +958,11 @@ app.post('/strategies/:name', (req,res,next) => {
     });
 });
 
-///////////////////////////////////////////////////////////////////////////////
-// delete strategies
-// @params { userid }
-// @return success true
+/**
+ * delete strategies
+ * @param { userid }
+ * @return { success: true }
+ */
 app.delete('/strategies/:userid', (req,res,next) => {
 
     if (!checkAuthenticaton(req, res)) { return; }
@@ -955,10 +977,11 @@ app.delete('/strategies/:userid', (req,res,next) => {
     });
 });
 
-///////////////////////////////////////////////////////////////////////////////
-// delete a single strategy
-// @params { name }
-// @return success true
+/**
+ * delete a single strategy
+ * @param { name }
+ * @return { success: true }
+ */
 app.delete('/strategy/:name', (req,res,next) => {
 
     if (!checkAuthenticaton(req, res)) { return; }
@@ -973,10 +996,11 @@ app.delete('/strategy/:name', (req,res,next) => {
     });
 });
 
-///////////////////////////////////////////////////////////////////////////////
-// update stripe
-// @params { user-object }
-// @return success true
+/**
+ * update stripe
+ * @param { user-object }
+ * @return { success: true }
+ */
 app.post('/updstrip/:id', async (req,res,next) => {
 
     if (!checkAuthenticaton(req, res)) { return; }
@@ -1000,11 +1024,12 @@ app.post('/updstrip/:id', async (req,res,next) => {
     });
 });
 
-///////////////////////////////////////////////////////////////////////////////
-// update account
-// @params { id }
-// @body { password | planid | stripeID | name | newmail }
-// return user object
+/**
+ * update account
+ * @param { params.id }
+ * @param { body.password, body.planid, body.stripeID, body.name, body.newmail }
+ * @return user object
+ */
 app.post('/updacc/:id', async (req,res,next) => {
 
     if (!checkAuthenticaton(req, res)) { return; }
@@ -1081,10 +1106,11 @@ app.post('/updacc/:id', async (req,res,next) => {
     });
 });
 
-///////////////////////////////////////////////////////////////////////////////
-// delete account
-// @params { stripe-id }
-// @return success true
+/**
+ * delete account
+ * @param { params.id, query.name }
+ * @return { success: true }
+ */
 app.delete('/delacc/:id', async (req,res,next) => {
 
     if (!checkAuthenticaton(req, res)) { return; }
