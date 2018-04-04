@@ -174,12 +174,13 @@ app.use ( bodyParser.raw({ type: "*/*" }) );
 
 //
 passport.serializeUser((user,done)=> {
-    done ( null, user.id );
+    done ( null, user.email );
 });
 
 //
 passport.deserializeUser((id,done)=> {
-    User.findById ( id, function(err,user) {
+    // User.findById ( id, function(err,user) {
+    User.get ( id, function(err,user) {
         done ( err, user );
     });
 });
@@ -188,7 +189,8 @@ passport.deserializeUser((id,done)=> {
 // passport.use ( new LocalStrategy...
 passport.use(new BasicStrategy({usernameField:'email'},(email,password,done)=> {
 
-    User.query ( { email: email }, function(err, user) {
+    // User.findOne ( { email: email }, function(err, user) {
+    User.get ( email, function(err, user) {
         if ( err ) {
             logger.error("passport validation failed for %s: %s",email,
                                                                  JSON.stringify(err));
@@ -197,7 +199,8 @@ passport.use(new BasicStrategy({usernameField:'email'},(email,password,done)=> {
         if ( ! user ) {
             return done ( { message: "user doesn't exist" }, false );
         }
-        if ( ! user.validPassword(password)) {
+        // if ( ! user.validPassword(password)) {
+        if ( ! dbgoose.validPassword(password,user.password)) {
             return done ( { message: "incorrect password" }, false);
         }
         return done ( null, user );
@@ -345,7 +348,8 @@ app.post('/verify', (req,res,next) => {
     var password = req.body.credentials.password;
 
     logger.info ( "verification of account %s requested", email );
-    User.findOne({ email: email }, function(err,user) {
+    // User.findOne({ email: email }, function(err,user) {
+    User.get(email, function(err,user) {
         if (err) {
             logger.error("verification of %s failed: %s", email, err);
             dbError(res,err);
@@ -355,7 +359,8 @@ app.post('/verify', (req,res,next) => {
                                                                           err);
             res.status(rc.Client.UNAUTHORIZED).send(apiError(ec.Account.USER_NOT_FOUND));
             return;
-        } else if (!user.validPassword(password)) {
+        // } else if (!user.validPassword(password)) {
+        } else if (!dbgoose.validPassword(password)) {
             logger.error("verification of %s failed: incorrect password", email,
                                                                           err);
             res.status(rc.Client.UNAUTHORIZED).send(apiError(ec.Account.NOT_AUTHORIZED));
@@ -381,14 +386,16 @@ app.post('/chgpass', (req,res,next) => {
     var newpassword = req.body.credentials.newpassword;
 
     logger.info( "password change for account %s requested", email) ;
-    User.findOne({ email: email }, function(err,user) {
+    // User.findOne({ email: email }, function(err,user) {
+    User.get(email, function(err,user) {
         if (err) {
             logger.error("password change of user %s failed: %s", email, err);
             dbError(res,err);
         } else if (!user) {
             logger.error("user %s doesn't exist", email);
             res.status(rc.Client.NOT_FOUND).send(apiError(ec.Account.USER_NOT_FOUND));
-        } else if (user.validPassword(password)) {
+        // } else if (user.validPassword(password)) {
+        } else if (dbgoose.validPassword(password)) {
             user.password = newpassword;
             user.save(function (err) {
                 if (err) {
@@ -423,7 +430,8 @@ app.post('/sendmail', (req,res,next) => {
                                                                     mail.ip);
 
     // find user in oder to save token
-    User.findOne({ email: mail.receiver }, (err, user) => {
+    // User.findOne({ email: mail.receiver }, (err, user) => {
+    User.get(mail.receiver, (err, user) => {
         if (err) {
             logger.error("sending %s mail failed: user %s doesn't exist in database",
                                                                     mail.type,
@@ -706,6 +714,7 @@ app.post('/register', (req,res,next) => {
 
         newUser.secretToken = random.generate();
         newUser.active = false;
+        dbgoose.encrypt(newUser);
         newUser.save(function (err) {
             if ( err ) {
                 logger.error("registering of customer %s failed: %s",newUser.email,
@@ -766,7 +775,8 @@ app.post('/register', (req,res,next) => {
 app.get('/recover/:token', (req,res,next) => {
 
     logger.info("attempt to change password via token %s", req.params.token);
-    User.findOne({ secretToken: req.params.token }, (err, user) => {
+    // User.findOne({ secretToken: req.params.token }, (err, user) => {
+    User.scan({ secretToken: {eq: req.params.token} }, (err, user) => {
 
         if (err) {
             logger.error("attempt to change password via token %s failed: %s",
@@ -828,15 +838,17 @@ app.get('/recover/:token', (req,res,next) => {
 app.get('/confirm/:token', (req,res,next) => {
 
     logger.info("attempt to confirm account via token %s", req.params.token );
-    User.findOne ( { secretToken: req.params.token }, (err, user) => {
+    // User.findOne ( { secretToken: req.params.token }, (err, user) => {
+    User.scan({ secretToken: {eq: req.params.token} }, (err, users) => {
 
         if (err) {
             logger.error("account confirmation via token %s failed: %s",
                                                                 req.params.token,
                                                                 JSON.stringify(err));
             dbError(res,err);
-        } else if ( user ) {
+        } else if ( users ) {
 
+            let user = users[0];
             user.active = true;
             user.secretToken = '';
 
@@ -917,7 +929,8 @@ app.post('/strategies/:name', (req,res,next) => {
 
     if (!checkAuthenticaton(req, res)) { return; }
 
-    Strategy.findOne ( { name : req.params.name}, (err,strategy) => {
+    // Strategy.findOne ( { name : req.params.name}, (err,strategy) => {
+    Strategy.scan({ name : {eq: req.params.name} }, (err,strategy) => {
 
         if ( err ) {
             logger.error("finding strategy <%s> failed", req.params.name);
@@ -1005,7 +1018,8 @@ app.post('/updstrip/:id', async (req,res,next) => {
 
     if (!checkAuthenticaton(req, res)) { return; }
 
-    User.findOne({ stripe: req.params.id }, (err, user) => {
+    // User.findOne({ stripe: req.params.id }, (err, user) => {
+    User.scan({ stripe: {eq: req.params.id} }, (err, user) => {
         if (err) {
             logger.error("update of stripe account failed: %s doesn't exist",
                                                                 req.params.id);
@@ -1036,13 +1050,15 @@ app.post('/updacc/:id', async (req,res,next) => {
 
     logger.info("attempt to update account %s", req.params.id);
 
-    User.findOne({ email: req.params.id }, (err, user) => {
+    // User.findOne({ email: req.params.id }, (err, user) => {
+    User.get(req.params.id, (err, user) => {
         if (err) {
             logger.error("update of local account %s failed", req.params.id);
             dbError(res,err);
         } else if (user) {
             // check password if passed for vefification
-            if ( req.body.password && !user.validPassword(req.body.password)) {
+            // if ( req.body.password && !user.validPassword(req.body.password)) {
+            if ( req.body.password && !dbgoose.validPassword(req.body.password)) {
                 logger.error("verification of %s failed", req.params.id );
                 res.status(rc.Client.UNAUTHORIZED).send(apiError(ec.Account.VERIFICATION_FAILED));
                 return;

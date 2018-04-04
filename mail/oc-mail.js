@@ -239,6 +239,6 @@ var isDevelop = function() {
 ///////////////////////////////////////////////////////////////////////////////
 // read the partial file and replaces ejs placeholders
 function readMailPartial(file,tags) {
-    var f = fs.readFileSync(__dirname + "/partials/mails/" + file + ".ejs", 'utf8');
+    var f = fs.readFileSync(__dirname + "/../partials/mails/" + file + ".ejs", 'utf8');
     return ejs.render(f,tags);
 }
