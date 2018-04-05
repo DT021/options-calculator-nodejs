@@ -397,6 +397,7 @@ app.post('/chgpass', (req,res,next) => {
         // } else if (user.validPassword(password)) {
         } else if (dbgoose.validPassword(password,user.password)) {
             user.password = newpassword;
+            dbgoose.encrypt(user);
             user.save(function (err) {
                 if (err) {
                     logger.error("password change of account %s failed: %s",
@@ -629,7 +630,7 @@ app.post('/subscribe', async (req,res,next) => {
     // create new subscription
     if ( ! subscriptionID ) {
         stripe.subscriptions.create({customer: customerID,
-                                     tems:[{plan:subscription.planid}]
+                                     items:[{plan:subscription.planid}]
         }).then ( subscription => {
             // customer charged automatically
             logger.info("subscription of %s succeeded", subscription.email);
@@ -638,7 +639,7 @@ app.post('/subscribe', async (req,res,next) => {
         }).catch(err => {
             logger.error("subscription of %s failed: %s", subscription.email,
                                                             err);
-            res.status(rc.Client.REQUEST_FAILED).send(apiError(ec.Stripe.ACCESS_ERROR));
+            res.status(rc.Client.REQUEST_FAILED).send(apiError(ec.Stripe.SUBSCRIPTION_FAILED));
             return;
         });
     // change exsisting subscription
@@ -985,14 +986,31 @@ app.delete('/strategies/:userid', (req,res,next) => {
 
     if (!checkAuthenticaton(req, res)) { return; }
 
-    // Strategy.remove({ userid: req.params.userid }, (err) => {
-    Strategy.delete({ userid: req.params.userid }, (err) => {
-        if (err) {
-            logger.error("deleting strategies of %s failed", req.params.userid);
+    Strategy.scan({ userid: { eq: req.params.userid } }, (err, strategies) => {
+
+        if ( err ) {
             dbError(res,err);
-        } else {
-            res.status(rc.Success.OK).send(apiSuccess());
         }
+
+        let query = [];
+        let len = strategies.length;
+        for ( var i = 0; i < len; i++ ) {
+            query.push ( {
+                userid: strategies[i].userid,
+                name: strategies[i].name });
+        }
+
+        // Strategy.remove({ userid: req.params.userid }, (err) => {
+        if ( query.length ) {
+            Strategy.batchDelete(query, (err) => {
+                if (err) {
+                    logger.error("deleting strategies of %s failed", req.params.userid);
+                    dbError(res,err);
+                    return;
+                 }
+            });
+        }
+        res.status(rc.Success.OK).send(apiSuccess());
     });
 });
 
@@ -1194,7 +1212,8 @@ app.delete('/delacc/:id', async (req,res,next) => {
     }
 
     // delete local user
-    User.remove ( { email: email }, (err) => {
+    // User.remove ( { email: email }, (err) => {
+    User.delete ( { email: email }, (err) => {
         if (err) {
             logger.error("deletion of local account %s failed: %s",
                                                                 email,

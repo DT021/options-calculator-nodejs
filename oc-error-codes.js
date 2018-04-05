@@ -35,10 +35,11 @@ module.exports = {
 
     Stripe: { // 4xx
 
-        ACCESS_ERROR:           { code: 400, message: "access failure" },
-        CHECKOUT_FAILURE:       { code: 401, message: "checkout failed" },
-        UPDATE_FAILED:          { code: 402, message: "update failed" },
-        DELETE_FAILED:          { code: 403, message: "deletion failed" },
-        FIND_FAILED:            { code: 404, message: "find failed" },
+        ACCESS_ERROR:           { code: 400, message: "access account failure" },
+        CHECKOUT_FAILURE:       { code: 401, message: "checkout bill failed" },
+        UPDATE_FAILED:          { code: 402, message: "update account failed" },
+        DELETE_FAILED:          { code: 403, message: "delete account failed" },
+        FIND_FAILED:            { code: 404, message: "find customer failed" },
+        SUBSCRIPTION_FAILED:    { code: 405, message: "subscription failed" },
     },
 }
