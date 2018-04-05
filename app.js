@@ -360,7 +360,7 @@ app.post('/verify', (req,res,next) => {
             res.status(rc.Client.UNAUTHORIZED).send(apiError(ec.Account.USER_NOT_FOUND));
             return;
         // } else if (!user.validPassword(password)) {
-        } else if (!dbgoose.validPassword(password)) {
+        } else if (!dbgoose.validPassword(password,user.password)) {
             logger.error("verification of %s failed: incorrect password", email,
                                                                           err);
             res.status(rc.Client.UNAUTHORIZED).send(apiError(ec.Account.NOT_AUTHORIZED));
@@ -395,7 +395,7 @@ app.post('/chgpass', (req,res,next) => {
             logger.error("user %s doesn't exist", email);
             res.status(rc.Client.NOT_FOUND).send(apiError(ec.Account.USER_NOT_FOUND));
         // } else if (user.validPassword(password)) {
-        } else if (dbgoose.validPassword(password)) {
+        } else if (dbgoose.validPassword(password,user.password)) {
             user.password = newpassword;
             user.save(function (err) {
                 if (err) {
@@ -776,17 +776,18 @@ app.get('/recover/:token', (req,res,next) => {
 
     logger.info("attempt to change password via token %s", req.params.token);
     // User.findOne({ secretToken: req.params.token }, (err, user) => {
-    User.scan({ secretToken: {eq: req.params.token} }, (err, user) => {
+    User.scan({ secretToken: {eq: req.params.token} }, (err, users) => {
 
         if (err) {
             logger.error("attempt to change password via token %s failed: %s",
                 req.params.token,
                 JSON.stringify(err));
             dbError(res, err);
-        } else if (user) {
+        } else if (users.length) {
             // check if customer has send new password
             if (req.query.password) {
                 logger.info("customer sent new password via token %s", req.params.token);
+                let user = users[0];
                 user.password = req.query.password;
                 user.secretToken = "";
                 user.save((err, user) => {
@@ -846,7 +847,7 @@ app.get('/confirm/:token', (req,res,next) => {
                                                                 req.params.token,
                                                                 JSON.stringify(err));
             dbError(res,err);
-        } else if ( users ) {
+        } else if ( users.length ) {
 
             let user = users[0];
             user.active = true;
@@ -889,12 +890,15 @@ app.get('/strategies/:name', (req,res,next) => {
 
     if (!checkAuthenticaton(req, res)) { return; }
 
-    Strategy.find({userid:req.params.name}).sort('name').exec((err,strategies)=> {
+    // Strategy.find({userid: req.params.name}).sort('name').exec((err,strategies)=> {
+    Strategy.scan({userid: {eq: req.params.name} }, (err,strategies)=> {
         if ( err ) {
             logger.error("finding strategy <%s> failed",req.params.name);
             dbError(res,err);
-        } else {
+        } else if ( strategies.length ) {
             res.status(rc.Success.OK).send(strategies);
+        } else {
+            res.status(rc.Success.OK).send([]);
         }
     });
 });
@@ -930,13 +934,14 @@ app.post('/strategies/:name', (req,res,next) => {
     if (!checkAuthenticaton(req, res)) { return; }
 
     // Strategy.findOne ( { name : req.params.name}, (err,strategy) => {
-    Strategy.scan({ name : {eq: req.params.name} }, (err,strategy) => {
+    Strategy.scan({ name: {eq: req.params.name} }, (err,strategies) => {
 
         if ( err ) {
             logger.error("finding strategy <%s> failed", req.params.name);
             dbError(res,err);
-        } else {
+        } else if ( strategies.length ){
 
+            let strategy = strategies[0];
             strategy.price = req.body.price;
             strategy.vola = req.body.vola;
             for (var i = 0; i < req.body.positions.length; i++) {
@@ -980,7 +985,8 @@ app.delete('/strategies/:userid', (req,res,next) => {
 
     if (!checkAuthenticaton(req, res)) { return; }
 
-    Strategy.remove({ userid: req.params.userid }, (err) => {
+    // Strategy.remove({ userid: req.params.userid }, (err) => {
+    Strategy.delete({ userid: req.params.userid }, (err) => {
         if (err) {
             logger.error("deleting strategies of %s failed", req.params.userid);
             dbError(res,err);
@@ -995,11 +1001,13 @@ app.delete('/strategies/:userid', (req,res,next) => {
  * @param { name }
  * @return { success: true }
  */
-app.delete('/strategy/:name', (req,res,next) => {
+app.delete('/strategy/:userid', (req,res,next) => {
 
     if (!checkAuthenticaton(req, res)) { return; }
 
-    Strategy.remove({ name: req.params.name }, (err) => {
+    // Strategy.remove({ name: req.params.name }, (err) => {
+    Strategy.delete({ userid: req.params.userid,
+                      name: req.query.name }, (err) => {
         if (err) {
             logger.error("deleting strategy <%s> failed", req.params.name);
             dbError(res,err);
@@ -1019,13 +1027,14 @@ app.post('/updstrip/:id', async (req,res,next) => {
     if (!checkAuthenticaton(req, res)) { return; }
 
     // User.findOne({ stripe: req.params.id }, (err, user) => {
-    User.scan({ stripe: {eq: req.params.id} }, (err, user) => {
+    User.scan({ stripe: {eq: req.params.id} }, (err, users) => {
         if (err) {
             logger.error("update of stripe account failed: %s doesn't exist",
                                                                 req.params.id);
             dbError(res,err);
-        } else if (user && user.stripe ) {
+        } else if (users.length && users[0].stripe ) {
             // update email in stripe account
+            let user = users[0];
             let data = { email: user.email };
             stripe.customers.update(user.stripe,data).then(customer => {
                 logger.info("update of stripe account %s succeeded", req.params.id);
@@ -1039,9 +1048,27 @@ app.post('/updstrip/:id', async (req,res,next) => {
 });
 
 /**
+ * change email
+ * @param { params.email }
+ * @param { body.newemail }
+ * @return user object
+ */
+app.post('/updemail/:email', async (req, res, next) => {
+
+    if (!checkAuthenticaton(req, res)) { return; }
+
+    logger.info("attempt to change email from %s to %s", req.params.email,
+                                                         req.body.newemail );
+
+    // TODO: find solution
+
+    res.status(rc.Success.OK).send(user);
+});
+
+/**
  * update account
  * @param { params.id }
- * @param { body.password, body.planid, body.stripeID, body.name, body.newmail }
+ * @param { body.password, body.planid, body.stripeID, body.name }
  * @return user object
  */
 app.post('/updacc/:id', async (req,res,next) => {
@@ -1058,7 +1085,7 @@ app.post('/updacc/:id', async (req,res,next) => {
         } else if (user) {
             // check password if passed for vefification
             // if ( req.body.password && !user.validPassword(req.body.password)) {
-            if ( req.body.password && !dbgoose.validPassword(req.body.password)) {
+            if ( req.body.password && !dbgoose.validPassword(req.body.password,user.password)) {
                 logger.error("verification of %s failed", req.params.id );
                 res.status(rc.Client.UNAUTHORIZED).send(apiError(ec.Account.VERIFICATION_FAILED));
                 return;
@@ -1072,7 +1099,7 @@ app.post('/updacc/:id', async (req,res,next) => {
                 user.plan = parseInt(req.body.planid);
                 // first time a subscription plan gets updated a stripe
                 // id is provided as well
-                if (req.body.stripeID ) {
+                if ( req.body.stripeID ) {
                     user.stripe = req.body.stripeID;
                 }
             }
@@ -1082,13 +1109,14 @@ app.post('/updacc/:id', async (req,res,next) => {
                 user.username = req.body.name;
             }
             // update email
-            if ( req.body.newemail && (req.body.newemail != user.email) ) {
-                user.backup = user.email;
-                user.email = req.body.newemail;
-                item = "email from " + user.backup + " to " + user.email;
-            }
+            // if ( req.body.newemail && (req.body.newemail != user.email) ) {
+            //     user.backup = user.email;
+            //     user.email = req.body.newemail;
+            //     item = "email from " + user.backup + " to " + user.email;
+            // }
             // update database
             user.save((err,user) => {
+            // User.update({ email: user.email }, update, (err) => {
                 if (err) {
                     if ( err.code == 11000 ){
                         logger.error("update account %s failed: email already exists",

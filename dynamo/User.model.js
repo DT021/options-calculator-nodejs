@@ -13,6 +13,7 @@ var UserSchema = new Schema ({
                     return /^([\w-\.]+@([\w-]+\.)+[\w-]{2,3})?$/.test(v);
              }
            },
+    backup: String,                     // backup of old email
     username: { type: String,
                 required: true },       // username
     password: { type: String,
@@ -21,8 +22,7 @@ var UserSchema = new Schema ({
     active: { type: Boolean,
               default: false },         // true when the email was verified
     plan: Number,                       // the subscription plan
-    stripe: String,                     // stripe customer id
-    backup: String                      // backup of old email
+    stripe: String                      // stripe customer id
 }, {
     timestamps: true,
     useNativeBooleans: true
