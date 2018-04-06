@@ -892,7 +892,10 @@ app.get('/strategies/:userid', (req,res,next) => {
     if (!checkAuthenticaton(req, res)) { return; }
 
     // Strategy.find({userid: req.params.userid}).sort('name').exec((err,strategies)=> {
-    Strategy.scan({ userid: { eq: req.params.userid} }, (err,strategies)=> {
+    Strategy.query('userid').eq(req.params.userid).
+                             where('name').
+                             not('').
+                             exec((err,strategies) => {
         if ( err ) {
             logger.error("finding strategy <%s> failed",req.params.name);
             dbError(res,err);

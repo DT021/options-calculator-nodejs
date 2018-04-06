@@ -37,15 +37,15 @@ var PositionSchema = new Schema ({
 var StrategySchema = new Schema ({
 
     userid: { type: String,         // stripe customer ID
-              rangeKey: true,
-              index: true },
-    name: { type: String,           // strategy name
-            index: {
+              index: {
                 global: true,
-                rangeKey: 'userid',
+                rangeKey: 'name',
                 name: 'StrategyIndex',
                 project: true,      // ProjectionType: ALL
                 throughput: 5 }},   // read and write are both 5
+    name: { type: String,           // strategy name
+            rangeKey: true,
+            index: true },
     price: Number,                  // price of the underlying
     vola: Number,                   // volatility used for stragegy
 
