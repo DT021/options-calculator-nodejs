@@ -1,46 +1,61 @@
+"use strict";
 
-var dynamoose = require('dynamoose');
-var Schema = dynamoose.Schema;
+const dynamoose = require('dynamoose');
+const Schema = dynamoose.Schema;
 
 //
-//
+// {
+//   "positions": [{ "amt":1,
+//                   "type":"call",
+//                   "strike":2585,
+//                   "expiry":"Apr 20 18" }],
+// }
 //
 var PositionSchema = new Schema ({
 
-    amt: Number,            // the position amount (positive=long, negative=short)
-    type: String,           // the position type (put/call)
-    strike: Number,         // the selected strike
-    expiry: Date            // selected expiration date
+    amt: Number,                    // position amount (pos.=long, neg.=short)
+    type: String,                   // position type (put/call)
+    strike: Number,                 // selected strike price
+    expiry: Date                    // selected expiration date
 });
 
 //
-//
+// {
+//   "createdAt": 1522999721957,
+//   "price": 2585,
+//   "name": "ES",
+//   "vola": 15,
+//   "positions": [...],
+//   "optionsContract": { "symbol":"ES",
+//                        "name":"S&P 500 E-Mini",
+//                        "multiplier":50,
+//                        "strikes":[3300,3275,3260, ... 3250,1890,1880] },
+//   "userid": "cus_Ccrq2aLQh6ckTb",
+//   "updatedAt": 1522999721957
+// }
 //
 var StrategySchema = new Schema ({
 
-    userid: { type: String,
+    userid: { type: String,         // stripe customer ID
               rangeKey: true,
-              index: true
-             },             // owner of strategy
-    name: { type: String,
+              index: true },
+    name: { type: String,           // strategy name
             index: {
                 global: true,
                 rangeKey: 'userid',
                 name: 'StrategyIndex',
-                project: true, // ProjectionType: ALL
-                throughput: 5 // read and write are both 5
-            }
-          },               // name of strategy
-    price: Number,         // price of the underlying
-    vola: Number,          // volatility used for stragegy
+                project: true,      // ProjectionType: ALL
+                throughput: 5 }},   // read and write are both 5
+    price: Number,                  // price of the underlying
+    vola: Number,                   // volatility used for stragegy
 
     optionsContract: {
 
-        symbol: String,     // the option symbol, like ES
-        name: String,       // the full name of the options
-        multiplier: Number, // the multiplier i.e. contract size
-        price: Number,      // the initial price used for first time use
-        strikes: [Number]   // the stikes used for the strategy
+        symbol: String,             // option symbol, as ES
+        name: String,               // full name of the options
+        multiplier: Number,         // multiplier i.e. contract size
+        price: Number,              // initial price used for first time use
+        strikes: [Number]           // stikes used for the strategy
     },
 
     positions: [PositionSchema],
@@ -48,7 +63,5 @@ var StrategySchema = new Schema ({
 }, {
     timestamps: true
 });
-
-// StrategySchema.index ( { userid : 1, name : -1 }, { unique: true } );
 
 module.exports = dynamoose.model ( 'Strategy', StrategySchema );

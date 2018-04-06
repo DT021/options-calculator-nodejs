@@ -1,9 +1,8 @@
 "use strict";
 
-// var aws = require("aws-sdk");
-// var dynamodb = require('dynamodb-model');
-var dynamoose = require('dynamoose');
-var bcrypt = require('bcrypt');
+const dynamoose = require('dynamoose');
+const bcrypt = require('bcrypt');
+const config = require('../oc-config');
 
 const SALT_WORK_FACTOR = 10;
 
@@ -12,13 +11,11 @@ module.exports.init = function (env, logger) {
     let p = new Promise((resolve, reject) => {
 
         dynamoose.AWS.config.update({
-            accessKeyId: "AKID",
-            secretAccessKey: "SECRET",
-            region: "us-east-2"
+            accessKeyId: config.db.access,
+            secretAccessKey: config.db.secret,
+            region: config.db.region
         });
-        // var dynamodb = new aws.DynamoDB();
         dynamoose.local(); // http://localhost:8000
-        // var dynamodb = dynamoose.ddb();
         resolve(dynamoose);
     });
     return p;

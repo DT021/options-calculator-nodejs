@@ -12,7 +12,7 @@ var dbconfig = {
     host: "localhost",
     port: 21302,
     name: "oc",
-    endp: "mongodb://"
+    endp: "mongodb://",
 };
 
 module.exports = {
@@ -24,8 +24,11 @@ module.exports = {
         docroot: "./public"
     },
 
-    // db url
+    // database settings
     db: {
+        access: "AKID",
+        secret: "SECRET",
+        region: "us-east-2",
 
         production: {
             url: dbconfig.endp + dbconfig.user + ":" +

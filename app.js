@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 const express = require('express');
 const session = require('express-session');
@@ -787,7 +787,8 @@ app.get('/recover/:token', (req,res,next) => {
         } else if (users.length) {
             // check if customer has send new password
             if (req.query.password) {
-                logger.info("customer sent new password via token %s", req.params.token);
+                logger.info("customer sent new password via token %s",
+                                                                req.params.token);
                 let user = users[0];
                 user.password = req.query.password;
                 user.secretToken = "";
@@ -799,18 +800,18 @@ app.get('/recover/:token', (req,res,next) => {
                         dbError(res, err);
                     } else {
                         logger.info("database update of account %s successfully",
-                            user.email);
+                                                                user.email);
                         var msg = "you have successfully changed your password.";
                         sendNotificationMail(user, msg, function (err, info) {
                             // in case the email coundn't be sent we just log the error but
                             // do not return it
                             if (err) {
                                 logger.error("notification couldn't be sent to %s: %s",
-                                    user.email,
-                                    JSON.stringify(err));
+                                                                user.email,
+                                                                JSON.stringify(err));
                             } else {
                                 logger.info("notification successfully sent to %s",
-                                    user.email);
+                                                                user.email);
                             }
                         });
                         res.status(rc.Success.OK).send(apiSuccess());
@@ -823,11 +824,9 @@ app.get('/recover/:token', (req,res,next) => {
             }
         } else {
             logger.error("attempt to change password failed: token %s doesn't exist",
-                req.params.token);
-            res.render("pages/error", {
-                error: "Token doesn\'t exist or expired",
-                advise: "Please try again. Thanks"
-            });
+                                                                req.params.token);
+            res.render("pages/error", { error: "Token doesn\'t exist or expired",
+                                        advise: "Please try again. Thanks" });
         }
     });
 });
@@ -887,12 +886,12 @@ app.get('/confirm/:token', (req,res,next) => {
  * @param { name }
  * @return the strategy object identified by name
  */
-app.get('/strategies/:name', (req,res,next) => {
+app.get('/strategies/:userid', (req,res,next) => {
 
     if (!checkAuthenticaton(req, res)) { return; }
 
-    // Strategy.find({userid: req.params.name}).sort('name').exec((err,strategies)=> {
-    Strategy.scan({userid: {eq: req.params.name} }, (err,strategies)=> {
+    // Strategy.find({userid: req.params.userid}).sort('name').exec((err,strategies)=> {
+    Strategy.scan({ userid: { eq: req.params.userid} }, (err,strategies)=> {
         if ( err ) {
             logger.error("finding strategy <%s> failed",req.params.name);
             dbError(res,err);
@@ -945,13 +944,14 @@ app.post('/strategies/:name', (req,res,next) => {
             let strategy = strategies[0];
             strategy.price = req.body.price;
             strategy.vola = req.body.vola;
+            strategy.positions = [];
             for (var i = 0; i < req.body.positions.length; i++) {
-                strategy.positions[i] = {
+                strategy.positions.push( {
                     amt: req.body.positions[i].amt,
                     type: req.body.positions[i].type,
                     strike: req.body.positions[i].strike,
                     expiry: req.body.positions[i].expiry
-                }
+                });
             }
             strategy.optionsContract = {
                 symbol: req.body.optionsContract.symbol,
@@ -1073,14 +1073,54 @@ app.post('/updstrip/:id', async (req,res,next) => {
  */
 app.post('/updemail/:email', async (req, res, next) => {
 
-    if (!checkAuthenticaton(req, res)) { return; }
+    if (!checkAuthenticaton(req,res)) { return; }
 
-    logger.info("attempt to change email from %s to %s", req.params.email,
-                                                         req.body.newemail );
+    let oldemail = req.params.email;
+    let newemail = req.body.newemail;
+    let password = req.body.password;
 
-    // TODO: find solution
+    logger.info("attempt to change email from %s to %s", oldemail, newemail );
 
-    res.status(rc.Success.OK).send(user);
+    // first find old email
+    User.get(oldemail, (err,user) => {
+        if (err) {
+            logger.error("email update of %s failed: %s", oldemail,
+                                                          JSON.stringify(err));
+            dbError(res,err);
+        } else if (user) {
+            if (!dbgoose.validPassword(password, user.password)) {
+                logger.error("verification of %s failed", oldemail);
+                res.status(rc.Client.UNAUTHORIZED).send(apiError(ec.Account.VERIFICATION_FAILED));
+                return;
+            }
+            // change email
+            user.email = newemail;
+            // save new email
+            user.save((err,user) => {
+                if (err) {
+                    logger.error("save of new email %s failed: %s",
+                                                            newemail,
+                                                            JSON.stringify(err));
+                    dbError(res, err);
+                } else {
+                    // delete old email
+                    User.delete({ email: oldemail }, (err) => {
+                        if (err) {
+                            logger.error("deletion of user %s failed: %s", oldemail);
+                            dbError(res, err);
+                        } else {
+                            logger.info("email of %s successfully changed to %s",
+                                                            oldemail, newemail);
+                            res.status(rc.Success.OK).send(user);
+                        }
+                    });
+                }
+            });
+        } else {
+            logger.error("user %s not found", oldemail);
+            res.status(rc.Client.NOT_FOUND).send();
+        }
+    });
 });
 
 /**
@@ -1213,7 +1253,7 @@ app.delete('/delacc/:id', async (req,res,next) => {
 
     // delete local user
     // User.remove ( { email: email }, (err) => {
-    User.delete ( { email: email }, (err) => {
+    User.delete ({email: email}, (err) => {
         if (err) {
             logger.error("deletion of local account %s failed: %s",
                                                                 email,
