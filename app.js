@@ -785,13 +785,14 @@ app.get('/recover/:token', (req,res,next) => {
                 JSON.stringify(err));
             dbError(res, err);
         } else if (users.length) {
+            let user = users[0];
             // check if customer has send new password
             if (req.query.password) {
                 logger.info("customer sent new password via token %s",
                                                                 req.params.token);
-                let user = users[0];
                 user.password = req.query.password;
                 user.secretToken = "";
+                dbgoose.encrypt(user);
                 user.save((err, user) => {
                     if (err) {
                         logger.error("database update of account %s failed: %s",
@@ -914,7 +915,8 @@ app.post('/strategies', (req,res,next) => {
 
     var newStrategy = new Strategy ( req.body );
     // check if name alrready exists
-    Strategy.scan({ name: { eq: newStrategy.name } }, (err,strategies) => {
+    Strategy.scan({ userid: { eq: newStrategy.userid },
+                    name: { eq: newStrategy.name } }, (err,strategies) => {
         if (err) {
             logger.error("finding strategy <%s> failed", newStrategy.name);
             dbError(res, err);
