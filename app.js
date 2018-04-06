@@ -913,12 +913,24 @@ app.post('/strategies', (req,res,next) => {
     if (!checkAuthenticaton(req, res)) { return; }
 
     var newStrategy = new Strategy ( req.body );
-    newStrategy.save(function (err) {
+    // check if name alrready exists
+    Strategy.scan({ name: { eq: newStrategy.name } }, (err,strategies) => {
         if (err) {
-            logger.error("saving strategy <%s> failed", newStrategy.name);
-            dbError(res,err);
+            logger.error("finding strategy <%s> failed", newStrategy.name);
+            dbError(res, err);
+        } else if (strategies.length) {
+            logger.error("strategy <%s> already exists", newStrategy.name);
+            res.status(rc.Client.REQUEST_FAILED).send(apiError(ec.Account.USER_ALREADY_EXISTS));
         } else {
-            res.status ( rc.Success.OK ).send ( newStrategy );
+            // save new strategy
+            newStrategy.save(function (err) {
+                if (err) {
+                    logger.error("saving strategy <%s> failed", newStrategy.name);
+                    dbError(res,err);
+                } else {
+                    res.status ( rc.Success.OK ).send ( newStrategy );
+                }
+            });
         }
     });
 });
