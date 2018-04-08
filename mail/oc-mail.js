@@ -76,7 +76,8 @@ module.exports.createConfirmationMail = function(receiver,name,token,ip) {
     var link = "https://ironcondortrader.com/confirm/" + token;
     var html = readMailPartial ( 'confirmation', { link : link,
                                                    name : name,
-                                                   ip : ip } );
+                                                   ip : ip,
+                                                   css: getCSS() } );
     return {
         from: '"IronCondorTrader©" <info@ironcondortrader.com>',
         subject: 'Account Verification Request',
@@ -90,7 +91,9 @@ module.exports.createConfirmationMail = function(receiver,name,token,ip) {
 module.exports.createRecoveryMail = function(receiver,token,ip) {
 
     var link = "https://ironcondortrader.com/recover/" + token;
-    var html = readMailPartial ( 'recover', { link: link, ip: ip } );
+    var html = readMailPartial ( 'recover', { link: link,
+                                              ip: ip,
+                                              css: getCSS() } );
     return {
         from: '"IronCondorTrader©" <info@ironcondortrader.com>',
         subject: 'Password Reset Request',
@@ -103,7 +106,9 @@ module.exports.createRecoveryMail = function(receiver,token,ip) {
 // create notification  mail
 module.exports.createNotificationMail = function(receiver,name,message) {
 
-    var html = readMailPartial('notification', { name: name, message: message });
+    var html = readMailPartial('notification', { name: name,
+                                                 message: message,
+                                                 css: getCSS() });
     return {
         from: '"IronCondorTrader©" <info@ironcondortrader.com>',
         subject: 'Account Update Notification',
@@ -234,6 +239,12 @@ module.exports.checkMail = function(email, callback, timeout, from_email) {
 // check for development enviroment
 var isDevelop = function() {
     return ( ! process.env.NODE_ENV  || process.env.NODE_ENV === "development");
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// contains styles imported into mail templates
+var getCSS = () => {
+    return "font-size:1.2em";
 }
 
 ///////////////////////////////////////////////////////////////////////////////
