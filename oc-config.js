@@ -26,8 +26,8 @@ module.exports = {
 
     // database settings
     db: {
-        access: "AKIAILB6XXEYALJ6O7UQ",
-        secret: "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",
+        access: "",
+        secret: "",
         region: "us-east-2",
 
         production: {
